@@ -1,0 +1,12 @@
+<service name="test" package="com.test">
+
+  <entity name="foo">
+  	<attribute name="a" type="long"/>
+  	<attribute name="b" type="String"/>
+  </entity>
+  
+  <entity name="bar">
+  	<attribute name="c" type="long"/>
+  	<attribute name="d" type="boolean"/>
+  </entity>
+</service>
