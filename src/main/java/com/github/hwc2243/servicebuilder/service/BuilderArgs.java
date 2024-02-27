@@ -1,5 +1,5 @@
 
-package connors.servicebuilder.service;
+package com.github.hwc2243.servicebuilder.service;
 
 import com.beust.jcommander.Parameter;
 

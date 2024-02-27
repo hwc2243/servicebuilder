@@ -9,7 +9,7 @@
 		<version>3.2.2</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>connors</groupId>
+	<groupId>com.github.hwc2243</groupId>
 	<artifactId>servicebuilder</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>servicebuilder</name>

@@ -1,4 +1,4 @@
-package connors.servicebuilder;
+package com.github.hwc2243.servicebuilder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,11 +10,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import com.beust.jcommander.JCommander;
-
-import connors.servicebuilder.model.Service;
-import connors.servicebuilder.service.BuilderArgs;
-import connors.servicebuilder.service.BuilderService;
-import connors.servicebuilder.service.DefinitionReaderService;
+import com.github.hwc2243.servicebuilder.model.Service;
+import com.github.hwc2243.servicebuilder.service.BuilderArgs;
+import com.github.hwc2243.servicebuilder.service.BuilderService;
+import com.github.hwc2243.servicebuilder.service.DefinitionReaderService;
 
 @SpringBootApplication
 public class ServiceBuilderApplication implements CommandLineRunner {

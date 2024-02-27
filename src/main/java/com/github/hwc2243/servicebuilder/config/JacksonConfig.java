@@ -1,4 +1,4 @@
-package connors.servicebuilder.config;
+package com.github.hwc2243.servicebuilder.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

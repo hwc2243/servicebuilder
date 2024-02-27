@@ -1,4 +1,4 @@
-package connors.servicebuilder.model;
+package com.github.hwc2243.servicebuilder.model;
 
 import lombok.Getter;
 import lombok.Setter;
