@@ -1,8 +1,9 @@
-package connors.servicebuilder.config;
+package com.github.hwc2243.servicebuilder.config;
 
 import java.util.Locale;
 
-import connors.servicebuilder.ServiceBuilderApplication;
+import com.github.hwc2243.servicebuilder.ServiceBuilderApplication;
+
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import freemarker.template.Version;

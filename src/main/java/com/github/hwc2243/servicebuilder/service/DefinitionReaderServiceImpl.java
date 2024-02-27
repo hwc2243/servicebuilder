@@ -1,4 +1,4 @@
-package connors.servicebuilder.service;
+package com.github.hwc2243.servicebuilder.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,8 +6,7 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-
-import connors.servicebuilder.model.Service;
+import com.github.hwc2243.servicebuilder.model.Service;
 
 @org.springframework.stereotype.Service
 public class DefinitionReaderServiceImpl implements DefinitionReaderService {

@@ -1,12 +1,12 @@
-package connors.servicebuilder.service;
+package com.github.hwc2243.servicebuilder.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import connors.servicebuilder.model.Entity;
-import connors.servicebuilder.model.Service;
+import com.github.hwc2243.servicebuilder.model.Entity;
+import com.github.hwc2243.servicebuilder.model.Service;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
