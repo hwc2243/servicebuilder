@@ -14,6 +14,7 @@ import freemarker.template.TemplateException;
 import freemarker.template.utility.StringUtil;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,8 +28,27 @@ public class BuilderServiceImpl implements BuilderService {
 
 	protected static Logger logger = LoggerFactory.getLogger(BuilderServiceImpl.class);
 	
-	@Autowired
 	protected Configuration freemarker;
+	
+	protected DefinitionReaderService definitionReaderService;
+	
+	public BuilderServiceImpl (@Autowired Configuration freemarker, @Autowired DefinitionReaderService definitionReaderService)
+	{
+		this.freemarker = freemarker;
+		this.definitionReaderService = definitionReaderService;
+	}
+	
+	@Override
+	public void build (BuilderArgs args) throws IOException {
+		File file = new File(args.getServiceFile());
+		if (!file.exists())
+		{
+			throw new FileNotFoundException(args.getServiceFile() + " not found");
+		}
+		
+		Service service = definitionReaderService.read(file);
+		build(service, args);
+	}
 	
 	@Override
 	public void build (Service service, BuilderArgs args) throws IOException {

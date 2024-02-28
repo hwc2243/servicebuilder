@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import com.beust.jcommander.JCommander;
 import com.github.hwc2243.servicebuilder.model.Service;
@@ -18,18 +19,15 @@ import com.github.hwc2243.servicebuilder.service.DefinitionReaderService;
 @SpringBootApplication
 public class ServiceBuilderApplication implements CommandLineRunner {
 
-	@Autowired
-	protected DefinitionReaderService definitionReaderService;
-	
-	@Autowired
-	protected BuilderService builderService;
-	
-	public static void main(String[] args) {
-		SpringApplication.run(ServiceBuilderApplication.class, args);
-	}
-
-	public void run (String... args)  throws IOException
+	public ServiceBuilderApplication ()
 	{
+	}
+	
+	public static void main(String[] args) throws IOException {
+		// HWC this isn't the try spring way of doing things but it gives a simple way to use
+		// spring for maven plugin
+		ConfigurableApplicationContext context = SpringApplication.run(ServiceBuilderApplication.class, args);
+
 		BuilderArgs builderArgs = new BuilderArgs();
 		JCommander cmd = JCommander.newBuilder()
 		  .addObject(builderArgs)
@@ -37,13 +35,12 @@ public class ServiceBuilderApplication implements CommandLineRunner {
 		
 		cmd.parse(args);
 		
-		File file = new File(builderArgs.getServiceFile());
-		if (!file.exists())
-		{
-			throw new FileNotFoundException(builderArgs.getServiceFile() + " not found");
-		}
+		BuilderService builderService = context.getBean(BuilderService.class);
+		builderService.build(builderArgs);
+	}
+
+	public void run (String... args)  throws IOException
+	{
 		
-		Service service = definitionReaderService.read(file);
-		builderService.build(service, builderArgs);
 	}
 }
