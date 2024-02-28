@@ -11,13 +11,16 @@
 	</parent>
 	<groupId>com.github.hwc2243</groupId>
 	<artifactId>servicebuilder</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>servicebuilder</name>
 	<description>Spring Service Builder</description>
 	<properties>
 		<jcommander.version>1.78</jcommander.version>
 		<java.version>17</java.version>
+		<maven.compiler.source>1.8</maven.compiler.source>
+     	<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -58,6 +61,9 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+                	<classifier>exec</classifier>
+            	</configuration>
 			</plugin>
 		</plugins>
 	</build>
