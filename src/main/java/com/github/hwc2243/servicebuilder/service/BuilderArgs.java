@@ -4,8 +4,10 @@ package com.github.hwc2243.servicebuilder.service;
 import com.beust.jcommander.Parameter;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class BuilderArgs {
 
 	@Parameter(

@@ -3,14 +3,16 @@ package com.github.hwc2243.servicebuilder.service;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import com.github.hwc2243.servicebuilder.ServiceBuilderApplication;
 import com.github.hwc2243.servicebuilder.model.Entity;
 import com.github.hwc2243.servicebuilder.model.Service;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import freemarker.template.TemplateExceptionHandler;
+import freemarker.template.Version;
 import freemarker.template.utility.StringUtil;
 
 import java.io.File;
@@ -21,9 +23,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
-@org.springframework.stereotype.Service
 public class BuilderServiceImpl implements BuilderService {
 
 	protected static Logger logger = LoggerFactory.getLogger(BuilderServiceImpl.class);
@@ -32,7 +34,18 @@ public class BuilderServiceImpl implements BuilderService {
 	
 	protected DefinitionReaderService definitionReaderService;
 	
-	public BuilderServiceImpl (@Autowired Configuration freemarker, @Autowired DefinitionReaderService definitionReaderService)
+	public BuilderServiceImpl ()
+	{
+		this.freemarker = new Configuration(new Version(2, 3, 20));
+        freemarker.setClassForTemplateLoading(ServiceBuilderApplication.class, "/templates");
+        freemarker.setDefaultEncoding("UTF-8");
+        freemarker.setLocale(Locale.US);
+        freemarker.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        
+        this.definitionReaderService = new DefinitionReaderServiceImpl();
+	}
+	
+	public BuilderServiceImpl (Configuration freemarker, DefinitionReaderService definitionReaderService)
 	{
 		this.freemarker = freemarker;
 		this.definitionReaderService = definitionReaderService;
@@ -194,10 +207,13 @@ public class BuilderServiceImpl implements BuilderService {
 			String className = StringUtils.capitalize(entity.getName()) + ".java";
 			File classFile = new File(outputDir, className);
 			
-			Map<String,Object> entityModel = new HashMap<>(baseModel);
-			entityModel.put("entity", entity);
+			if (!classFile.exists() || args.isReplace())
+			{
+				Map<String,Object> entityModel = new HashMap<>(baseModel);
+				entityModel.put("entity", entity);
 			
-			writeFile(args, entityModel, "local_entity.ftl", classFile);
+				writeFile(args, entityModel, "local_entity.ftl", classFile);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -210,10 +226,13 @@ public class BuilderServiceImpl implements BuilderService {
 			String className = StringUtil.capitalize(entity.getName()) + "Persistence.java";
 			File classFile = new File(outputDir, className);
 			
-			Map<String, Object> entityModel = new HashMap<>(baseModel);
-			entityModel.put("entity", entity);
+			if (!classFile.exists() || args.isReplace())
+			{
+				Map<String, Object> entityModel = new HashMap<>(baseModel);
+				entityModel.put("entity", entity);
 			
-			writeFile(args, entityModel, "local_repository.ftl", classFile);
+				writeFile(args, entityModel, "local_repository.ftl", classFile);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -229,9 +248,14 @@ public class BuilderServiceImpl implements BuilderService {
 			
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
+
+			if (!serviceFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "local_service.ftl", serviceFile);
+			}
 			
-			writeFile(args, entityModel, "local_service.ftl", serviceFile);
-			writeFile(args, entityModel, "local_service_impl.ftl", implFile);
+			if (!implFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "local_service_impl.ftl", implFile);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
