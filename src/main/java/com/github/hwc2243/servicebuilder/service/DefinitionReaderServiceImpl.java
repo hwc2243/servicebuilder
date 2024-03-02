@@ -3,16 +3,18 @@ package com.github.hwc2243.servicebuilder.service;
 import java.io.File;
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
 import com.github.hwc2243.servicebuilder.model.Service;
 
-@org.springframework.stereotype.Service
 public class DefinitionReaderServiceImpl implements DefinitionReaderService {
 
-	@Autowired
-	XmlMapper xmlMapper;
+	protected XmlMapper xmlMapper;
+	
+	public DefinitionReaderServiceImpl ()
+	{
+		this.xmlMapper = new XmlMapper();
+	}
 	
 	@Override
 	public Service read(File file) throws IOException {
