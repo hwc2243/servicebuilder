@@ -31,7 +31,30 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<T extends Base${en
   {
     return ${entity.name}Persistence.findAll();
   }
-  
+<#if entity.finders??>
+<#list entity.finders as finder>
+<#assign finderName = "">
+<#assign finderArguments = "">
+<#assign finderParameters = "">
+<#list finder.finderColumns as finderColumn>
+<#if finderName?length != 0><#assign finderName += "And"></#if>
+<#assign finderName += finderColumn.name?cap_first>
+<#if finderArguments?length != 0><#assign finderArguments += ", "><#assign finderParameters += ", "></#if>
+<#assign finderParameter = entity.getAttribute(finderColumn.name)>
+<#assign finderArguments += finderParameter.name>
+<#assign finderParameters += finderParameter.type>
+<#assign finderParameters += " ">
+<#assign finderParameters += finderParameter.name>
+</#list>
+
+  @Override
+  public List<T> findBy${finderName} (${finderParameters})
+  {
+	return ${entity.name}Persistence.findBy${finderName}(${finderArguments});
+  }
+</#list>
+</#if>  
+
   @Override
   public T get (ID id) throws ServiceException
   {
