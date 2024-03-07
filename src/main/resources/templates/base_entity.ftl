@@ -1,13 +1,3 @@
-<#assign referencedTypes = "">
-<#if referencedEntitiesMap[entity.name]?has_content>
-<#assign referencedTypes += "<">
-<#list referencedEntitiesMap[entity.name] as referencedEntity>
-<#assign referencedTypes += referencedEntity.name?upper_case>
-<#assign referencedTypes += " extends Base">
-<#assign referencedTypes += referencedEntity.name?cap_first>
-</#list>
-<#assign referencedTypes += ">">
-</#if>
 package ${baseModelPackage};
 
 import jakarta.persistence.Column;
