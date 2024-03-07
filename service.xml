@@ -3,6 +3,7 @@
   <entity name="foo">
   	<attribute name="a" type="long"/>
   	<attribute name="b" type="String"/>
+  	<attribute name="bar" type="entity" entity-name="bar"/> 
   	
   	<finder>
   		<finder-column name="a" />

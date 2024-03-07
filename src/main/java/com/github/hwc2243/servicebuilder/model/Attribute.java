@@ -15,4 +15,9 @@ public class Attribute {
 	@Setter
 	protected String type;
 	
+	@Getter
+	@Setter
+	@JacksonXmlElementWrapper(useWrapping = false)
+	@JacksonXmlProperty(localName = "entity-name")
+	protected String entityName;
 }

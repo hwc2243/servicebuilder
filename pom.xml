@@ -8,12 +8,14 @@
 	<version>0.0.2-SNAPSHOT</version>
 	<name>servicebuilder</name>
 	<description>Spring Service Builder</description>
-	
+
 	<properties>
+		<assertj.version>3.24.2</assertj.version>
 		<freemarker.version>2.3.32</freemarker.version>
 		<jackson.version>2.15.3</jackson.version>
 		<jcommander.version>1.78</jcommander.version>
 		<java.version>17</java.version>
+		<junit.version>5.9.2</junit.version>
 		<lombok.version>1.18.30</lombok.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -61,18 +63,39 @@
 			<artifactId>lombok</artifactId>
 			<version>${lombok.version}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>${assertj.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
 		<plugins>
 			<plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.2.1</version>
-                <configuration>
-                    <mainClass>com.github.hwc2243.servicebuilder.ServiceBuilderApplication</mainClass>
-                </configuration>
-            </plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.2.1</version>
+				<configuration>
+					<mainClass>
+						com.github.hwc2243.servicebuilder.ServiceBuilderApplication</mainClass>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<!-- JUnit 5 requires Surefire version 2.22.0 or higher -->
+				<version>3.2.5</version>
+			</plugin>
 		</plugins>
 	</build>
 

@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.hwc2243.servicebuilder.ServiceBuilderApplication;
+import com.github.hwc2243.servicebuilder.model.Attribute;
 import com.github.hwc2243.servicebuilder.model.Entity;
 import com.github.hwc2243.servicebuilder.model.Service;
 
@@ -23,8 +24,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class BuilderServiceImpl implements BuilderService {
 
@@ -64,8 +68,15 @@ public class BuilderServiceImpl implements BuilderService {
 	}
 	
 	@Override
-	public void build (Service service, BuilderArgs args) throws IOException {
-
+	public void build (Service service, BuilderArgs args) throws IOException
+	{
+		Map<String, Object> model = new HashMap<>();
+		
+		Map<String, Entity> entityMap = buildEntityMap(service);
+		model.put("entityMap", entityMap);
+		Map<String, List<Entity>> referencedEntitiesMap = buildReferencedEntitiesMap(entityMap);
+		model.put("referencedEntitiesMap", referencedEntitiesMap);
+		
 		File outputDir = new File(args.getOutputDir());
 		logger.debug("Outdir = {}", outputDir.getAbsolutePath());
 		if (outputDir.exists() && args.isClean())
@@ -84,7 +95,6 @@ public class BuilderServiceImpl implements BuilderService {
 		logger.debug("Base package dir = {}", projectPackageDir.getAbsolutePath());
 		
 		String basePackageName = projectPackageName + ".base";
-		Map<String, Object> model = new HashMap<>();
 		model.put("basePackage", basePackageName);
 		File basePackageDir = createPackageDir(projectPackageDir, "base");
 
@@ -142,7 +152,30 @@ public class BuilderServiceImpl implements BuilderService {
 			writeBaseService(args, model, entity, baseServiceDir);
 			writeLocalService(args, model, entity, localServiceDir);
 		});
+	}
+	
+	protected Map<String, Entity> buildEntityMap (Service service)
+	{
+		return service.getEntities().stream().collect(Collectors.toMap(Entity::getName, Function.identity()));
+	}
+	
+	protected Map<String, List<Entity>> buildReferencedEntitiesMap (Map<String, Entity> entityMap)
+	{
+		Map<String, List<Entity>> referencedEntitiesMap = new HashMap<>();
+
+		entityMap.values().stream()
+		    .forEach(entity -> {
+		       List<Entity> referencedEntities = entity.getAttributes().stream()
+		           .filter(attribute -> StringUtils.isNotBlank(attribute.getEntityName()))
+		           .map(attribute -> { return entityMap.get(attribute.getEntityName());})
+		           .collect(Collectors.toList());
 		
+		       logger.info("{} referencedEntities = {}", entity.getName(), referencedEntities);
+		
+		       referencedEntitiesMap.put(entity.getName(), referencedEntities);
+		    });
+		
+		return referencedEntitiesMap;
 	}
 	
 	protected File createPackageDir (File baseDir, String packageName)
