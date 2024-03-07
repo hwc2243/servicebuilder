@@ -99,10 +99,14 @@ public class BuilderServiceImpl implements BuilderService {
 		File basePackageDir = createPackageDir(projectPackageDir, "base");
 
 		
-		// write the base models
+		// write the models
 		String baseModelPackageName = basePackageName + ".model";
 		model.put("baseModelPackage", baseModelPackageName);
+		String localModelPackageName = projectPackageName + ".model";
+		model.put("localModelPackage", localModelPackageName);
+		
 		File baseModelDir = createPackageDir(basePackageDir, "model");
+		File localModelDir = createPackageDir(projectPackageDir, "model");
 		try
 		{
 			writeFile(args, model, "abstract_base_entity.ftl", new File(baseModelDir, "AbstractBaseEntity.java"));
@@ -111,14 +115,11 @@ public class BuilderServiceImpl implements BuilderService {
 		{
 			ex.printStackTrace();
 		}
-		service.getEntities().stream().forEach(entity -> {writeBaseEntity(args, model, entity, baseModelDir);});
+		service.getEntities().stream().forEach(entity -> {
+				writeBaseEntity(args, model, entity, baseModelDir);
+				writeLocalEntity(args, model, entity, localModelDir);
+			});
 		
-		// write the local model
-		String localModelPackageName = projectPackageName + ".model";
-		model.put("localModelPackage", localModelPackageName);
-		File localModelDir = createPackageDir(projectPackageDir, "model");
-		service.getEntities().stream().forEach(entity -> {writeLocalEntity(args, model, entity, localModelDir);});
-
 		// write the repositories
 		String baseRepositoryPackageName = basePackageName + ".persistence";
 		model.put("baseRepositoryPackage", baseRepositoryPackageName);

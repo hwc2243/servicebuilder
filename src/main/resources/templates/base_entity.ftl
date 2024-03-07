@@ -5,6 +5,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
+<#list referencedEntitiesMap[entity.name] as referencedEntity>
+import ${localModelPackage}.${referencedEntity.name?cap_first};
+</#list>
+
 @Entity
 public class Base${entity.name?cap_first} extends AbstractBaseEntity
 {
@@ -34,12 +38,12 @@ public class Base${entity.name?cap_first} extends AbstractBaseEntity
   }
 
 <#else>
-  public Base${attribute.entityName?cap_first} get${attribute.name?cap_first} ()
+  public ${attribute.entityName?cap_first} get${attribute.name?cap_first} ()
   {
-    return this.${attribute.name};
+    return (${attribute.entityName?cap_first})this.${attribute.name};
   }
   
-  public void set${attribute.name?cap_first} (Base${attribute.entityName?cap_first} ${attribute.name})
+  public void set${attribute.name?cap_first} (${attribute.entityName?cap_first} ${attribute.name})
   {
     this.${attribute.name} = ${attribute.name};
   }
