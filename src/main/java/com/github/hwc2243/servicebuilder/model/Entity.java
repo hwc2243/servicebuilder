@@ -6,9 +6,11 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+@EqualsAndHashCode
 public class Entity {
 	@Getter
 	@Setter
@@ -16,12 +18,14 @@ public class Entity {
 	
 	@Getter
 	@Setter
+	@EqualsAndHashCode.Exclude
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "attribute")
 	protected List<Attribute> attributes;
 	
 	@Getter
 	@Setter
+	@EqualsAndHashCode.Exclude
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "finder")
 	protected List<Finder> finders;
