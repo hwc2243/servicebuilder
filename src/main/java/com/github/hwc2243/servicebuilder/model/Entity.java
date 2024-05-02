@@ -30,6 +30,7 @@ public class Entity {
 	@JacksonXmlProperty(localName = "finder")
 	protected List<Finder> finders;
 	
+
 	public Attribute getAttribute (String name)
 	{
 		List<Attribute> matches = attributes

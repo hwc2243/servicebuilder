@@ -17,6 +17,18 @@ public class Attribute {
 	
 	@Getter
 	@Setter
+	protected CollectionType collection = null;
+	
+	@Getter
+	@Setter
+	protected RelationshipType relationship = null;
+	
+	@Getter
+	@Setter
+	protected boolean unidirectional = false;
+	
+	@Getter
+	@Setter
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "entity-name")
 	protected String entityName;
