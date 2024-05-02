@@ -14,7 +14,6 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 import freemarker.template.Version;
-import freemarker.template.utility.StringUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -205,7 +204,7 @@ public class BuilderServiceImpl implements BuilderService {
 	protected void writeBaseRepository (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir)
 	{
 		try {
-			String className = "Base" + StringUtil.capitalize(entity.getName()) + "Persistence.java";
+			String className = "Base" + StringUtils.capitalize(entity.getName()) + "Persistence.java";
 			File classFile = new File(outputDir, className);
 			
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
@@ -220,9 +219,9 @@ public class BuilderServiceImpl implements BuilderService {
 	protected void writeBaseService (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir)
 	{
 		try {
-			String serviceName = "Base" + StringUtil.capitalize(entity.getName()) + "Service.java";
+			String serviceName = "Base" + StringUtils.capitalize(entity.getName()) + "Service.java";
 			File serviceFile = new File(outputDir, serviceName);
-			String implName = "Base" + StringUtil.capitalize(entity.getName()) + "ServiceImpl.java";
+			String implName = "Base" + StringUtils.capitalize(entity.getName()) + "ServiceImpl.java";
 			File implFile = new File(outputDir, implName);
 			
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
@@ -257,7 +256,7 @@ public class BuilderServiceImpl implements BuilderService {
 	protected void writeLocalRepository (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir)
 	{
 		try {
-			String className = StringUtil.capitalize(entity.getName()) + "Persistence.java";
+			String className = StringUtils.capitalize(entity.getName()) + "Persistence.java";
 			File classFile = new File(outputDir, className);
 			
 			if (!classFile.exists() || args.isReplace())
@@ -275,9 +274,9 @@ public class BuilderServiceImpl implements BuilderService {
 	protected void writeLocalService (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir)
 	{
 		try {
-			String serviceName = StringUtil.capitalize(entity.getName()) + "Service.java";
+			String serviceName = StringUtils.capitalize(entity.getName()) + "Service.java";
 			File serviceFile = new File(outputDir, serviceName);
-			String implName = StringUtil.capitalize(entity.getName()) + "ServiceImpl.java";
+			String implName = StringUtils.capitalize(entity.getName()) + "ServiceImpl.java";
 			File implFile = new File(outputDir, implName);
 			
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
