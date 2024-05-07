@@ -40,4 +40,9 @@ public class Entity {
 		
 		return matches.size() == 1 ? matches.iterator().next() : null;
 	}
+	
+	public void addAttribute (Attribute attribute)
+	{
+		attributes.add(attribute);
+	}
 }
