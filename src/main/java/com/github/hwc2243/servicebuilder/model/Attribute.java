@@ -1,5 +1,6 @@
 package com.github.hwc2243.servicebuilder.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
@@ -25,7 +26,12 @@ public class Attribute {
 	
 	@Getter
 	@Setter
-	protected boolean unidirectional = false;
+	protected boolean bidirectional = false;
+	
+	@Getter
+	@Setter
+	@JsonIgnore
+	protected boolean owner = false;
 	
 	@Getter
 	@Setter
