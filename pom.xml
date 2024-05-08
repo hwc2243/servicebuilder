@@ -96,6 +96,13 @@
 				<!-- JUnit 5 requires Surefire version 2.22.0 or higher -->
 				<version>3.2.5</version>
 			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.0</version>
+				<configuration>
+					<release>17</release>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

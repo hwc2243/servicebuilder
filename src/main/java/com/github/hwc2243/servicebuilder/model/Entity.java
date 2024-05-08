@@ -18,6 +18,10 @@ public class Entity {
 	
 	@Getter
 	@Setter
+	protected boolean persistence = true;
+	
+	@Getter
+	@Setter
 	@EqualsAndHashCode.Exclude
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "attribute")

@@ -117,8 +117,10 @@ public class BuilderServiceImpl implements BuilderService {
 		model.put("localRepositoryPackage", localRepositoryPackageName);
 		File localRepositoryDir = createPackageDir(projectPackageDir, "persistence");
 		service.getEntities().stream().forEach(entity -> {
-			writeBaseRepository(args, model, entity, baseRepositoryDir);
-			writeLocalRepository(args, model, entity, localRepositoryDir);
+			if (entity.isPersistence()) {
+				writeBaseRepository(args, model, entity, baseRepositoryDir);
+				writeLocalRepository(args, model, entity, localRepositoryDir);
+			}
 		});
 
 		// write the services
@@ -136,8 +138,10 @@ public class BuilderServiceImpl implements BuilderService {
 		File localServiceDir = createPackageDir(projectPackageDir, "service");
 
 		service.getEntities().stream().forEach(entity -> {
-			writeBaseService(args, model, entity, baseServiceDir);
-			writeLocalService(args, model, entity, localServiceDir);
+			if (entity.isPersistence()) {
+				writeBaseService(args, model, entity, baseServiceDir);
+				writeLocalService(args, model, entity, localServiceDir);
+			}
 		});
 	}
 
@@ -184,11 +188,13 @@ public class BuilderServiceImpl implements BuilderService {
 				logger.info("  name: {}, type: {}, entity: {}", attribute.getName(), attribute.getType(),
 						attribute.getEntityName());
 				if (attribute.getRelationship() != null) {
+					Entity targetEntity = null;
+
 					switch (attribute.getRelationship()) {
-					
+
 					case ONE_TO_ONE:
 						if (attribute.isBidirectional()) {
-							Entity targetEntity = entityMap.get(attribute.getEntityName());
+							targetEntity = entityMap.get(attribute.getEntityName());
 							boolean found = false;
 							for (Attribute targetAttribute : targetEntity.getAttributes()) {
 								if (targetAttribute.getType().equals("entity")
@@ -211,8 +217,9 @@ public class BuilderServiceImpl implements BuilderService {
 							}
 						}
 						break;
+
 					case ONE_TO_MANY:
-						Entity targetEntity = entityMap.get(attribute.getEntityName());
+						targetEntity = entityMap.get(attribute.getEntityName());
 
 						Attribute targetAttribute = new Attribute();
 						targetAttribute.setName(entity.getName());
@@ -222,6 +229,16 @@ public class BuilderServiceImpl implements BuilderService {
 						targetEntity.addAttribute(targetAttribute);
 						logger.info("  adding {} to {}", targetAttribute.getName(), targetEntity.getName());
 
+						break;
+
+					case MANY_TO_MANY:
+						logger.info("  MANY_TO_MANY");
+						logger.info("    attribute {} target {}", attribute.getName(), attribute.getEntityName());
+						if (StringUtils.isNotBlank(attribute.getMappedBy())) {
+							targetEntity = entityMap.get(attribute.getEntityName());
+							targetAttribute = targetEntity.getAttribute(attribute.getMappedBy());
+							targetAttribute.setOwner(true);
+						}
 						break;
 					}
 				}

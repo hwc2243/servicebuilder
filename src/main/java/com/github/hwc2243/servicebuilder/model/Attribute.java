@@ -10,11 +10,11 @@ import lombok.Setter;
 public class Attribute {
 	@Getter
 	@Setter
-	protected String name;
+	protected String name = null;
 	
 	@Getter
 	@Setter
-	protected String type;
+	protected String type = null;
 	
 	@Getter
 	@Setter
@@ -32,6 +32,11 @@ public class Attribute {
 	@Setter
 	@JsonIgnore
 	protected boolean owner = false;
+	
+	@Getter
+	@Setter
+	@JacksonXmlProperty(localName="mapped-by")
+	protected String mappedBy = null;
 	
 	@Getter
 	@Setter
