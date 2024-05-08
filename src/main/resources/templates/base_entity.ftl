@@ -45,12 +45,16 @@ public class Base${entity.name?cap_first} extends AbstractBaseEntity
   protected Base${attribute.entityName?cap_first} ${attribute.name};
 
 <#elseif attribute.relationship.name() == "MANY_TO_MANY">
-  @ManyToMany
+<#if attribute.owner>
+  @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(name = "${entity.name}_${attribute.entityName}",
-             joinColumns = @JoinColumn(name = "${attribute.name}_id"),
+             joinColumns = @JoinColumn(name = "${entity.name}_id"),
              inverseJoinColumns = @JoinColumn(name = "${attribute.entityName}_id"))
   protected List<Base${attribute.entityName?cap_first}> ${attribute.name};
-
+<#else>
+  @ManyToMany(mappedBy = "${attribute.mappedBy}")
+  protected List<Base${attribute.entityName?cap_first}> ${attribute.name};
+</#if>
 </#if>
 </#list>
 
@@ -66,6 +70,16 @@ public class Base${entity.name?cap_first} extends AbstractBaseEntity
     this.${attribute.name} = ${attribute.name};
   }
 <#elseif attribute.relationship.name() == "ONE_TO_MANY">
+  public List<Base${attribute.entityName?cap_first}> get${attribute.name?cap_first} ()
+  {
+    return this.${attribute.name};
+  }
+  
+  public void set${attribute.name?cap_first} (List<Base${attribute.entityName?cap_first}> ${attribute.name})
+  {
+    this.${attribute.name} = ${attribute.name};
+  }
+<#elseif attribute.relationship.name() == "MANY_TO_MANY">
   public List<Base${attribute.entityName?cap_first}> get${attribute.name?cap_first} ()
   {
     return this.${attribute.name};
