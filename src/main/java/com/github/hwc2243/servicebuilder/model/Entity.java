@@ -22,6 +22,15 @@ public class Entity {
 	
 	@Getter
 	@Setter
+	@JacksonXmlProperty(localName="abstract")
+	protected boolean abstractEntity = false;
+	
+	@Getter
+	@Setter
+	protected String parent = null;
+	
+	@Getter
+	@Setter
 	@EqualsAndHashCode.Exclude
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "attribute")

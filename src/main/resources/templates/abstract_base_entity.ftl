@@ -11,7 +11,7 @@ import jakarta.persistence.MappedSuperclass;
 public abstract class AbstractBaseEntity
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     protected long id;
 
     public long getId() {
