@@ -7,8 +7,9 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import ${baseModelPackage}.Base${entity.name?cap_first};
+import ${localModelPackage}.${entity.name?cap_first};
 
-public interface Base${entity.name?cap_first}Persistence<T extends Base${entity.name?cap_first}, ID> extends JpaRepository<T, ID>
+public interface Base${entity.name?cap_first}Persistence<T extends ${entity.name?cap_first}, ID> extends JpaRepository<T, ID>
 {
 <#if entity.finders??>
 <#list entity.finders as finder>
