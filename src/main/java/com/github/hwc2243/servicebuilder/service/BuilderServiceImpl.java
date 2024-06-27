@@ -67,6 +67,7 @@ public class BuilderServiceImpl implements BuilderService {
 	@Override
 	public void build(Service service, BuilderArgs args) throws IOException {
 		Map<String, Object> model = new HashMap<>();
+		model.put("jpaPackage", args.getJpaPackage());
 
 		Map<String, Entity> entityMap = buildEntityMap(service);
 		postProcess(entityMap);
@@ -238,6 +239,10 @@ public class BuilderServiceImpl implements BuilderService {
 							targetEntity = entityMap.get(attribute.getEntityName());
 							targetAttribute = targetEntity.getAttribute(attribute.getMappedBy());
 							targetAttribute.setOwner(true);
+						}
+						else
+						{
+							attribute.setOwner(true);
 						}
 						break;
 					}

@@ -1,14 +1,18 @@
 package ${localModelPackage};
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.Table;
+import ${jpaPackage}.Entity;
+import ${jpaPackage}.Inheritance;
+import ${jpaPackage}.InheritanceType;
+import ${jpaPackage}.Table;
 
 import ${baseModelPackage}.Base${entity.name?cap_first};
 
 @Entity
+<#if entity.tableName?has_content>
+@Table (name="${entity.tableName}")
+<#else>
 @Table (name="${entity.name}")
+</#if>
 <#if entity.abstractEntity>
 @Inheritance(strategy = InheritanceType.JOINED)
 </#if>

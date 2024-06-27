@@ -1,19 +1,29 @@
+<#include "/functions.ftl">
 package ${baseModelPackage};
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+<#list entity.attributes as attribute>
+<#if attribute.type == "enum">
+import ${attribute.enumClass};
+<#elseif attribute.type?last_index_of(".") gt 0>
+import ${attribute.type};
+</#if>
+</#list>
+import ${jpaPackage}.CascadeType;
+import ${jpaPackage}.Column;
+import ${jpaPackage}.Entity;
+import ${jpaPackage}.Enumerated;
+import ${jpaPackage}.EnumType;
+import ${jpaPackage}.FetchType;
+import ${jpaPackage}.Inheritance;
+import ${jpaPackage}.InheritanceType;
+import ${jpaPackage}.JoinColumn;
+import ${jpaPackage}.JoinTable;
+import ${jpaPackage}.ManyToMany;
+import ${jpaPackage}.ManyToOne;
+import ${jpaPackage}.MappedSuperclass;
+import ${jpaPackage}.OneToMany;
+import ${jpaPackage}.OneToOne;
+import ${jpaPackage}.Table;
 
 import java.util.List;
 
@@ -40,9 +50,14 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 </#if>
 {
 <#list entity.attributes as attribute>
-<#if attribute.type != "entity">
+<#if attribute.type == "enum">
   @Column
-  protected ${attribute.type} ${attribute.name};
+  @Enumerated(EnumType.STRING)
+  protected ${attribute.enumClass} ${attribute.name};
+  
+<#elseif attribute.type != "entity">
+  @Column
+  protected ${className(attribute.type)} ${attribute.name};
 
 <#elseif attribute.relationship.name() == "ONE_TO_ONE">
 <#if attribute.owner>
@@ -70,7 +85,7 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
              joinColumns = @JoinColumn(name = "${entity.name}_id"),
              inverseJoinColumns = @JoinColumn(name = "${attribute.entityName}_id"))
   protected List<Base${attribute.entityName?cap_first}> ${attribute.name};
-<#else>
+<#elseif attribute.mappedBy?has_content>
   @ManyToMany(mappedBy = "${attribute.mappedBy}")
   protected List<Base${attribute.entityName?cap_first}> ${attribute.name};
 </#if>
@@ -78,13 +93,23 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 </#list>
 
 <#list entity.attributes as attribute>
-<#if attribute.type != "entity">
-  public ${attribute.type} get${attribute.name?cap_first} ()
+<#if attribute.type == "enum">
+  public ${attribute.enumClass} get${attribute.name?cap_first} ()
   {
     return this.${attribute.name};
   }
   
-  public void set${attribute.name?cap_first} (${attribute.type} ${attribute.name})
+  public void set${attribute.name?cap_first} (${attribute.enumClass} ${attribute.name})
+  {
+    this.${attribute.name} = ${attribute.name};
+  }
+<#elseif attribute.type != "entity">
+  public ${className(attribute.type)} get${attribute.name?cap_first} ()
+  {
+    return this.${attribute.name};
+  }
+  
+  public void set${attribute.name?cap_first} (${className(attribute.type)} ${attribute.name})
   {
     this.${attribute.name} = ${attribute.name};
   }

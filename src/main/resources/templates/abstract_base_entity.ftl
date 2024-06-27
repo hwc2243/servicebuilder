@@ -2,10 +2,10 @@ package ${baseModelPackage};
 
 import java.util.Objects;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import ${jpaPackage}.GeneratedValue;
+import ${jpaPackage}.GenerationType;
+import ${jpaPackage}.Id;
+import ${jpaPackage}.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class AbstractBaseEntity

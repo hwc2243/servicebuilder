@@ -43,4 +43,9 @@ public class Attribute {
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "entity-name")
 	protected String entityName;
+	
+	@Getter
+	@Setter
+	@JacksonXmlProperty(localName = "enum-class")
+	protected String enumClass = null;
 }

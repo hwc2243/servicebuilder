@@ -32,5 +32,8 @@ public class BuilderArgs {
 		required = true)
 	private String serviceFile;
 	
-	
+	@Parameter(
+		names = {"-j", "--jpa-package"},
+		description = "The package to get JPA annotations from (default jakarta.persistence)")
+	private String jpaPackage = "jakarta.persistence";
 }
