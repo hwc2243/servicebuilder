@@ -18,6 +18,11 @@ public class Entity {
 	
 	@Getter
 	@Setter
+	@JacksonXmlProperty(localName="table")
+	protected String tableName = null;
+	
+	@Getter
+	@Setter
 	protected boolean persistence = true;
 	
 	@Getter
