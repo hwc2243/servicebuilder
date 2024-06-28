@@ -2,6 +2,8 @@ package ${baseServicePackage};
 
 import ${baseModelPackage}.AbstractBaseEntity;
 
+import ${localServicePackage}.ServiceException;
+
 import java.util.List;
 
 public interface EntityService<T extends AbstractBaseEntity, ID> {

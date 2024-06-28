@@ -1,4 +1,4 @@
-package ${baseServicePackage};
+package ${localServicePackage};
 
 public class ServiceException extends Exception {
     
