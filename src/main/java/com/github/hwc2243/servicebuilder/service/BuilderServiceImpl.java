@@ -88,18 +88,14 @@ public class BuilderServiceImpl implements BuilderService {
 		File projectPackageDir = createPackageDir(outputDir, projectPackageName.replace(".", File.separator));
 		logger.debug("Base package dir = {}", projectPackageDir.getAbsolutePath());
 
-		String basePackageName = projectPackageName + ".base";
-		model.put("basePackage", basePackageName);
-		File basePackageDir = createPackageDir(projectPackageDir, "base");
-
 		// write the models
-		String baseModelPackageName = basePackageName + ".model";
-		model.put("baseModelPackage", baseModelPackageName);
 		String localModelPackageName = projectPackageName + ".model";
 		model.put("localModelPackage", localModelPackageName);
+		String baseModelPackageName = localModelPackageName + ".base";
+		model.put("baseModelPackage", baseModelPackageName);
 
-		File baseModelDir = createPackageDir(basePackageDir, "model");
 		File localModelDir = createPackageDir(projectPackageDir, "model");
+		File baseModelDir = createPackageDir(localModelDir, "base");
 		try {
 			writeFile(args, model, "abstract_base_entity.ftl", new File(baseModelDir, "AbstractBaseEntity.java"));
 		} catch (Exception ex) {
@@ -111,12 +107,13 @@ public class BuilderServiceImpl implements BuilderService {
 		});
 
 		// write the repositories
-		String baseRepositoryPackageName = basePackageName + ".persistence";
-		model.put("baseRepositoryPackage", baseRepositoryPackageName);
-		File baseRepositoryDir = createPackageDir(basePackageDir, "persistence");
 		String localRepositoryPackageName = projectPackageName + ".persistence";
 		model.put("localRepositoryPackage", localRepositoryPackageName);
+		String baseRepositoryPackageName = localRepositoryPackageName + ".base";
+		model.put("baseRepositoryPackage", baseRepositoryPackageName);
+		
 		File localRepositoryDir = createPackageDir(projectPackageDir, "persistence");
+		File baseRepositoryDir = createPackageDir(localRepositoryDir, "base");
 		service.getEntities().stream().forEach(entity -> {
 			if (entity.isPersistence()) {
 				writeBaseRepository(args, model, entity, baseRepositoryDir);
@@ -125,18 +122,20 @@ public class BuilderServiceImpl implements BuilderService {
 		});
 
 		// write the services
-		String baseServicePackageName = basePackageName + ".service";
+		String localServicePackageName = projectPackageName + ".service";
+		model.put("localServicePackage", localServicePackageName);
+		File localServiceDir = createPackageDir(projectPackageDir, "service");
+		
+		String baseServicePackageName = localServicePackageName + ".base";
 		model.put("baseServicePackage", baseServicePackageName);
-		File baseServiceDir = createPackageDir(basePackageDir, "service");
+		File baseServiceDir = createPackageDir(localServiceDir, "base");
+		
 		try {
-			writeFile(args, model, "service_exception.ftl", new File(baseServiceDir, "ServiceException.java"));
+			writeFile(args, model, "service_exception.ftl", new File(localServiceDir, "ServiceException.java"));
 			writeFile(args, model, "base_entity_service.ftl", new File(baseServiceDir, "EntityService.java"));
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		String localServicePackageName = projectPackageName + ".service";
-		model.put("localServicePackage", localServicePackageName);
-		File localServiceDir = createPackageDir(projectPackageDir, "service");
 
 		service.getEntities().stream().forEach(entity -> {
 			if (entity.isPersistence()) {
