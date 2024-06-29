@@ -18,7 +18,8 @@ public class Attribute {
 	
 	@Getter
 	@Setter
-	protected CollectionType collection = null;
+	@JacksonXmlProperty(localName="collection-type")
+	protected CollectionType collectionType = CollectionType.LIST;
 	
 	@Getter
 	@Setter

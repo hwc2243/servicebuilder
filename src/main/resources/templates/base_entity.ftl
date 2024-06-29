@@ -26,6 +26,7 @@ import ${jpaPackage}.OneToOne;
 import ${jpaPackage}.Table;
 
 import java.util.List;
+import java.util.Set;
 
 <#list referencedEntitiesMap[entity.name] as referencedEntity>
 import ${localModelPackage}.${referencedEntity.name?cap_first};
@@ -71,7 +72,7 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 <#elseif attribute.relationship.name() == "ONE_TO_MANY">
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "${entity.name}Id")
-  protected List<${attribute.entityName?cap_first}> ${attribute.name};
+  protected ${attribute.collectionType.collectionType}<${attribute.entityName?cap_first}> ${attribute.name};
   
 <#elseif attribute.relationship.name() == "MANY_TO_ONE">
   @ManyToOne
@@ -84,10 +85,10 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
   @JoinTable(name = "${entity.name}_${attribute.entityName}",
              joinColumns = @JoinColumn(name = "${entity.name}_id"),
              inverseJoinColumns = @JoinColumn(name = "${attribute.entityName}_id"))
-  protected List<Base${attribute.entityName?cap_first}> ${attribute.name};
+  protected ${attribute.collectionType.collectionType}<Base${attribute.entityName?cap_first}> ${attribute.name};
 <#elseif attribute.mappedBy?has_content>
   @ManyToMany(mappedBy = "${attribute.mappedBy}")
-  protected List<Base${attribute.entityName?cap_first}> ${attribute.name};
+  protected ${attribute.collectionType.collectionType}<Base${attribute.entityName?cap_first}> ${attribute.name};
 </#if>
 </#if>
 </#list>
@@ -114,22 +115,22 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
     this.${attribute.name} = ${attribute.name};
   }
 <#elseif attribute.relationship.name() == "ONE_TO_MANY">
-  public List<${attribute.entityName?cap_first}> get${attribute.name?cap_first} ()
+  public ${attribute.collectionType.collectionType}<${attribute.entityName?cap_first}> get${attribute.name?cap_first} ()
   {
     return this.${attribute.name};
   }
   
-  public void set${attribute.name?cap_first} (List<${attribute.entityName?cap_first}> ${attribute.name})
+  public void set${attribute.name?cap_first} (${attribute.collectionType.collectionType}<${attribute.entityName?cap_first}> ${attribute.name})
   {
     this.${attribute.name} = ${attribute.name};
   }
 <#elseif attribute.relationship.name() == "MANY_TO_MANY">
-  public List<Base${attribute.entityName?cap_first}> get${attribute.name?cap_first} ()
+  public ${attribute.collectionType.collectionType}<Base${attribute.entityName?cap_first}> get${attribute.name?cap_first} ()
   {
     return this.${attribute.name};
   }
   
-  public void set${attribute.name?cap_first} (List<Base${attribute.entityName?cap_first}> ${attribute.name})
+  public void set${attribute.name?cap_first} (${attribute.collectionType.collectionType}<Base${attribute.entityName?cap_first}> ${attribute.name})
   {
     this.${attribute.name} = ${attribute.name};
   }
