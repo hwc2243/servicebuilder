@@ -18,8 +18,8 @@ public class Entity {
 	
 	@Getter
 	@Setter
-	@JacksonXmlProperty(localName="table")
-	protected String tableName = null;
+	@JacksonXmlProperty(localName="db-name")
+	protected String dbName = null;
 	
 	@Getter
 	@Setter

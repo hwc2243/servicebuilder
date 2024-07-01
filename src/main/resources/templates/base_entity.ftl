@@ -53,12 +53,20 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 {
 <#list entity.attributes as attribute>
 <#if attribute.type == "enum">
+<#if attribute.dbName?has_content>
+  @Column(name="${attribute.dbName}")
+<#else>
   @Column
+</#if>
   @Enumerated(EnumType.STRING)
   protected ${attribute.enumClass} ${attribute.name};
   
 <#elseif attribute.type != "entity">
+<#if attribute.dbName?has_content>
+  @Column(name="${attribute.dbName}")
+<#else>
   @Column
+</#if>
   protected ${className(attribute.type)} ${attribute.name};
 
 <#elseif attribute.relationship.name() == "ONE_TO_ONE">
