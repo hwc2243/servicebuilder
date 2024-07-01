@@ -10,29 +10,33 @@ import ${localModelPackage}.${entity.name?cap_first};
 
 import ${localServicePackage}.ServiceException;
 
+import ${localRepositoryPackage}.${entity.name?cap_first}Persistence;
 import ${baseRepositoryPackage}.Base${entity.name?cap_first}Persistence;
 
 public abstract class Base${entity.name?cap_first}ServiceImpl<T extends ${entity.name?cap_first}, ID> implements Base${entity.name?cap_first}Service<T, ID> {
 
   @Autowired
-  protected Base${entity.name?cap_first}Persistence<T,ID> ${entity.name}Persistence;
+  private Base${entity.name?cap_first}Persistence<T,ID> base${entity.name?cap_first}Persistence;
+  
+  @Autowired
+  protected ${entity.name?cap_first}Persistence ${entity.name}Persistence;
   
   @Override
   public T create (T entity) throws ServiceException
   {
-    return ${entity.name}Persistence.save(entity);
+    return base${entity.name?cap_first}Persistence.save(entity);
   }
   
   @Override
   public void delete (ID id) throws ServiceException
   {
-    ${entity.name}Persistence.deleteById(id);
+    base${entity.name?cap_first}Persistence.deleteById(id);
   }
   
   @Override
   public List<T> findAll () throws ServiceException
   {
-    return ${entity.name}Persistence.findAll();
+    return base${entity.name?cap_first}Persistence.findAll();
   }
 <#if entity.finders??>
 <#list entity.finders as finder>
@@ -53,7 +57,7 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<T extends ${entity
   @Override
   public List<T> findBy${finderName} (${finderParameters})
   {
-	return ${entity.name}Persistence.findBy${finderName}(${finderArguments});
+	return base${entity.name?cap_first}Persistence.findBy${finderName}(${finderArguments});
   }
 </#list>
 </#if>  
@@ -61,7 +65,7 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<T extends ${entity
   @Override
   public T get (ID id) throws ServiceException
   {
-    Optional<T> optional = ${entity.name}Persistence.findById(id);
+    Optional<T> optional = base${entity.name?cap_first}Persistence.findById(id);
 
     return optional.isEmpty() ? null : optional.get();
   }
@@ -69,6 +73,6 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<T extends ${entity
   @Override
   public T update (T entity) throws ServiceException
   {
-    return ${entity.name}Persistence.save(entity);
+    return base${entity.name?cap_first}Persistence.save(entity);
   }
 }

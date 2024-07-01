@@ -14,6 +14,11 @@ public class Attribute {
 	
 	@Getter
 	@Setter
+	@JacksonXmlProperty(localName="db-name")
+	protected String dbName = null;
+	
+	@Getter
+	@Setter
 	protected String type = null;
 	
 	@Getter

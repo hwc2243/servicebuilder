@@ -8,8 +8,8 @@ import ${jpaPackage}.Table;
 import ${baseModelPackage}.Base${entity.name?cap_first};
 
 @Entity
-<#if entity.tableName?has_content>
-@Table (name="${entity.tableName}")
+<#if entity.dbName?has_content>
+@Table (name="${entity.dbName}")
 <#else>
 @Table (name="${entity.name}")
 </#if>
