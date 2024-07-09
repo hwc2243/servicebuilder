@@ -3,10 +3,13 @@ package com.github.hwc2243.servicebuilder.service;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import com.github.hwc2243.servicebuilder.ServiceBuilderApplication;
 import com.github.hwc2243.servicebuilder.model.Attribute;
 import com.github.hwc2243.servicebuilder.model.Entity;
+import com.github.hwc2243.servicebuilder.model.Related;
 import com.github.hwc2243.servicebuilder.model.RelationshipType;
 import com.github.hwc2243.servicebuilder.model.Service;
 
@@ -20,6 +23,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -30,6 +34,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.xml.XMLConstants;
+import javax.xml.validation.SchemaFactory;
+
 public class BuilderServiceImpl implements BuilderService {
 
 	protected static Logger logger = LoggerFactory.getLogger(BuilderServiceImpl.class);
@@ -38,7 +45,8 @@ public class BuilderServiceImpl implements BuilderService {
 
 	protected DefinitionReaderService definitionReaderService;
 
-	public BuilderServiceImpl() {
+	public BuilderServiceImpl() throws SAXException 
+	{
 		this.freemarker = new Configuration(new Version(2, 3, 20));
 		freemarker.setClassForTemplateLoading(ServiceBuilderApplication.class, "/templates");
 		freemarker.setDefaultEncoding("UTF-8");
@@ -60,8 +68,15 @@ public class BuilderServiceImpl implements BuilderService {
 			throw new FileNotFoundException(args.getServiceFile() + " not found");
 		}
 
-		Service service = definitionReaderService.read(file);
-		build(service, args);
+		try
+		{
+			Service service = definitionReaderService.read(file);
+			build(service, args);
+		}
+		catch (SAXException ex)
+		{
+			throw new IOException("Failed to parse service file", ex);
+		}
 	}
 
 	@Override
@@ -154,9 +169,9 @@ public class BuilderServiceImpl implements BuilderService {
 
 		entityMap.values().stream().forEach(entity -> {
 			logger.info("entity {} - attribute = {}", entity.getName(), entity.getAttributes());
-			List<Entity> referencedEntities = entity.getAttributes().stream()
-					.filter(attribute -> StringUtils.isNotBlank(attribute.getEntityName())).map(attribute -> {
-						return entityMap.get(attribute.getEntityName());
+			List<Entity> referencedEntities = entity.getRelateds().stream()
+					.filter(related -> StringUtils.isNotBlank(related.getEntityName())).map(related -> {
+						return entityMap.get(related.getEntityName());
 					}).collect(Collectors.toList());
 
 			logger.info("{} referencedEntities = {}", entity.getName(), referencedEntities);
@@ -184,72 +199,69 @@ public class BuilderServiceImpl implements BuilderService {
 	protected void postProcess(Map<String, Entity> entityMap) {
 		for (Entity entity : entityMap.values()) {
 			logger.info("processing {}", entity.getName());
-			for (Attribute attribute : entity.getAttributes()) {
-				logger.info("  name: {}, type: {}, entity: {}", attribute.getName(), attribute.getType(),
-						attribute.getEntityName());
-				if (attribute.getRelationship() != null) {
+			for (Related related : entity.getRelateds()) {
+				logger.info("  name: {}, type: {}, entity: {}", related.getName(), related.getRelationshipType(),
+						related.getEntityName());
 					Entity targetEntity = null;
 
-					switch (attribute.getRelationship()) {
+					switch (related.getRelationshipType()) {
 
 					case ONE_TO_ONE:
-						if (attribute.isBidirectional()) {
-							targetEntity = entityMap.get(attribute.getEntityName());
+						if (related.isBidirectional()) {
+							targetEntity = entityMap.get(related.getEntityName());
 							boolean found = false;
-							for (Attribute targetAttribute : targetEntity.getAttributes()) {
-								if (targetAttribute.getType().equals("entity")
-										&& targetAttribute.getEntityName().equals(entity.getName())) {
+							for (Related targetRelationship : targetEntity.getRelateds()) {
+								if (targetRelationship.getEntityName().equals(entity.getName())) {
 									found = true;
 								}
 							}
 							if (!found) {
-								logger.info("  setting {} as owner", attribute.getName());
-								attribute.setOwner(true);
+								logger.info("  setting {} as owner", related.getName());
+								related.setOwner(true);
 
-								Attribute targetAttribute = new Attribute();
-								targetAttribute.setName(entity.getName());
-								targetAttribute.setType("entity");
-								targetAttribute.setEntityName(entity.getName());
-								targetAttribute.setRelationship(RelationshipType.ONE_TO_ONE);
-								targetAttribute.setBidirectional(true);
-								targetEntity.addAttribute(targetAttribute);
-								logger.info("  adding {} to {}", targetAttribute.getName(), targetEntity.getName());
+								Related targetRelationship = new Related();
+								targetRelationship.setName(entity.getName());
+								targetRelationship.setEntityName(entity.getName());
+								targetRelationship.setRelationshipType(RelationshipType.ONE_TO_ONE);
+								targetRelationship.setBidirectional(true);
+								targetEntity.addRelated(targetRelationship);
+								logger.info("  adding {} to {}", targetRelationship.getName(), targetEntity.getName());
 							}
 						}
 						break;
 
 					case ONE_TO_MANY:
-						targetEntity = entityMap.get(attribute.getEntityName());
+						targetEntity = entityMap.get(related.getEntityName());
 
-						Attribute targetAttribute = new Attribute();
-						targetAttribute.setName(entity.getName());
-						targetAttribute.setType("entity");
-						targetAttribute.setEntityName(entity.getName());
-						targetAttribute.setRelationship(RelationshipType.MANY_TO_ONE);
-						targetEntity.addAttribute(targetAttribute);
-						logger.info("  adding {} to {}", targetAttribute.getName(), targetEntity.getName());
+						Related targetRelationship = new Related();
+						targetRelationship.setName(entity.getName());
+						targetRelationship.setEntityName(entity.getName());
+						targetRelationship.setRelationshipType(RelationshipType.MANY_TO_ONE);
+						targetEntity.addRelated(targetRelationship);
+						logger.info("  adding {} to {}", targetRelationship.getName(), targetEntity.getName());
 
 						break;
 
 					case MANY_TO_MANY:
 						logger.info("  MANY_TO_MANY");
-						logger.info("    attribute {} target {}", attribute.getName(), attribute.getEntityName());
-						if (StringUtils.isNotBlank(attribute.getMappedBy())) {
-							targetEntity = entityMap.get(attribute.getEntityName());
-							targetAttribute = targetEntity.getAttribute(attribute.getMappedBy());
-							targetAttribute.setOwner(true);
+						logger.info("    relationship {} target {}", related.getName(), related.getEntityName());
+						if (StringUtils.isNotBlank(related.getMappedBy())) {
+							targetEntity = entityMap.get(related.getEntityName());
+							targetRelationship = targetEntity.getRelated(related.getMappedBy());
+							targetRelationship.setOwner(true);
 						}
 						else
 						{
-							attribute.setOwner(true);
+							related.setOwner(true);
 						}
 						break;
 					}
-				}
 			}
 		}
 	}
 
+	
+	
 	protected void writeBaseEntity(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
 		try {
 			String className = "Base" + StringUtils.capitalize(entity.getName()) + ".java";

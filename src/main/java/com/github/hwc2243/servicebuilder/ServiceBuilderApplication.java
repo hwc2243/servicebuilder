@@ -3,6 +3,8 @@ package com.github.hwc2243.servicebuilder;
 import java.io.IOException;
 import java.util.Locale;
 
+import org.xml.sax.SAXException;
+
 import com.beust.jcommander.JCommander;
 
 import com.github.hwc2243.servicebuilder.service.BuilderArgs;
@@ -20,7 +22,7 @@ public class ServiceBuilderApplication {
 	{
 	}
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, SAXException {
 		BuilderArgs builderArgs = new BuilderArgs();
 		JCommander cmd = JCommander.newBuilder()
 		  .addObject(builderArgs)

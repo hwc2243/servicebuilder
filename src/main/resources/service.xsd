@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:attribute name="abstract" type="xs:boolean"/>
+	<xs:attribute name="bidirectional" type="xs:boolean"/>
+	<xs:attribute name="collection">
+		<xs:simpleType>
+			<xs:restriction base="xs:string">
+				<xs:enumeration value="list"></xs:enumeration>
+				<xs:enumeration value="set"></xs:enumeration>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:attribute>
+	<xs:attribute name="db-name" type="xs:string"/>
+	<xs:attribute name="entity" type="xs:string" />
+	<xs:attribute name="enum-class" type="xs:string" />
+	<xs:attribute name="mapped-by" type="xs:string"/>
+	<xs:attribute name="name" type="xs:string"/>
+	<xs:attribute name="owner" type="xs:boolean"/>
+	<xs:attribute name="package" type="xs:string"/>
+	<xs:attribute name="parent" type="xs:string"/>
+	<xs:attribute name="persistence" type="xs:boolean"/>
+	<xs:attribute name="relationship">
+		<xs:simpleType>
+			<xs:restriction base="xs:string">
+				<xs:enumeration value="one_to_one"></xs:enumeration>
+				<xs:enumeration value="one_to_many"></xs:enumeration>
+				<xs:enumeration value="many_to_one"></xs:enumeration>
+				<xs:enumeration value="many_to_many"></xs:enumeration>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:attribute>
+	<xs:attribute name="type">
+		<xs:simpleType>
+        	<xs:restriction base="xs:string">
+                <xs:enumeration value="boolean" />
+                <xs:enumeration value="enum" />
+            	<xs:enumeration value="int" />
+                <xs:enumeration value="long" />
+                <xs:enumeration value="String" />
+                <xs:enumeration value="java.time.LocalDate" />
+            </xs:restriction>
+        </xs:simpleType>
+	</xs:attribute>
+	 
+	<xs:element name="attribute">
+		<xs:complexType>
+			<xs:attribute ref="name" use="required"/>
+			<xs:attribute ref="db-name"/>
+			<xs:attribute ref="type" use="required"/>
+			<xs:attribute ref="enum-class" />
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="finder-column">
+		<xs:complexType>
+			<xs:attribute ref="name"/>
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="finder" >
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="finder-column" minOccurs="1" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="related">
+		<xs:complexType>
+			<xs:attribute ref="name" use="required"/>
+			<xs:attribute ref="entity" use="required"/>
+			<xs:attribute ref="collection"/>
+			<xs:attribute ref="relationship" use="required"/>
+			<xs:attribute ref="bidirectional" />
+			<xs:attribute ref="owner" />
+			<xs:attribute ref="mapped-by" />
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="entity">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="attribute" minOccurs="1" maxOccurs="unbounded"/>
+				<xs:element ref="related" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="finder" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			
+			<xs:attribute ref="name" use="required"/>
+			<xs:attribute ref="db-name"/>
+			<xs:attribute ref="abstract" />
+			<xs:attribute ref="parent" />
+			<xs:attribute ref="persistence" />
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="service">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="entity" minOccurs="1" maxOccurs="unbounded"/>
+			</xs:sequence>
+			
+			<xs:attribute ref="name" use="required"/>
+			<xs:attribute ref="package" use="required"/>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
