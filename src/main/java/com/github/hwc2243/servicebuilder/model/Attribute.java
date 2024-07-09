@@ -23,35 +23,6 @@ public class Attribute {
 	
 	@Getter
 	@Setter
-	@JacksonXmlProperty(localName="collection-type")
-	protected CollectionType collectionType = CollectionType.LIST;
-	
-	@Getter
-	@Setter
-	protected RelationshipType relationship = null;
-	
-	@Getter
-	@Setter
-	protected boolean bidirectional = false;
-	
-	@Getter
-	@Setter
-	@JsonIgnore
-	protected boolean owner = false;
-	
-	@Getter
-	@Setter
-	@JacksonXmlProperty(localName="mapped-by")
-	protected String mappedBy = null;
-	
-	@Getter
-	@Setter
-	@JacksonXmlElementWrapper(useWrapping = false)
-	@JacksonXmlProperty(localName = "entity-name")
-	protected String entityName;
-	
-	@Getter
-	@Setter
 	@JacksonXmlProperty(localName = "enum-class")
 	protected String enumClass = null;
 }

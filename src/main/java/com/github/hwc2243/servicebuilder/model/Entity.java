@@ -1,5 +1,6 @@
 package com.github.hwc2243.servicebuilder.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,14 +40,22 @@ public class Entity {
 	@EqualsAndHashCode.Exclude
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "attribute")
-	protected List<Attribute> attributes;
+	protected List<Attribute> attributes = new ArrayList<>();
+	
+	@Getter
+	@Setter
+	@EqualsAndHashCode.Exclude
+	@JacksonXmlElementWrapper(useWrapping = false)
+	@JacksonXmlProperty(localName = "related")
+	protected List<Related> relateds = new ArrayList<>();
+	
 	
 	@Getter
 	@Setter
 	@EqualsAndHashCode.Exclude
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "finder")
-	protected List<Finder> finders;
+	protected List<Finder> finders = new ArrayList<>();
 	
 
 	public Attribute getAttribute (String name)
@@ -62,5 +71,20 @@ public class Entity {
 	public void addAttribute (Attribute attribute)
 	{
 		attributes.add(attribute);
+	}
+	
+	public Related getRelated (String name)
+	{
+		List<Related> matches = relateds
+				.stream()
+				.filter(related -> name.equals(related.getName()))
+				.collect(Collectors.toList());
+		
+		return matches.size() == 1 ? matches.iterator().next() : null;
+	}
+	
+	public void addRelated (Related related)
+	{
+		relateds.add(related);
 	}
 }

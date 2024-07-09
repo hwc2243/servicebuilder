@@ -61,43 +61,47 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
   @Enumerated(EnumType.STRING)
   protected ${attribute.enumClass} ${attribute.name};
   
-<#elseif attribute.type != "entity">
+<#else>
 <#if attribute.dbName?has_content>
   @Column(name="${attribute.dbName}")
 <#else>
   @Column
 </#if>
   protected ${className(attribute.type)} ${attribute.name};
+  
+</#if>
+</#list>
 
-<#elseif attribute.relationship.name() == "ONE_TO_ONE">
-<#if attribute.owner>
+<#list entity.relateds as related>
+<#if related.relationshipType.name() == "ONE_TO_ONE">
+<#if related.owner>
   @OneToOne(mappedBy = "${entity.name}", cascade = CascadeType.ALL, orphanRemoval = true, fetch=FetchType.LAZY)
 <#else>
   @OneToOne(cascade=CascadeType.ALL)
-  @JoinColumn(name= "${attribute.name}_id", nullable=true)
+  @JoinColumn(name= "${related.name}_id", nullable=true)
 </#if>
-  protected ${attribute.entityName?cap_first} ${attribute.name};
+  protected ${related.entityName?cap_first} ${related.name};
   
-<#elseif attribute.relationship.name() == "ONE_TO_MANY">
+<#elseif related.relationshipType.name() == "ONE_TO_MANY">
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "${entity.name}Id")
-  protected ${attribute.collectionType.collectionType}<${attribute.entityName?cap_first}> ${attribute.name};
+  protected ${related.collectionType.collectionType}<${related.entityName?cap_first}> ${related.name};
   
-<#elseif attribute.relationship.name() == "MANY_TO_ONE">
+<#elseif related.relationshipType.name() == "MANY_TO_ONE">
   @ManyToOne
-  @JoinColumn(name= "${attribute.name}Id", nullable=true)
-  protected ${attribute.entityName?cap_first} ${attribute.name};
+  @JoinColumn(name= "${related.name}Id", nullable=true)
+  protected ${related.entityName?cap_first} ${related.name};
 
-<#elseif attribute.relationship.name() == "MANY_TO_MANY">
-<#if attribute.owner>
+<#elseif related.relationshipType.name() == "MANY_TO_MANY">
+<#if related.owner>
   @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  @JoinTable(name = "${entity.name}_${attribute.entityName}",
+  @JoinTable(name = "${entity.name}_${related.entityName}",
              joinColumns = @JoinColumn(name = "${entity.name}_id"),
-             inverseJoinColumns = @JoinColumn(name = "${attribute.entityName}_id"))
-  protected ${attribute.collectionType.collectionType}<${attribute.entityName?cap_first}> ${attribute.name};
-<#elseif attribute.mappedBy?has_content>
-  @ManyToMany(mappedBy = "${attribute.mappedBy}")
-  protected ${attribute.collectionType.collectionType}<${attribute.entityName?cap_first}> ${attribute.name};
+             inverseJoinColumns = @JoinColumn(name = "${related.entityName}_id"))
+  protected ${related.collectionType.collectionType}<${related.entityName?cap_first}> ${related.name};
+<#elseif related.mappedBy?has_content>
+  @ManyToMany(mappedBy = "${related.mappedBy}")
+  protected ${related.collectionType.collectionType}<${related.entityName?cap_first}> ${related.name};
 </#if>
 </#if>
 </#list>
@@ -113,7 +117,7 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
   {
     this.${attribute.name} = ${attribute.name};
   }
-<#elseif attribute.type != "entity">
+<#else>
   public ${className(attribute.type)} get${attribute.name?cap_first} ()
   {
     return this.${attribute.name};
@@ -123,35 +127,38 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
   {
     this.${attribute.name} = ${attribute.name};
   }
-<#elseif attribute.relationship.name() == "ONE_TO_MANY">
-  public ${attribute.collectionType.collectionType}<${attribute.entityName?cap_first}> get${attribute.name?cap_first} ()
+</#if>
+</#list>
+<#list entity.relateds as related>
+<#if related.relationshipType.name() == "ONE_TO_MANY">
+  public ${related.collectionType.collectionType}<${related.entityName?cap_first}> get${related.name?cap_first} ()
   {
-    return this.${attribute.name};
+    return this.${related.name};
   }
   
-  public void set${attribute.name?cap_first} (${attribute.collectionType.collectionType}<${attribute.entityName?cap_first}> ${attribute.name})
+  public void set${related.name?cap_first} (${related.collectionType.collectionType}<${related.entityName?cap_first}> ${related.name})
   {
-    this.${attribute.name} = ${attribute.name};
+    this.${related.name} = ${related.name};
   }
-<#elseif attribute.relationship.name() == "MANY_TO_MANY">
-  public ${attribute.collectionType.collectionType}<${attribute.entityName?cap_first}> get${attribute.name?cap_first} ()
+<#elseif related.relationshipType.name() == "MANY_TO_MANY">
+  public ${related.collectionType.collectionType}<${related.entityName?cap_first}> get${related.name?cap_first} ()
   {
-    return this.${attribute.name};
+    return this.${related.name};
   }
   
-  public void set${attribute.name?cap_first} (${attribute.collectionType.collectionType}<${attribute.entityName?cap_first}> ${attribute.name})
+  public void set${related.name?cap_first} (${related.collectionType.collectionType}<${related.entityName?cap_first}> ${related.name})
   {
-    this.${attribute.name} = ${attribute.name};
+    this.${related.name} = ${related.name};
   }
 <#else>
-  public ${attribute.entityName?cap_first} get${attribute.name?cap_first} ()
+  public ${related.entityName?cap_first} get${related.name?cap_first} ()
   {
-    return (${attribute.entityName?cap_first})this.${attribute.name};
+    return (${related.entityName?cap_first})this.${related.name};
   }
   
-  public void set${attribute.name?cap_first} (${attribute.entityName?cap_first} ${attribute.name})
+  public void set${related.name?cap_first} (${related.entityName?cap_first} ${related.name})
   {
-    this.${attribute.name} = ${attribute.name};
+    this.${related.name} = ${related.name};
   }
 </#if>
 
