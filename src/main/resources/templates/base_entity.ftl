@@ -1,4 +1,16 @@
 <#include "/functions.ftl">
+<#include "/attribute/enum.ftl">
+<#include "/attribute/primitive.ftl">
+<#include "/attribute/one_to_one.ftl">
+<#include "/attribute/one_to_many.ftl">
+<#include "/attribute/many_to_one.ftl">
+<#include "/attribute/many_to_many.ftl">
+<#include "/accessor/enum.ftl">
+<#include "/accessor/primitive.ftl">
+<#include "/accessor/one_to_one.ftl">
+<#include "/accessor/one_to_many.ftl">
+<#include "/accessor/many_to_one.ftl">
+<#include "/accessor/many_to_many.ftl">
 package ${baseModelPackage};
 
 <#list entity.attributes as attribute>
@@ -25,6 +37,8 @@ import ${jpaPackage}.OneToMany;
 import ${jpaPackage}.OneToOne;
 import ${jpaPackage}.Table;
 
+import java.io.Serializable;
+
 import java.util.List;
 import java.util.Set;
 
@@ -36,130 +50,63 @@ import ${localModelPackage}.${referencedEntity.name?cap_first};
 import ${localModelPackage}.${entity.parent?cap_first};
 </#if>
 
-
-/*
-@Entity
-@Table (name="${entity.name}")
-<#if entity.abstractEntity>
-@Inheritance(strategy = InheritanceType.JOINED)
-</#if>
-*/
 @MappedSuperclass
 <#if entity.parent??>
 public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?cap_first}> extends ${entity.parent?cap_first}<T>
 <#else>
 public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?cap_first}> extends AbstractBaseEntity
 </#if>
+    implements Serializable
 {
 <#list entity.attributes as attribute>
 <#if attribute.type == "enum">
-<#if attribute.dbName?has_content>
-  @Column(name="${attribute.dbName}")
-<#else>
-  @Column
-</#if>
-  @Enumerated(EnumType.STRING)
-  protected ${attribute.enumClass} ${attribute.name};
+<@enum_attribute entity=entity attribute=attribute/>
   
 <#else>
-<#if attribute.dbName?has_content>
-  @Column(name="${attribute.dbName}")
-<#else>
-  @Column
-</#if>
-  protected ${className(attribute.type)} ${attribute.name};
+<@primitive_attribute entity=entity attribute=attribute/>
   
 </#if>
 </#list>
 
 <#list entity.relateds as related>
 <#if related.relationshipType.name() == "ONE_TO_ONE">
-<#if related.owner>
-  @OneToOne(mappedBy = "${entity.name}", cascade = CascadeType.ALL, orphanRemoval = true, fetch=FetchType.LAZY)
-<#else>
-  @OneToOne(cascade=CascadeType.ALL)
-  @JoinColumn(name= "${related.name}_id", nullable=true)
-</#if>
-  protected ${related.entityName?cap_first} ${related.name};
+<@one_to_one_attribute entity=entity related=related/>
   
 <#elseif related.relationshipType.name() == "ONE_TO_MANY">
-  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-  @JoinColumn(name = "${entity.name}Id")
-  protected ${related.collectionType.collectionType}<${related.entityName?cap_first}> ${related.name};
+<@one_to_many_attribute entity=entity related=related/>
   
 <#elseif related.relationshipType.name() == "MANY_TO_ONE">
-  @ManyToOne
-  @JoinColumn(name= "${related.name}Id", nullable=true)
-  protected ${related.entityName?cap_first} ${related.name};
+<@many_to_one_attribute entity=entity related=related/>
 
 <#elseif related.relationshipType.name() == "MANY_TO_MANY">
-<#if related.owner>
-  @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  @JoinTable(name = "${entity.name}_${related.entityName}",
-             joinColumns = @JoinColumn(name = "${entity.name}_id"),
-             inverseJoinColumns = @JoinColumn(name = "${related.entityName}_id"))
-  protected ${related.collectionType.collectionType}<${related.entityName?cap_first}> ${related.name};
-<#elseif related.mappedBy?has_content>
-  @ManyToMany(mappedBy = "${related.mappedBy}")
-  protected ${related.collectionType.collectionType}<${related.entityName?cap_first}> ${related.name};
-</#if>
+<@many_to_many_attribute entity=entity related=related/>
+
 </#if>
 </#list>
 
 <#list entity.attributes as attribute>
 <#if attribute.type == "enum">
-  public ${attribute.enumClass} get${attribute.name?cap_first} ()
-  {
-    return this.${attribute.name};
-  }
-  
-  public void set${attribute.name?cap_first} (${attribute.enumClass} ${attribute.name})
-  {
-    this.${attribute.name} = ${attribute.name};
-  }
+<@enum_accessors entity=entity attribute=attribute/>
+
 <#else>
-  public ${className(attribute.type)} get${attribute.name?cap_first} ()
-  {
-    return this.${attribute.name};
-  }
-  
-  public void set${attribute.name?cap_first} (${className(attribute.type)} ${attribute.name})
-  {
-    this.${attribute.name} = ${attribute.name};
-  }
+<@primitive_accessors entity=entity attribute=attribute/>
+
 </#if>
 </#list>
 <#list entity.relateds as related>
-<#if related.relationshipType.name() == "ONE_TO_MANY">
-  public ${related.collectionType.collectionType}<${related.entityName?cap_first}> get${related.name?cap_first} ()
-  {
-    return this.${related.name};
-  }
-  
-  public void set${related.name?cap_first} (${related.collectionType.collectionType}<${related.entityName?cap_first}> ${related.name})
-  {
-    this.${related.name} = ${related.name};
-  }
+<#if related.relationshipType.name() == "ONE_TO_ONE">
+<@one_to_one_accessors entity=entity related=related/>
+
+<#elseif related.relationshipType.name() == "ONE_TO_MANY">
+<@one_to_many_accessors entity=entity related=related/>
+
+<#elseif related.relationshipType.name() == "MANY_TO_ONE">
+<@many_to_one_accessors entity=entity related=related/>
+
 <#elseif related.relationshipType.name() == "MANY_TO_MANY">
-  public ${related.collectionType.collectionType}<${related.entityName?cap_first}> get${related.name?cap_first} ()
-  {
-    return this.${related.name};
-  }
-  
-  public void set${related.name?cap_first} (${related.collectionType.collectionType}<${related.entityName?cap_first}> ${related.name})
-  {
-    this.${related.name} = ${related.name};
-  }
+<@many_to_many_accessors entity=entity related=related/>
+
 <#else>
-  public ${related.entityName?cap_first} get${related.name?cap_first} ()
-  {
-    return (${related.entityName?cap_first})this.${related.name};
-  }
-  
-  public void set${related.name?cap_first} (${related.entityName?cap_first} ${related.name})
-  {
-    this.${related.name} = ${related.name};
-  }
 </#if>
 
 </#list>

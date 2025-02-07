@@ -11,11 +11,11 @@ public interface Base${entity.name?cap_first}Service<T extends Base${entity.name
 <#list entity.finders as finder>
 <#assign finderName = "">
 <#assign finderParameters = "">
-<#list finder.finderColumns as finderColumn>
+<#list finder.finderAttributes as finderAttribute>
 <#if finderName?length != 0><#assign finderName += "And"></#if>
-<#assign finderName += finderColumn.name?cap_first>
+<#assign finderName += finderAttribute.name?cap_first>
 <#if finderParameters?length != 0><#assign finderParameters += ", "></#if>
-<#assign finderParameter = entity.getAttribute(finderColumn.name)>
+<#assign finderParameter = entity.getAttribute(finderAttribute.name)>
 <#assign finderParameters += finderParameter.type>
 <#assign finderParameters += " ">
 <#assign finderParameters += finderParameter.name>

@@ -11,6 +11,7 @@ import com.github.hwc2243.servicebuilder.service.BuilderArgs;
 import com.github.hwc2243.servicebuilder.service.BuilderService;
 import com.github.hwc2243.servicebuilder.service.BuilderServiceImpl;
 import com.github.hwc2243.servicebuilder.service.DefinitionReaderServiceImpl;
+import com.github.hwc2243.servicebuilder.service.ServiceException;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -22,7 +23,7 @@ public class ServiceBuilderApplication {
 	{
 	}
 	
-	public static void main(String[] args) throws IOException, SAXException {
+	public static void main(String[] args) throws ServiceException, IOException, SAXException {
 		BuilderArgs builderArgs = new BuilderArgs();
 		JCommander cmd = JCommander.newBuilder()
 		  .addObject(builderArgs)

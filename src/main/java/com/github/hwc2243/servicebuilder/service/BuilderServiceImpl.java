@@ -9,6 +9,8 @@ import org.xml.sax.SAXParseException;
 import com.github.hwc2243.servicebuilder.ServiceBuilderApplication;
 import com.github.hwc2243.servicebuilder.model.Attribute;
 import com.github.hwc2243.servicebuilder.model.Entity;
+import com.github.hwc2243.servicebuilder.model.Finder;
+import com.github.hwc2243.servicebuilder.model.FinderAttribute;
 import com.github.hwc2243.servicebuilder.model.Related;
 import com.github.hwc2243.servicebuilder.model.RelationshipType;
 import com.github.hwc2243.servicebuilder.model.Service;
@@ -62,8 +64,14 @@ public class BuilderServiceImpl implements BuilderService {
 	}
 
 	@Override
-	public void build(BuilderArgs args) throws IOException {
+	public void build(BuilderArgs args) throws ServiceException, IOException {
 		File file = new File(args.getServiceFile());
+		
+		build(file, args);
+	}
+
+	@Override
+	public void build (File file, BuilderArgs args) throws ServiceException, IOException {
 		if (!file.exists()) {
 			throw new FileNotFoundException(args.getServiceFile() + " not found");
 		}
@@ -78,14 +86,16 @@ public class BuilderServiceImpl implements BuilderService {
 			throw new IOException("Failed to parse service file", ex);
 		}
 	}
-
+	
 	@Override
-	public void build(Service service, BuilderArgs args) throws IOException {
+	public void build(Service service, BuilderArgs args) throws ServiceException, IOException {
 		Map<String, Object> model = new HashMap<>();
 		model.put("jpaPackage", args.getJpaPackage());
 
 		Map<String, Entity> entityMap = buildEntityMap(service);
 		postProcess(entityMap);
+		validateEntityMap(entityMap);
+		
 		model.put("entityMap", entityMap);
 		Map<String, List<Entity>> referencedEntitiesMap = buildReferencedEntitiesMap(entityMap);
 		model.put("referencedEntitiesMap", referencedEntitiesMap);
@@ -260,7 +270,25 @@ public class BuilderServiceImpl implements BuilderService {
 		}
 	}
 
+	protected void validateEntityMap (Map<String, Entity> entityMap) throws ServiceException
+	{
+		for (Entity entity : entityMap.values())
+		{
+			validateFinders(entity);
+		}
+	}
 	
+	protected void validateFinders (Entity entity) throws ServiceException
+	{
+		for (Finder finder : entity.getFinders())
+		{
+			for (FinderAttribute attribute : finder.getFinderAttributes()) {
+				if (entity.getAttribute(attribute.getName()) == null) {
+					throw new ServiceException(String.format("Finder %s on %s is invalid, %s is not an attribute.", finder.buildFinderName(), entity.getName(), attribute.getName()));
+				}
+			}
+		}
+	}
 	
 	protected void writeBaseEntity(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
 		try {

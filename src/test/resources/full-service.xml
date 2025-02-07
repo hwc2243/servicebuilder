@@ -20,12 +20,12 @@
 		<attribute name="b" type="String" />
 
 		<finder>
-			<finder-column name="a" />
+			<finder-attribute name="a" />
 		</finder>
 
 		<finder>
-			<finder-column name="a" />
-			<finder-column name="b" />
+			<finder-attribute name="a" />
+			<finder-attribute name="b" />
 		</finder>
 		
 	</entity>
@@ -94,12 +94,12 @@
 		<related name="manyToOneBar" entity="manyToOneBar" relationship="many_to_one" />
 
 		<finder>
-			<finder-column name="a" />
+			<finder-attribute name="a" />
 		</finder>
 
 		<finder>
-			<finder-column name="a" />
-			<finder-column name="b" />
+			<finder-attribute name="a" />
+			<finder-attribute name="b" />
 		</finder>
 	</entity>
 
