@@ -14,7 +14,7 @@ import org.xml.sax.SAXParseException;
 
 import com.github.hwc2243.servicebuilder.model.Service;
 
-public class DefinitionReaderServiceTest {
+public class DefinitionReaderServiceTest extends AbstractServiceTest {
 	
 	protected static Logger logger = LoggerFactory.getLogger(DefinitionReaderServiceTest.class);
 
@@ -87,8 +87,5 @@ public class DefinitionReaderServiceTest {
 		});
 	}
 
-	protected File loadFile (String filename)
-	{
-		return new File(getClass().getClassLoader().getResource(filename).getFile());
-	}
+
 }

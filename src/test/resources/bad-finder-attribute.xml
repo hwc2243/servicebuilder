@@ -5,7 +5,7 @@
 		<attribute name="test_col_a" type="int"/>
 		
 		<finder>
-			<finder-attribute name="test_col_a"/>
+			<finder-attribute name="test_col_b"/>
 		</finder>
 	</entity>
 </service>

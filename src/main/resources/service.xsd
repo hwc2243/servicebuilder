@@ -51,7 +51,7 @@
 		</xs:complexType>
 	</xs:element>
 	
-	<xs:element name="finder-column">
+	<xs:element name="finder-attribute">
 		<xs:complexType>
 			<xs:attribute ref="name"/>
 		</xs:complexType>
@@ -60,7 +60,7 @@
 	<xs:element name="finder" >
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element ref="finder-column" minOccurs="1" maxOccurs="unbounded"/>
+				<xs:element ref="finder-attribute" minOccurs="1" maxOccurs="unbounded"/>
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>

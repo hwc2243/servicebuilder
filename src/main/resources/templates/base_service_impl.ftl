@@ -43,11 +43,11 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<T extends ${entity
 <#assign finderName = "">
 <#assign finderArguments = "">
 <#assign finderParameters = "">
-<#list finder.finderColumns as finderColumn>
+<#list finder.finderAttributes as finderAttribute>
 <#if finderName?length != 0><#assign finderName += "And"></#if>
-<#assign finderName += finderColumn.name?cap_first>
+<#assign finderName += finderAttribute.name?cap_first>
 <#if finderArguments?length != 0><#assign finderArguments += ", "><#assign finderParameters += ", "></#if>
-<#assign finderParameter = entity.getAttribute(finderColumn.name)>
+<#assign finderParameter = entity.getAttribute(finderAttribute.name)>
 <#assign finderArguments += finderParameter.name>
 <#assign finderParameters += finderParameter.type>
 <#assign finderParameters += " ">

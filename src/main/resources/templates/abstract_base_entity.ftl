@@ -1,5 +1,7 @@
 package ${baseModelPackage};
 
+import java.io.Serializable;
+
 import java.util.Objects;
 
 import ${jpaPackage}.GeneratedValue;
@@ -9,9 +11,10 @@ import ${jpaPackage}.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class AbstractBaseEntity
+  implements Serializable
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected long id;
 
     public long getId() {
