@@ -168,6 +168,40 @@ public class BuilderServiceImpl implements BuilderService {
 				writeLocalService(args, model, entity, localServiceDir);
 			}
 		});
+		
+		// write the rest endpoints
+
+		String apiPackageName = projectPackageName + ".api";
+		File apiPackageDir = createPackageDir(projectPackageDir, "api");
+		
+		String baseApiPackageName = apiPackageName + ".base";
+		File baseApiPackageDir = createPackageDir(apiPackageDir, "base");
+		
+		String baseInternalApiPackageName = baseApiPackageName + ".internal";
+		model.put("baseInternalApiPackage", baseInternalApiPackageName);
+		File baseInternalApiPackageDir = createPackageDir(baseApiPackageDir, "internal");
+		service.getEntities().stream().forEach(entity -> {
+			if (entity.isPersistence()) {
+				writeApiBaseInternal(args, model, entity, baseInternalApiPackageDir);
+			}
+		});
+		
+		String baseExternalApiPackage = baseApiPackageName + ".external";
+		model.put("baseExternalApiPackage", baseExternalApiPackage);
+		File baseExternalApiPackageDir = createPackageDir(baseApiPackageDir, "external");
+		
+		String internalApiPackageName = apiPackageName + ".internal";
+		model.put("internalApiPackage", internalApiPackageName);
+		File internalApiPackageDir = createPackageDir(apiPackageDir, "internal");
+		service.getEntities().stream().forEach(entity -> {
+			if (entity.isPersistence()) {
+				writeApiInternal(args, model, entity, internalApiPackageDir);
+			}
+		});
+		
+		String externalApiPackageName = apiPackageName + ".external";
+		model.put("externalApiPackage", externalApiPackageName);
+		File externalApiPackageDir = createPackageDir(apiPackageDir, "external");
 	}
 
 	protected Map<String, Entity> buildEntityMap(Service service) {
@@ -290,6 +324,44 @@ public class BuilderServiceImpl implements BuilderService {
 		}
 	}
 	
+	protected void writeApiBaseInternal (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
+		try
+		{
+			String className = "BaseInternal" + StringUtils.capitalize(entity.getName()) + "Rest.java";
+			File classFile = new File(outputDir, className);
+	
+			String implName = "BaseInternal" + StringUtils.capitalize(entity.getName()) + "RestImpl.java";
+			File implFile = new File(outputDir, implName);
+
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+
+			writeFile(args, entityModel, "api/internal/base_api_internal.ftl", classFile);
+			writeFile(args, entityModel, "api/internal/base_api_internal_impl.ftl", implFile);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	protected void writeApiInternal (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
+		try
+		{
+			String className = "Internal" + StringUtils.capitalize(entity.getName()) + "Rest.java";
+			File classFile = new File(outputDir, className);
+	
+			String implName = "Internal" + StringUtils.capitalize(entity.getName()) + "RestImpl.java";
+			File implFile = new File(outputDir, implName);
+
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+
+			writeFile(args, entityModel, "api/internal/api_internal.ftl", classFile);
+			writeFile(args, entityModel, "api/internal/api_internal_impl.ftl", implFile);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
 	protected void writeBaseEntity(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
 		try {
 			String className = "Base" + StringUtils.capitalize(entity.getName()) + ".java";
@@ -346,12 +418,31 @@ public class BuilderServiceImpl implements BuilderService {
 
 				writeFile(args, entityModel, "local_entity.ftl", classFile);
 			}
+			entity.getAttributes().stream()
+			  .filter(attribute -> "enum".equals(attribute.getType()))
+			  .forEach(attribute -> { writeLocalEnum(args, baseModel, attribute, outputDir);});
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
 	}
 
+	protected void writeLocalEnum (BuilderArgs args, Map<String, Object> baseModel, Attribute attribute, File outputDir) {
+		try {
+			String enumName = StringUtils.capitalize(attribute.getName()) + "Type.java";
+			File enumFile = new File(outputDir, enumName);
+
+			if (!enumFile.exists() || args.isReplace()) {
+				Map<String, Object> enumModel = new HashMap<>(baseModel);
+				enumModel.put("attribute", attribute);
+
+				writeFile(args, enumModel, "local_enum.ftl", enumFile);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
 	protected void writeLocalRepository(BuilderArgs args, Map<String, Object> baseModel, Entity entity,
 			File outputDir) {
 		try {

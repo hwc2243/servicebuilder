@@ -36,6 +36,8 @@
                 <xs:enumeration value="enum" />
             	<xs:enumeration value="int" />
                 <xs:enumeration value="long" />
+                <xs:enumeration value="float" />
+                <xs:enumeration value="double" />
                 <xs:enumeration value="String" />
                 <xs:enumeration value="java.time.LocalDate" />
             </xs:restriction>

@@ -26,6 +26,8 @@ public class Entity {
 	@Setter
 	protected boolean persistence = true;
 	
+	// HWC TODO we probably want to add attributes to suppress writing the API (internal and external)
+	
 	@Getter
 	@Setter
 	@JacksonXmlProperty(localName="abstract")

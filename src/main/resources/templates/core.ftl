@@ -1,0 +1,1 @@
+<#assign baseEntityName = entity.name?cap_first>
