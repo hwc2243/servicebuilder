@@ -5,5 +5,9 @@
   @Column
 </#if>
   @Enumerated(EnumType.STRING)
+<#if attribute.enumClass?has_content>
   protected ${attribute.enumClass} ${attribute.name};
+<#else>
+  protected ${attribute.name?cap_first}Type ${attribute.name};
+</#if>
 </#macro>

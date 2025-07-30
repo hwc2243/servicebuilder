@@ -15,7 +15,11 @@ package ${baseModelPackage};
 
 <#list entity.attributes as attribute>
 <#if attribute.type == "enum">
+<#if attribute.enumClass?has_content>
 import ${attribute.enumClass};
+<#else>
+import ${localModelPackage}.${attribute.name?cap_first}Type;
+</#if>
 <#elseif attribute.type?last_index_of(".") gt 0>
 import ${attribute.type};
 </#if>
