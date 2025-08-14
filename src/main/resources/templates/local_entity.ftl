@@ -1,4 +1,6 @@
 <#include "/entity/table.ftl">
+<#include "/entity/builder_class.ftl">
+<#include "/entity/builder_constructor.ftl">
 package ${localModelPackage};
 
 import java.io.Serializable;
@@ -28,4 +30,7 @@ public class ${entity.name?cap_first} extends Base${entity.name?cap_first}<${ent
 </#if>
     implements Serializable
 {
+<@builder_constructor entity=entity/>
+
+<@builder_class entity=entity/>
 }
