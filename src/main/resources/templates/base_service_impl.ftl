@@ -1,3 +1,4 @@
+<#include "/finder/finder.ftl">
 package ${baseServicePackage};
 
 import java.util.List;
@@ -40,25 +41,21 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<T extends ${entity
   }
 <#if entity.finders??>
 <#list entity.finders as finder>
-<#assign finderName = "">
-<#assign finderArguments = "">
-<#assign finderParameters = "">
-<#list finder.finderAttributes as finderAttribute>
-<#if finderName?length != 0><#assign finderName += "And"></#if>
-<#assign finderName += finderAttribute.name?cap_first>
-<#if finderArguments?length != 0><#assign finderArguments += ", "><#assign finderParameters += ", "></#if>
-<#assign finderParameter = entity.getAttribute(finderAttribute.name)>
-<#assign finderArguments += finderParameter.name>
-<#assign finderParameters += finderParameter.type>
-<#assign finderParameters += " ">
-<#assign finderParameters += finderParameter.name>
-</#list>
+<@finder_processor finder=finder/>
 
+<#if finder.unique>
   @Override
-  public List<T> findBy${finderName} (${finderParameters})
+  public T ${finderName} (${finderParameters})
   {
-	return base${entity.name?cap_first}Persistence.findBy${finderName}(${finderArguments});
+	return base${entity.name?cap_first}Persistence.findFirstBy${finderAttributes}(${finderArguments});
   }
+<#else>
+  @Override
+  public List<T> ${finderName} (${finderParameters})
+  {
+	return base${entity.name?cap_first}Persistence.${finderName}(${finderArguments});
+  }
+</#if>
 </#list>
 </#if>  
 

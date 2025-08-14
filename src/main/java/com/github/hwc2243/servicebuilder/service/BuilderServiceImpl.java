@@ -318,7 +318,7 @@ public class BuilderServiceImpl implements BuilderService {
 		{
 			for (FinderAttribute attribute : finder.getFinderAttributes()) {
 				if (entity.getAttribute(attribute.getName()) == null) {
-					throw new ServiceException(String.format("Finder %s on %s is invalid, %s is not an attribute.", finder.buildFinderName(), entity.getName(), attribute.getName()));
+					throw new ServiceException(String.format("Finder %s on %s is invalid, %s is not an attribute.", "findBy" + finder.buildFinderColumnNames(), entity.getName(), attribute.getName()));
 				}
 			}
 		}

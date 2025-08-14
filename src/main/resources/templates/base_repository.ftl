@@ -1,3 +1,4 @@
+<#include "/finder/finder.ftl">
 package ${baseRepositoryPackage};
 
 <#if entity.finders??>
@@ -13,20 +14,13 @@ public interface Base${entity.name?cap_first}Persistence<T extends ${entity.name
 {
 <#if entity.finders??>
 <#list entity.finders as finder>
-<#assign finderName = "">
-<#assign finderParameters = "">
-<#list finder.finderAttributes as finderAttribute>
-<#if finderName?length != 0><#assign finderName += "And"></#if>
-<#assign finderName += finderAttribute.name?cap_first>
-<#if finderParameters?length != 0><#assign finderParameters += ", "></#if>
-<#assign finderParameter = entity.getAttribute(finderAttribute.name)>
-<#assign finderParameters += finderParameter.type>
-<#assign finderParameters += " ">
-<#assign finderParameters += finderParameter.name>
-</#list>
+<@finder_processor finder=finder/>
 
-<#assign finder = finder>
-	public List<T> ${finder.buildFinderName()} (${finderParameters});
+<#if finder.unique>
+    public T findFirstBy${finderAttributes} (${finderParameters});
+<#else>
+	public List<T> ${finderName} (${finderParameters});
+</#if>
 </#list>
 </#if>
 } 
