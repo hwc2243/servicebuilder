@@ -19,7 +19,13 @@ public class Finder {
 	@JacksonXmlProperty(localName = "finder-attribute")
 	protected LinkedHashSet<FinderAttribute> finderAttributes;
 	
-	public String buildFinderName ()
+	// Added a new boolean attribute for 'unique'
+	@Getter
+	@Setter
+	@JacksonXmlProperty(localName = "unique")
+	protected boolean unique;
+		
+	public String buildFinderColumnNames ()
 	{
 		List<String> attributeNames = finderAttributes.stream()
 			.map(attribute -> {
@@ -30,25 +36,6 @@ public class Finder {
 			})
 			.collect(Collectors.toList());
 		
-		return "findBy" + String.join("And", attributeNames);
+		return String.join("And", attributeNames);
 	}
-	
-	/*
-	public String buildFinderParameters ()
-	{
-		List<String> attributeParameters = finderAttributes.stream()
-			.map(attribute -> {
-				String attributeName = attribute.getName();
-				return attributeName;
-			})
-			.collect(Collectors.toList());
-		
-		return "";
-	}
-	
-	public String buildFinderSignature ()
-	{
-		return "public List<T> " + buildFinderName() + " (" + buildFinderParameters() + ")";
-	}
-	*/
 }

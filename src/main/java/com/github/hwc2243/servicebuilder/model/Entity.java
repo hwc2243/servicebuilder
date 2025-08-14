@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
@@ -13,6 +16,8 @@ import lombok.Setter;
 
 @EqualsAndHashCode
 public class Entity {
+	protected static Logger logger = LoggerFactory.getLogger(Entity.class);
+
 	@Getter
 	@Setter
 	protected String name;
@@ -59,7 +64,17 @@ public class Entity {
 	@JacksonXmlProperty(localName = "finder")
 	protected List<Finder> finders = new ArrayList<>();
 	
+	public List<Finder> getUniqueFinders ()
+	{
+		List<Finder> uniqueFinders = finders.stream()
+			.filter(finder -> finder.isUnique())
+			.collect(Collectors.toList());
 
+		logger.info("Found {} unique finders for entity {}", uniqueFinders.size(), name);
+		
+		return uniqueFinders.isEmpty() ? null : uniqueFinders;
+	}
+	
 	public Attribute getAttribute (String name)
 	{
 		List<Attribute> matches = attributes
