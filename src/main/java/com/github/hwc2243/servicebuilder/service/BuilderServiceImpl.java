@@ -355,8 +355,12 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "api/internal/api_internal.ftl", classFile);
-			writeFile(args, entityModel, "api/internal/api_internal_impl.ftl", implFile);
+			if (!classFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "api/internal/api_internal.ftl", classFile);
+			}
+			if (!implFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "api/internal/api_internal_impl.ftl", implFile);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
