@@ -2,12 +2,12 @@
     public static class Builder {
 
 <#list entity.attributes as attribute>
-<#assign fieldType = (attribute.type == "enum")?then((attribute.enumClass?has_content)?then(attribute.enumClass, attribute.name?cap_first + "Type"), attribute.type)>
+<#assign fieldType = (attribute.type == "ENUM")?then((attribute.enumClass?has_content)?then(attribute.enumClass, attribute.name?cap_first + "Type"), attribute.javaType)>
         private ${fieldType} ${attribute.name};
 </#list>
 
 <#list entity.attributes as attribute>
-<#assign fieldType = (attribute.type == "enum")?then((attribute.enumClass?has_content)?then(attribute.enumClass, attribute.name?cap_first + "Type"), attribute.type)>
+<#assign fieldType = (attribute.type == "ENUM")?then((attribute.enumClass?has_content)?then(attribute.enumClass, attribute.name?cap_first + "Type"), attribute.javaType)>
         public Builder ${attribute.name}(${fieldType} ${attribute.name}) {
             this.${attribute.name} = ${attribute.name};
             return this;

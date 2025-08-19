@@ -4,5 +4,5 @@
   <#else>
   @Column
   </#if>
-  protected ${className(attribute.type)} ${attribute.name};
+  protected ${className(attribute.type.javaType)} ${attribute.name};
 </#macro>

@@ -9,7 +9,7 @@
 	</entity>
 	
 	<entity name="basicBar" persistence="false">
-		<attribute name="bar" type="String" />
+		<attribute name="bar" type="string" />
 	</entity>
 	
 <!--	
@@ -17,7 +17,7 @@
  -->
 	<entity name="foo">
 		<attribute name="a" type="long" />
-		<attribute name="b" type="String" />
+		<attribute name="b" type="string" />
 
 		<finder>
 			<finder-attribute name="a" />
@@ -38,7 +38,7 @@
 	</entity>
 	
 	<entity name="childBar" parent="parentFoo">
-		<attribute name="b" type="String"/>
+		<attribute name="b" type="string"/>
 	</entity>
 	
 	<entity name="childBaz" parent="parentFoo">
@@ -55,7 +55,7 @@
 	</entity>
 
 	<entity name="oneToOneOwnedUnidirectional">
-		<attribute name="b" type="String" />
+		<attribute name="b" type="string" />
 	</entity>
 
 <!--
@@ -68,7 +68,7 @@
 	</entity>
 
 	<entity name="oneToOneBidirectionalBar">
-		<attribute name="b" type="String" />
+		<attribute name="b" type="string" />
 	</entity>
 
 <!--
@@ -81,7 +81,7 @@
 	</entity>
 	
 	<entity name="oneToManyBar">
-		<attribute name="b" type="String" />
+		<attribute name="b" type="string" />
 	</entity>
 	
 <!--
@@ -89,7 +89,7 @@
 -->
 	<entity name="manyToOneFoo">
 		<attribute name="a" type="long" />
-		<attribute name="b" type="String" />
+		<attribute name="b" type="string" />
 		
 		<related name="manyToOneBar" entity="manyToOneBar" relationship="many_to_one" />
 

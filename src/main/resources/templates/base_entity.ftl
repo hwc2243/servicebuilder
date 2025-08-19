@@ -14,14 +14,14 @@
 package ${baseModelPackage};
 
 <#list entity.attributes as attribute>
-<#if attribute.type == "enum">
+<#if attribute.type == "ENUM">
 <#if attribute.enumClass?has_content>
 import ${attribute.enumClass};
 <#else>
 import ${localModelPackage}.${attribute.name?cap_first}Type;
 </#if>
-<#elseif attribute.type?last_index_of(".") gt 0>
-import ${attribute.type};
+<#elseif attribute.type.javaType?last_index_of(".") gt 0>
+import ${attribute.type.javaType};
 </#if>
 </#list>
 import ${jpaPackage}.CascadeType;
@@ -63,7 +63,7 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
     implements Serializable
 {
 <#list entity.attributes as attribute>
-<#if attribute.type == "enum">
+<#if attribute.type == "ENUM">
 <@enum_attribute entity=entity attribute=attribute/>
   
 <#else>
@@ -89,7 +89,7 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 </#list>
 
 <#list entity.attributes as attribute>
-<#if attribute.type == "enum">
+<#if attribute.type == "ENUM">
 <@enum_accessors entity=entity attribute=attribute/>
 
 <#else>

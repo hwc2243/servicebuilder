@@ -28,8 +28,9 @@
             <xs:enumeration value="long" />
             <xs:enumeration value="float" />
             <xs:enumeration value="double" />
-            <xs:enumeration value="String" />
-            <xs:enumeration value="java.time.LocalDate" />
+            <xs:enumeration value="string" />
+            <xs:enumeration value="localdate" />
+            <xs:enumeration value="localtime" />
         </xs:restriction>
     </xs:simpleType>
         
