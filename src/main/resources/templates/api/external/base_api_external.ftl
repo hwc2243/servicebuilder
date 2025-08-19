@@ -1,6 +1,6 @@
 <#include "/core.ftl">
 <#include "/functions.ftl">
-package ${baseInternalApiPackage};
+package ${baseExternalApiPackage};
 
 import java.util.List;
 
@@ -10,19 +10,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import ${localModelPackage}.${baseEntityName};
 
-import ${baseInternalApiPackage}.BaseInternal${baseEntityName}Rest;
+import ${baseExternalApiPackage}.BaseExternal${baseEntityName}Rest;
 
-public interface BaseInternal${baseEntityName}Rest
+public interface BaseExternal${baseEntityName}Rest
 {
-<#if entity.api?? && entity.api.internal?? && entity.api.internal.operations?seq_contains("CREATE")>
+<#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("CREATE")>
 	public ResponseEntity<${baseEntityName}> create${baseEntityName} (${baseEntityName} ${entity.name});
 </#if>
 	
-<#if entity.api?? && entity.api.internal?? && entity.api.internal.operations?seq_contains("DELETE")>
+<#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("DELETE")>
     public ResponseEntity<${baseEntityName}> delete${baseEntityName}(Long id); 
 </#if>
 
-<#if entity.api?? && entity.api.internal?? && entity.api.internal.operations?seq_contains("READ")>
+<#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("READ")>
 	public ResponseEntity<${baseEntityName}> get${baseEntityName} (Long id);
 	
 	public ResponseEntity<List<${baseEntityName}>> list${baseEntityName}s ();
@@ -35,7 +35,7 @@ public interface BaseInternal${baseEntityName}Rest
 	);
 </#if>
 	
-<#if entity.api?? && entity.api.internal?? && entity.api.internal.operations?seq_contains("UPDATE")>
+<#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("UPDATE")>
     public ResponseEntity<${baseEntityName}> update${baseEntityName} (Long id, ${baseEntityName} ${entity.name});
 </#if>
 }

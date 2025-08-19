@@ -31,7 +31,6 @@ public class Entity {
 	@Setter
 	protected boolean persistence = true;
 	
-	// HWC TODO we probably want to add attributes to suppress writing the API (internal and external)
 	
 	@Getter
 	@Setter
@@ -63,6 +62,13 @@ public class Entity {
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "finder")
 	protected List<Finder> finders = new ArrayList<>();
+	
+	@Getter
+	@Setter
+	@EqualsAndHashCode.Exclude
+	@JacksonXmlElementWrapper(useWrapping = false)
+	@JacksonXmlProperty(localName = "api")
+	protected Api api = null;
 	
 	public List<Finder> getUniqueFinders ()
 	{

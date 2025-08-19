@@ -1,6 +1,6 @@
 <#include "/core.ftl">
 <#include "/functions.ftl">
-package ${baseInternalApiPackage};
+package ${baseExternalApiPackage};
 
 import java.util.List;
 import java.util.ArrayList;
@@ -25,14 +25,14 @@ import ${localModelPackage}.${baseEntityName};
 import ${localServicePackage}.${baseEntityName}Service;
 import ${localServicePackage}.ServiceException;
 
-import ${baseInternalApiPackage}.BaseInternal${baseEntityName}Rest;
+import ${baseExternalApiPackage}.BaseExternal${baseEntityName}Rest;
 
-public abstract class BaseInternal${baseEntityName}RestImpl implements BaseInternal${baseEntityName}Rest
+public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExternal${baseEntityName}Rest
 {
 	@Autowired
 	protected ${baseEntityName}Service ${entity.name}Service;
 
-<#if entity.api?? && entity.api.internal?? && entity.api.internal.operations?seq_contains("CREATE")>
+<#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("CREATE")>
 	@PostMapping
 	@Override
 	public ResponseEntity<${baseEntityName}> create${baseEntityName} (@RequestBody ${baseEntityName} ${entity.name})
@@ -47,13 +47,13 @@ public abstract class BaseInternal${baseEntityName}RestImpl implements BaseInter
 	  {
 	    ex.printStackTrace();
         return ResponseEntity.internalServerError().build();
-	  }
+	  }	
 	  
 	  return ResponseEntity.status(HttpStatus.CREATED).body(new${baseEntityName});
 	}
 </#if>
 	
-<#if entity.api?? && entity.api.internal?? && entity.api.internal.operations?seq_contains("DELETE")>
+<#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("DELETE")>
 	@DeleteMapping("/{id}")
 	@Override
     public ResponseEntity<${baseEntityName}> delete${baseEntityName}(@PathVariable Long id) 
@@ -71,7 +71,7 @@ public abstract class BaseInternal${baseEntityName}RestImpl implements BaseInter
     }
 </#if>
 
-<#if entity.api?? && entity.api.internal?? && entity.api.internal.operations?seq_contains("READ")>
+<#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("READ")>
 	@GetMapping("/{id}")
 	@Override
 	public ResponseEntity<${baseEntityName}> get${baseEntityName} (@PathVariable Long id)
@@ -139,7 +139,7 @@ public abstract class BaseInternal${baseEntityName}RestImpl implements BaseInter
 	}
 </#if>
 	
-<#if entity.api?? && entity.api.internal?? && entity.api.internal.operations?seq_contains("UPDATE")>
+<#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("UPDATE")>
     @PutMapping("/{id}")
     @Override
     public ResponseEntity<${baseEntityName}> update${baseEntityName}(@PathVariable Long id, @RequestBody ${baseEntityName} ${entity.name})
