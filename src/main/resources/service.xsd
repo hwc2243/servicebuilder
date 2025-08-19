@@ -1,15 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:simpleType name="apiOperationsType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="CREATE"></xs:enumeration>
+			<xs:enumeration value="READ"></xs:enumeration>
+			<xs:enumeration value="UPDATE"></xs:enumeration>
+			<xs:enumeration value="DELETE"></xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	
+    <xs:simpleType name="apiOperationsListType">
+        <xs:list itemType="apiOperationsType"/>
+    </xs:simpleType>
+    
+	<xs:simpleType name="collectionsType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="list"></xs:enumeration>
+			<xs:enumeration value="set"></xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="dataType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="boolean" />
+            <xs:enumeration value="enum" />
+         	<xs:enumeration value="int" />
+            <xs:enumeration value="long" />
+            <xs:enumeration value="float" />
+            <xs:enumeration value="double" />
+            <xs:enumeration value="String" />
+            <xs:enumeration value="java.time.LocalDate" />
+        </xs:restriction>
+    </xs:simpleType>
+        
+	<xs:simpleType name="relationshipType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="one_to_one"></xs:enumeration>
+			<xs:enumeration value="one_to_many"></xs:enumeration>
+			<xs:enumeration value="many_to_one"></xs:enumeration>
+			<xs:enumeration value="many_to_many"></xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	
 	<xs:attribute name="abstract" type="xs:boolean"/>
 	<xs:attribute name="bidirectional" type="xs:boolean"/>
-	<xs:attribute name="collection">
-		<xs:simpleType>
-			<xs:restriction base="xs:string">
-				<xs:enumeration value="list"></xs:enumeration>
-				<xs:enumeration value="set"></xs:enumeration>
-			</xs:restriction>
-		</xs:simpleType>
-	</xs:attribute>
+	<xs:attribute name="collection" type="collectionsType" />
 	<xs:attribute name="db-name" type="xs:string"/>
 	<xs:attribute name="entity" type="xs:string" />
 	<xs:attribute name="enum-class" type="xs:string" />
@@ -19,30 +54,8 @@
 	<xs:attribute name="package" type="xs:string"/>
 	<xs:attribute name="parent" type="xs:string"/>
 	<xs:attribute name="persistence" type="xs:boolean"/>
-	<xs:attribute name="relationship">
-		<xs:simpleType>
-			<xs:restriction base="xs:string">
-				<xs:enumeration value="one_to_one"></xs:enumeration>
-				<xs:enumeration value="one_to_many"></xs:enumeration>
-				<xs:enumeration value="many_to_one"></xs:enumeration>
-				<xs:enumeration value="many_to_many"></xs:enumeration>
-			</xs:restriction>
-		</xs:simpleType>
-	</xs:attribute>
-	<xs:attribute name="type">
-		<xs:simpleType>
-        	<xs:restriction base="xs:string">
-                <xs:enumeration value="boolean" />
-                <xs:enumeration value="enum" />
-            	<xs:enumeration value="int" />
-                <xs:enumeration value="long" />
-                <xs:enumeration value="float" />
-                <xs:enumeration value="double" />
-                <xs:enumeration value="String" />
-                <xs:enumeration value="java.time.LocalDate" />
-            </xs:restriction>
-        </xs:simpleType>
-	</xs:attribute>
+	<xs:attribute name="relationship" type="relationshipType"/>
+	<xs:attribute name="type" type="dataType"/>
 	 
 	<xs:element name="attribute">
 		<xs:complexType>
@@ -80,12 +93,35 @@
 		</xs:complexType>
 	</xs:element>
 	
+	<xs:element name="internal">
+		<xs:complexType>
+			<xs:attribute name="operations" type="apiOperationsListType" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="external">
+		<xs:complexType>
+			<xs:attribute name="operations" type="apiOperationsListType" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	
+	<!-- New API element which is optional -->
+	<xs:element name="api">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="internal" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="external" minOccurs="0" maxOccurs="1"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	
 	<xs:element name="entity">
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref="attribute" minOccurs="1" maxOccurs="unbounded"/>
 				<xs:element ref="related" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element ref="finder" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="api" minOccurs="0" maxOccurs="1"/>
 			</xs:sequence>
 			
 			<xs:attribute ref="name" use="required"/>
