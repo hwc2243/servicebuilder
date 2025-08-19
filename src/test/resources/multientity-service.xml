@@ -6,6 +6,6 @@
 	</entity>
 
 	<entity name="bar">
-		<attribute name="bar_col_b" type="String"/>
+		<attribute name="bar_col_b" type="string"/>
 	</entity>
 </service>

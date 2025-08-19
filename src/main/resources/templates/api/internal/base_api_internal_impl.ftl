@@ -123,7 +123,7 @@ public abstract class BaseInternal${baseEntityName}RestImpl implements BaseInter
 	    List<${baseEntityName}> all${baseEntityName}s = ${entity.name}Service.findAll();
 	    List<${baseEntityName}> filtered${baseEntityName}s = all${baseEntityName}s.stream()
 <#list entity.attributes as attribute>
-<#if attribute.name != "id" && attribute.type == "String">
+<#if attribute.name != "id" && attribute.type == "string">
           .filter(item -> ${attribute.name} == null || item.get${attribute.name?cap_first}().equalsIgnoreCase(${attribute.name}))
 </#if>
 </#list>

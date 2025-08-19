@@ -9,7 +9,7 @@
 <#if finderArguments?length != 0><#assign finderArguments += ", "><#assign finderParameters += ", "></#if>
 <#assign finderParameter = entity.getAttribute(finderAttribute.name)>
 <#assign finderArguments += finderParameter.name>
-<#assign finderParameters += finderParameter.type>
+<#assign finderParameters += finderParameter.type.javaType>
 <#assign finderParameters += " ">
 <#assign finderParameters += finderParameter.name>
 <#if finder.unique>

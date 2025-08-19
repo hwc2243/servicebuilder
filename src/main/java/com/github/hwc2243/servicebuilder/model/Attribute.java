@@ -19,7 +19,7 @@ public class Attribute {
 	
 	@Getter
 	@Setter
-	protected String type = null;
+	protected DataType type = null;
 	
 	@Getter
 	@Setter
