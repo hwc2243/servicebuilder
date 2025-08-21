@@ -3,7 +3,7 @@
 
 <#list entity.attributes as attribute>
 <#assign fieldType = (attribute.type == "ENUM")?then((attribute.enumClass?has_content)?then(attribute.enumClass, attribute.name?cap_first + "Type"), attribute.type.javaType)>
-        private ${fieldType} ${attribute.name};
+        private ${fieldType} ${attribute.name} = null;
 </#list>
 
 <#list entity.attributes as attribute>
