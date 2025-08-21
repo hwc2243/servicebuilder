@@ -30,6 +30,11 @@ public class ${entity.name?cap_first} extends Base${entity.name?cap_first}<${ent
 </#if>
     implements Serializable
 {
+	public ${entity.name?cap_first} ()
+	{
+		super();
+	}
+	
 <@builder_constructor entity=entity/>
 
 <@builder_class entity=entity/>

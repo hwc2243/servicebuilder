@@ -6,8 +6,8 @@
 </#if>
   @Enumerated(EnumType.STRING)
 <#if attribute.enumClass?has_content>
-  protected ${attribute.enumClass} ${attribute.name};
+  protected ${attribute.enumClass} ${attribute.name} = null;
 <#else>
-  protected ${attribute.name?cap_first}Type ${attribute.name};
+  protected ${attribute.name?cap_first}Type ${attribute.name} = null;
 </#if>
 </#macro>

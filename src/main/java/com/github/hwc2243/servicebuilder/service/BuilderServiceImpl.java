@@ -8,6 +8,7 @@ import org.xml.sax.SAXParseException;
 
 import com.github.hwc2243.servicebuilder.ServiceBuilderApplication;
 import com.github.hwc2243.servicebuilder.model.Attribute;
+import com.github.hwc2243.servicebuilder.model.DataType;
 import com.github.hwc2243.servicebuilder.model.Entity;
 import com.github.hwc2243.servicebuilder.model.Finder;
 import com.github.hwc2243.servicebuilder.model.FinderAttribute;
@@ -63,14 +64,14 @@ public class BuilderServiceImpl implements BuilderService {
 	}
 
 	@Override
-	public void build(BuilderArgs args) throws ServiceException, IOException {
+	public void build (BuilderArgs args) throws ServiceException, IOException {
 		File file = new File(args.getServiceFile());
 
 		build(file, args);
 	}
 
 	@Override
-	public void build(File file, BuilderArgs args) throws ServiceException, IOException {
+	public void build (File file, BuilderArgs args) throws ServiceException, IOException {
 		if (!file.exists()) {
 			throw new FileNotFoundException(args.getServiceFile() + " not found");
 		}
@@ -84,7 +85,7 @@ public class BuilderServiceImpl implements BuilderService {
 	}
 
 	@Override
-	public void build(Service service, BuilderArgs args) throws ServiceException, IOException {
+	public void build (Service service, BuilderArgs args) throws ServiceException, IOException {
 		boolean needPersistence = false;
 		boolean needInternalApi = false;
 		boolean needExternalApi = false;
@@ -237,6 +238,34 @@ public class BuilderServiceImpl implements BuilderService {
 		Map<String, List<Entity>> referencedEntitiesMap = new HashMap<>();
 
 		entityMap.values().stream().forEach(entity -> {
+            logger.info("entity {} - attribute = {}", entity.getName(), entity.getAttributes());
+
+            try {
+                List<Entity> referencedEntities = entity.getRelateds().stream()
+                        .map(related -> {
+                            String relatedEntityName = related.getEntityName();
+                            if (StringUtils.isBlank(relatedEntityName)) {
+                                throw new IllegalStateException("Related entity name cannot be blank for entity: " + entity.getName());
+                            }
+
+                            Entity relatedEntity = entityMap.get(relatedEntityName);
+                            if (relatedEntity == null) {
+                                throw new IllegalArgumentException("Related entity '" + relatedEntityName + "' not found for entity: " + entity.getName());
+                            }
+                            return relatedEntity;
+                        }).collect(Collectors.toList());
+
+                logger.info("{} referencedEntities = {}", entity.getName(), referencedEntities);
+                referencedEntitiesMap.put(entity.getName(), referencedEntities);
+
+            } catch (Exception ex) {
+                logger.error("Error building referenced entities for {}: {}", entity.getName(), ex.getMessage());
+                throw ex; // Re-throw the exception to propagate the error
+            }
+        });
+			
+		/*
+		entityMap.values().stream().forEach(entity -> {
 			logger.info("entity {} - attribute = {}", entity.getName(), entity.getAttributes());
 			List<Entity> referencedEntities = entity.getRelateds().stream()
 					.filter(related -> StringUtils.isNotBlank(related.getEntityName())).map(related -> {
@@ -247,6 +276,7 @@ public class BuilderServiceImpl implements BuilderService {
 
 			referencedEntitiesMap.put(entity.getName(), referencedEntities);
 		});
+		*/
 
 		return referencedEntitiesMap;
 	}
@@ -482,7 +512,7 @@ public class BuilderServiceImpl implements BuilderService {
 
 				writeFile(args, entityModel, "local_entity.ftl", classFile);
 			}
-			entity.getAttributes().stream().filter(attribute -> "enum".equals(attribute.getType()))
+			entity.getAttributes().stream().filter(attribute -> DataType.ENUM == attribute.getType())
 					.forEach(attribute -> {
 						writeLocalEnum(args, baseModel, attribute, outputDir);
 					});
