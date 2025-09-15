@@ -49,6 +49,7 @@
 	<xs:attribute name="db-name" type="xs:string"/>
 	<xs:attribute name="entity" type="xs:string" />
 	<xs:attribute name="enum-class" type="xs:string" />
+	<xs:attribute name="enum-values" type="xs:string" />
 	<xs:attribute name="mapped-by" type="xs:string"/>
 	<xs:attribute name="name" type="xs:string"/>
 	<xs:attribute name="owner" type="xs:boolean"/>
@@ -63,7 +64,11 @@
 			<xs:attribute ref="name" use="required"/>
 			<xs:attribute ref="db-name"/>
 			<xs:attribute ref="type" use="required"/>
-			<xs:attribute ref="enum-class" />
+			<xs:attribute ref="enum-class" use="optional"/>
+			<xs:attribute ref="enum-values" use="optional"/>
+			<!-- HWC XML 1.1 that isn't currently primetime in java 
+			<xs:assert test="not(@type = 'enum') or (@enum-class or @enum-values)"/>
+			-->
 		</xs:complexType>
 	</xs:element>
 	
