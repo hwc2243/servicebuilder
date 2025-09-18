@@ -34,4 +34,47 @@ public class BuilderServiceTest extends AbstractServiceTest {
 			builderService.build(serviceFile, args);
 		});
 	}
+	
+	@Test
+	public void whenBidirectionalRelationship_isGood () throws Exception
+	{
+		File serviceFile = this.loadFile("related/many-to-many-bi-good.xml");
+		builderService.build(serviceFile, args);
+	}
+	
+	@Test
+	public void whenBidirectionalRelationship_hasBadRelated () throws Exception
+	{
+		assertThrows(ServiceException.class, () -> {
+			File serviceFile = this.loadFile("related/many-to-many-bi-bad-related.xml");
+			builderService.build(serviceFile, args);
+		});
+	}
+	
+	@Test
+	public void whenBidirectionalRelationship_hasBadMappedBy () throws Exception
+	{
+		assertThrows(ServiceException.class, () -> {
+			File serviceFile = this.loadFile("related/many-to-many-bi-no-mapped-by.xml");
+			builderService.build(serviceFile, args);
+		});
+		
+		assertThrows(ServiceException.class, () -> {
+			File serviceFile = this.loadFile("related/many-to-many-bi-both-mapped-by.xml");
+			builderService.build(serviceFile, args);
+		});
+
+		assertThrows(ServiceException.class, () -> {
+			File serviceFile = this.loadFile("related/many-to-many-bi-wrong-mapped-by.xml");
+			builderService.build(serviceFile, args);
+		});
+
+	}
+	
+	@Test
+	public void whenUnidirectionalRelationship_isGood () throws Exception
+	{
+		File serviceFile = this.loadFile("related/many-to-many-uni-good.xml");
+		builderService.build(serviceFile, args);
+	}
 }
