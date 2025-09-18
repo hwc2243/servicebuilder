@@ -107,8 +107,8 @@ public class BuilderServiceImpl implements BuilderService {
 		model.put("jpaPackage", args.getJpaPackage());
 
 		Map<String, Entity> entityMap = buildEntityMap(service);
-		postProcess(entityMap);
 		validateEntityMap(entityMap);
+		postProcess(entityMap);
 
 		model.put("entityMap", entityMap);
 		Map<String, List<Entity>> referencedEntitiesMap = buildReferencedEntitiesMap(entityMap);
@@ -359,10 +359,32 @@ public class BuilderServiceImpl implements BuilderService {
 
 	protected void validateEntityMap(Map<String, Entity> entityMap) throws ServiceException {
 		for (Entity entity : entityMap.values()) {
+			logger.info("Validating entity: " + entity.getName());
+			validateAttributes(entity);
 			validateFinders(entity);
+			validateRelated(entity, entityMap);
 		}
 	}
 
+	protected void validateAttributes (Entity entity) throws ServiceException {
+		for (Attribute attribute : entity.getAttributes()) {
+			if (DataType.ENUM == attribute.getType()) {
+				if (attribute.getEnumClass() != null && attribute.getEnumValues() != null) {
+					throw new ServiceException(String.format("Attribute %s on %s cannot have both enumClass and enumValues defined.",
+							attribute.getName(), entity.getName()));
+				}
+				if (attribute.getEnumClass() == null && attribute.getEnumValues() == null) {
+					throw new ServiceException(String.format("Attribute %s on %s must have either enumClass or enumValues defined.",
+							attribute.getName(), entity.getName()));
+				}
+				if (attribute.getEnumValues() != null && attribute.getEnumValues().isEmpty()) {
+					throw new ServiceException(String.format("Attribute %s on %s has an empty enumValues list.",
+							attribute.getName(), entity.getName()));
+				}
+			}
+		}
+	}
+	
 	protected void validateFinders(Entity entity) throws ServiceException {
 		for (Finder finder : entity.getFinders()) {
 			for (FinderAttribute attribute : finder.getFinderAttributes()) {
@@ -370,6 +392,45 @@ public class BuilderServiceImpl implements BuilderService {
 					throw new ServiceException(String.format("Finder %s on %s is invalid, %s is not an attribute.",
 							"findBy" + finder.buildFinderColumnNames(), entity.getName(), attribute.getName()));
 				}
+			}
+		}
+	}
+	
+	protected void validateRelated (Entity entity, Map<String, Entity> entityMap) throws ServiceException
+	{
+		if (entity.getRelateds() != null) {
+			logger.info("Validating related for entity: " + entity.getName());
+		}
+		for (Related related : entity.getRelateds()) {
+			if (StringUtils.isBlank(related.getEntityName())) {
+				throw new ServiceException("Related entity name cannot be blank for entity: " + entity.getName());
+			}
+			
+			Entity relatedEntity = entityMap.get(related.getEntityName());
+			if (relatedEntity == null) {
+				throw new ServiceException("Related entity '" + related.getEntityName() + "' not found for entity: " + entity.getName());
+			}
+			
+			if (related.getRelationshipType() == null) {
+				throw new ServiceException("Related entity '" + related.getEntityName() + "' must have a relationship type defined for entity: " + entity.getName());
+			} else if (related.getRelationshipType() == RelationshipType.MANY_TO_MANY) {
+				Related relatedEntityRelated = relatedEntity.getRelated(entity.getName() + "s");
+				if (relatedEntityRelated == null) {
+					// if there is no relatedEntity related definition assume this unidirectional
+					related.setBidirectional(false);
+				} else if (relatedEntityRelated.getRelationshipType() != RelationshipType.MANY_TO_MANY) {
+					throw new ServiceException("Related entity '" + related.getEntityName() + "' has an invalid relationship type for entity: " + entity.getName());
+				} else if (!(StringUtils.isEmpty(related.getMappedBy()) ^ StringUtils.isEmpty(relatedEntityRelated.getMappedBy()))) {
+					throw new ServiceException("Related entities '" + entity.getName() + "'.'" + related.getName() + "' and '" + relatedEntity.getName() + "'.'" + relatedEntityRelated.getName() + "' must have one and only one side as the mapped-by for MANY_TO_MANY relationship");
+				} else if (!StringUtils.isEmpty(related.getMappedBy()) && !related.getMappedBy().equals(relatedEntityRelated.getName())) {
+					throw new ServiceException("Related entity '" + related.getEntityName() + "' does not have the mapped-by name: " + related.getMappedBy() + " specified by '" + entity.getName() + "'.'" + related.getName() + "'");
+				}
+				related.setBidirectional(true);
+			} else if (related.getRelationshipType() == RelationshipType.ONE_TO_MANY) {
+			} else if (related.getRelationshipType() == RelationshipType.MANY_TO_ONE) {
+			} else if (related.getRelationshipType() == RelationshipType.ONE_TO_ONE) {
+			} else {
+				throw new ServiceException("Related entity '" + related.getEntityName() + "' has an invalid relationship type for entity: " + entity.getName());
 			}
 		}
 	}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="test" package="m2m.uni.good">
+	<entity name="foo">
+		<attribute name="id" type="long"/>
+
+	</entity>
+	
+	<entity name="bar">
+        <attribute name="id" type="long"/>
+        
+        <related name="foos" entity="foo" collection="list" relationship="many_to_many"/>
+    </entity>
+</service>

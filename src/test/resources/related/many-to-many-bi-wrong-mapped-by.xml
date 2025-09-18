@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="test" package="m2m.bi.wrong.mapped.by">
+	<entity name="foo">
+		<attribute name="id" type="long"/>
+
+        <related name="bars" collection="list" relationship="many_to_many" entity="bar" />
+	</entity>
+	
+	<entity name="bar">
+        <attribute name="id" type="long"/>
+        
+        <related name="foos" collection="list" relationship="many_to_many" entity="foo" mapped-by="foos"/>
+    </entity>
+</service>
