@@ -1,11 +1,14 @@
 <#include "/functions.ftl">
+<#include "entity/equals_hashcode.ftl">
 <#include "/attribute/enum.ftl">
+<#include "/attribute/key.ftl">
 <#include "/attribute/primitive.ftl">
 <#include "/attribute/one_to_one.ftl">
 <#include "/attribute/one_to_many.ftl">
 <#include "/attribute/many_to_one.ftl">
 <#include "/attribute/many_to_many.ftl">
 <#include "/accessor/enum.ftl">
+<#include "/accessor/key.ftl">
 <#include "/accessor/primitive.ftl">
 <#include "/accessor/one_to_one.ftl">
 <#include "/accessor/one_to_many.ftl">
@@ -30,6 +33,9 @@ import ${jpaPackage}.Entity;
 import ${jpaPackage}.Enumerated;
 import ${jpaPackage}.EnumType;
 import ${jpaPackage}.FetchType;
+import ${jpaPackage}.GeneratedValue;
+import ${jpaPackage}.GenerationType;
+import ${jpaPackage}.Id;
 import ${jpaPackage}.Inheritance;
 import ${jpaPackage}.InheritanceType;
 import ${jpaPackage}.JoinColumn;
@@ -44,6 +50,7 @@ import ${jpaPackage}.Table;
 import java.io.Serializable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import ${localModelPackage}.${entity.name?cap_first};
@@ -62,6 +69,8 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 </#if>
     implements Serializable
 {
+<@key_attribute entity entity.key/>
+
 <#list entity.attributes as attribute>
 <#if attribute.type == "ENUM">
 <@enum_attribute entity=entity attribute=attribute/>
@@ -87,6 +96,8 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 
 </#if>
 </#list>
+
+<@key_accessors entity=entity key=entity.key/>
 
 <#list entity.attributes as attribute>
 <#if attribute.type == "ENUM">
@@ -114,4 +125,7 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 </#if>
 
 </#list>
+
+<@equals_hashcode entity=entity key=entity.key/>
+
 }

@@ -12,9 +12,12 @@ import com.github.hwc2243.servicebuilder.model.DataType;
 import com.github.hwc2243.servicebuilder.model.Entity;
 import com.github.hwc2243.servicebuilder.model.Finder;
 import com.github.hwc2243.servicebuilder.model.FinderAttribute;
+import com.github.hwc2243.servicebuilder.model.Key;
+import com.github.hwc2243.servicebuilder.model.KeyType;
 import com.github.hwc2243.servicebuilder.model.Related;
 import com.github.hwc2243.servicebuilder.model.RelationshipType;
 import com.github.hwc2243.servicebuilder.model.Service;
+import com.github.hwc2243.servicebuilder.model.TenantDiscriminator;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -107,7 +110,7 @@ public class BuilderServiceImpl implements BuilderService {
 		model.put("jpaPackage", args.getJpaPackage());
 
 		Map<String, Entity> entityMap = buildEntityMap(service);
-		validateEntityMap(entityMap);
+		validateService(service, entityMap);
 		postProcess(entityMap);
 
 		model.put("entityMap", entityMap);
@@ -140,6 +143,7 @@ public class BuilderServiceImpl implements BuilderService {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+
 		service.getEntities().stream().forEach(entity -> {
 			writeBaseEntity(args, model, entity, baseModelDir);
 			writeLocalEntity(args, model, entity, localModelDir);
@@ -358,16 +362,11 @@ public class BuilderServiceImpl implements BuilderService {
 	}
 
 	protected void validateEntityMap(Map<String, Entity> entityMap) throws ServiceException {
-		for (Entity entity : entityMap.values()) {
-			logger.info("Validating entity: " + entity.getName());
-			validateAttributes(entity);
-			validateFinders(entity);
-			validateRelated(entity, entityMap);
-		}
 	}
 
-	protected void validateAttributes (Entity entity) throws ServiceException {
+	protected void validateAttributes (Entity entity, TenantDiscriminator tenantDiscriminator) throws ServiceException {
 		for (Attribute attribute : entity.getAttributes()) {
+			// ensure enum attributes are properly defined
 			if (DataType.ENUM == attribute.getType()) {
 				if (attribute.getEnumClass() != null && attribute.getEnumValues() != null) {
 					throw new ServiceException(String.format("Attribute %s on %s cannot have both enumClass and enumValues defined.",
@@ -383,9 +382,40 @@ public class BuilderServiceImpl implements BuilderService {
 				}
 			}
 		}
+		
+		// if the entity is multitenant ensure the tenant-discriminator attribute exists
+		if (entity.isMultitenant() && tenantDiscriminator != null) {
+			Attribute attribute = entity.getAttribute(tenantDiscriminator.getName());
+			if (attribute == null) {
+				attribute = new Attribute();
+				attribute.setName(tenantDiscriminator.getName());
+				attribute.setType(tenantDiscriminator.getType());
+				attribute.setIndexed(true);
+				entity.addAttribute(attribute);
+			} else {
+				if (attribute.getType() != tenantDiscriminator.getType()) {
+					throw new ServiceException(String.format("Entity %s is multitenant but tenant-discriminator attribute %s has type %s instead of %s.",
+							entity.getName(), attribute.getName(), attribute.getType(), tenantDiscriminator.getType()));
+				}
+				attribute.setIndexed(true);
+			}
+		}
 	}
 	
-	protected void validateFinders(Entity entity) throws ServiceException {
+	protected void validateEntity (Entity entity) throws ServiceException {
+		if (entity.getKey() == null) {
+			if (entity.getAttribute("id") != null) {
+				throw new ServiceException(String.format("Entity %s can not auto generate a key because an attribute with the name 'id' already exists.", entity.getName()));
+			}
+			Key key = Key.builder().name("id")
+			                       .type(KeyType.LONG)
+			                       .build();
+			entity.setKey(key);
+		}
+			
+	}
+	
+	protected void validateFinders (Entity entity) throws ServiceException {
 		for (Finder finder : entity.getFinders()) {
 			for (FinderAttribute attribute : finder.getFinderAttributes()) {
 				if (entity.getAttribute(attribute.getName()) == null) {
@@ -435,6 +465,30 @@ public class BuilderServiceImpl implements BuilderService {
 		}
 	}
 
+	protected void validateService (Service service, Map<String, Entity> entityMap) throws ServiceException {
+		if (StringUtils.isBlank(service.getPackageName())) {
+			throw new ServiceException("Service package name cannot be blank");
+		}
+		if (service.getEntities() == null || service.getEntities().isEmpty()) {
+			throw new ServiceException("Service must have at least one entity defined");
+		}
+		if (service.isMultitenant() && service.getTenantDiscriminator() == null) {
+			throw new ServiceException("Service is multitenant but no tenant-discriminator defined");
+		} else if (!service.isMultitenant() && service.getTenantDiscriminator() != null) {
+			throw new ServiceException("Service is not multitenant but tenant-discriminator defined");
+		}
+		
+		for (Entity entity : entityMap.values()) {
+			logger.info("Validating entity: " + entity.getName());
+			validateAttributes(entity, service.getTenantDiscriminator());
+			validateFinders(entity);
+			validateRelated(entity, entityMap);
+			validateEntity(entity);
+		}
+
+		validateEntityMap(entityMap);
+	}
+	
 	protected void writeApiBaseExternal(BuilderArgs args, Map<String, Object> baseModel, Entity entity,
 			File outputDir) {
 		try {

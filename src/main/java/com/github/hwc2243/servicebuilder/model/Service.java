@@ -21,6 +21,15 @@ public class Service {
 	
 	@Getter
 	@Setter
+	protected boolean multitenant;
+	
+	@Getter
+	@Setter
+	@JacksonXmlProperty(localName = "tenant-discriminator")
+	protected TenantDiscriminator tenantDiscriminator;
+	
+	@Getter
+	@Setter
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "entity")
 	protected List<Entity> entities;

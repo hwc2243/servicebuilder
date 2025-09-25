@@ -32,6 +32,11 @@ public class Attribute {
 	
 	@Getter
 	@Setter
+	@JsonIgnore
+	protected boolean indexed = false;
+	
+	@Getter
+	@Setter
 	@JacksonXmlProperty(localName = "enum-class")
 	protected String enumClass = null;
 	

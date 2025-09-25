@@ -4,30 +4,18 @@ import java.io.Serializable;
 
 import java.util.Objects;
 
-import ${jpaPackage}.GeneratedValue;
-import ${jpaPackage}.GenerationType;
-import ${jpaPackage}.Id;
 import ${jpaPackage}.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class AbstractBaseEntity
   implements Serializable
 {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected long id;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    
+    protected abstract Object getKey ();
     
     @Override
 	public int hashCode() {
-		return Objects.hash(id);
+		return Objects.hash(getKey());
 	}
 	
 	@Override
@@ -40,6 +28,6 @@ public abstract class AbstractBaseEntity
 			return false;
 			
 		AbstractBaseEntity other = (AbstractBaseEntity) obj;
-		return id == other.id;
+		return getKey().equals(other.getKey());
 	}
 }

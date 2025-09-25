@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
@@ -29,6 +30,11 @@ public class Entity {
 	
 	@Getter
 	@Setter
+	@JsonIgnore
+	protected Key key;
+	
+	@Getter
+	@Setter
 	protected boolean persistence = true;
 	
 	
@@ -39,7 +45,16 @@ public class Entity {
 	
 	@Getter
 	@Setter
+	public boolean multitenant = false;
+	
+	@Getter
+	@Setter
 	protected String parent = null;
+	
+	@Getter
+	@Setter
+	@JacksonXmlProperty(localName = "tenant-discriminator")
+	protected TenantDiscriminator tenantDiscriminator = null;
 	
 	@Getter
 	@Setter
