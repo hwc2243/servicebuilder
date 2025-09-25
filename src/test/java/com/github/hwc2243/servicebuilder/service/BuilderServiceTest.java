@@ -1,5 +1,6 @@
 package com.github.hwc2243.servicebuilder.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
@@ -26,6 +27,13 @@ public class BuilderServiceTest extends AbstractServiceTest {
 		args.setOutputDir("/tmp");
 	}
 
+	@Test
+	public void whenSimple_isGood () throws Exception
+	{
+		File serviceFile = this.loadFile("simple-service.xml");
+		builderService.build(serviceFile, args);
+	}
+	
 	@Test
 	public void whenFinder_hasBadColumn () throws Exception
 	{
@@ -76,5 +84,32 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	{
 		File serviceFile = this.loadFile("related/many-to-many-uni-good.xml");
 		builderService.build(serviceFile, args);
+	}
+	
+	@Test
+	public void whenMultitenant_NoDiscriminator () throws Exception
+	{
+		assertThrows(ServiceException.class, () -> {
+			File serviceFile = this.loadFile("multitenant/multi-no-discriminator.xml");
+			builderService.build(serviceFile, args);
+		});
+	}
+	
+	@Test
+	public void whenNoMultitenant_HasDiscriminator () throws Exception
+	{
+		assertThrows(ServiceException.class, () -> {
+			File serviceFile = this.loadFile("multitenant/no-multi-discriminator.xml");
+			builderService.build(serviceFile, args);
+		});
+	}
+	
+	@Test
+	public void whenMultitenant_HasDiscriminator () throws Exception
+	{
+		assertDoesNotThrow(() -> {
+			File serviceFile = this.loadFile("multitenant/multi-discriminator-good.xml");
+			builderService.build(serviceFile, args);
+		});
 	}
 }

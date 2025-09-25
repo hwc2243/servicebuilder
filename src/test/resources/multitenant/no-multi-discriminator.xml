@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<service name="test" package="test.simple">
+<service name="test" package="test.simple" >
+
+	<tenant-discriminator name="tenantId" type="long"/>
+	
 	<entity name="test_entity">
 		<attribute name="test_col_a" type="int"/>
 	</entity>

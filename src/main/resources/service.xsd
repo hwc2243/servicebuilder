@@ -20,7 +20,7 @@
 		</xs:restriction>
 	</xs:simpleType>
 	
-	<xs:simpleType name="dataType">
+	<xs:simpleType name="dataTypes">
         <xs:restriction base="xs:string">
             <xs:enumeration value="boolean" />
             <xs:enumeration value="enum" />
@@ -31,6 +31,14 @@
             <xs:enumeration value="string" />
             <xs:enumeration value="localdate" />
             <xs:enumeration value="localtime" />
+        </xs:restriction>
+    </xs:simpleType>
+
+	<xs:simpleType name="keyTypes">
+        <xs:restriction base="xs:string">
+         	<xs:enumeration value="int" />
+            <xs:enumeration value="long" />
+            <xs:enumeration value="string" />
         </xs:restriction>
     </xs:simpleType>
         
@@ -51,14 +59,23 @@
 	<xs:attribute name="enum-class" type="xs:string" />
 	<xs:attribute name="enum-values" type="xs:string" />
 	<xs:attribute name="mapped-by" type="xs:string"/>
+	<xs:attribute name="multitenant" type="xs:boolean"/>
 	<xs:attribute name="name" type="xs:string"/>
 	<xs:attribute name="owner" type="xs:boolean"/>
 	<xs:attribute name="package" type="xs:string"/>
 	<xs:attribute name="parent" type="xs:string"/>
 	<xs:attribute name="persistence" type="xs:boolean"/>
 	<xs:attribute name="relationship" type="relationshipType"/>
-	<xs:attribute name="type" type="dataType"/>
-	 
+	<xs:attribute name="type" type="dataTypes"/>
+	
+	<xs:element name="key">
+		<xs:complexType>
+			<xs:attribute ref="name" use="required"/>
+			<xs:attribute ref="db-name"/>
+			<xs:attribute name="type" type="keyTypes" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	
 	<xs:element name="attribute">
 		<xs:complexType>
 			<xs:attribute ref="name" use="required"/>
@@ -66,7 +83,7 @@
 			<xs:attribute ref="type" use="required"/>
 			<xs:attribute ref="enum-class" use="optional"/>
 			<xs:attribute ref="enum-values" use="optional"/>
-			<!-- HWC XML 1.1 that isn't currently primetime in java 
+			<!-- HWC XML 1.1 isn't currently primetime in java so we will enforce this in code 
 			<xs:assert test="not(@type = 'enum') or (@enum-class or @enum-values)"/>
 			-->
 		</xs:complexType>
@@ -124,6 +141,7 @@
 	<xs:element name="entity">
 		<xs:complexType>
 			<xs:sequence>
+				<xs:element ref="key" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element ref="attribute" minOccurs="1" maxOccurs="unbounded"/>
 				<xs:element ref="related" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element ref="finder" minOccurs="0" maxOccurs="unbounded"/>
@@ -135,17 +153,29 @@
 			<xs:attribute ref="abstract" />
 			<xs:attribute ref="parent" />
 			<xs:attribute ref="persistence" />
+			<xs:attribute ref="multitenant" />
 		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="tenant-discriminator">
+	    <xs:complexType>
+            <xs:attribute ref="name" use="required"/>
+            <xs:attribute name="type" type="keyTypes" use="required"/>
+        </xs:complexType>
 	</xs:element>
 	
 	<xs:element name="service">
 		<xs:complexType>
 			<xs:sequence>
+				<xs:element ref="tenant-discriminator" minOccurs="0" maxOccurs="1"/>
+			
 				<xs:element ref="entity" minOccurs="1" maxOccurs="unbounded"/>
 			</xs:sequence>
 			
 			<xs:attribute ref="name" use="required"/>
 			<xs:attribute ref="package" use="required"/>
+			<xs:attribute ref="multitenant" />
+			
 		</xs:complexType>
 	</xs:element>
 </xs:schema>
