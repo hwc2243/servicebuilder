@@ -46,7 +46,11 @@ import ${jpaPackage}.MappedSuperclass;
 import ${jpaPackage}.OneToMany;
 import ${jpaPackage}.OneToOne;
 import ${jpaPackage}.Table;
+<#if entity.multitenant>
 
+import ${multitenantPackage}.Multitenant;
+
+</#if>
 import java.io.Serializable;
 
 import java.util.List;
@@ -67,7 +71,7 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 <#else>
 public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?cap_first}> extends AbstractBaseEntity
 </#if>
-    implements Serializable
+    implements <#if entity.multitenant>Multitenant, </#if>Serializable
 {
 <@key_attribute entity entity.key/>
 

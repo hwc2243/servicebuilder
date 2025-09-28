@@ -6,6 +6,7 @@ package ${localModelPackage};
 import java.io.Serializable;
 
 import ${jpaPackage}.Entity;
+import ${jpaPackage}.Index;
 import ${jpaPackage}.Inheritance;
 import ${jpaPackage}.InheritanceType;
 import ${jpaPackage}.Table;
@@ -15,11 +16,7 @@ import ${jpaPackage}.UniqueConstraint;
 import ${baseModelPackage}.Base${entity.name?cap_first};
 
 @Entity
-<#if entity.dbName?has_content>
-<@table_definition dbName=entity.dbName uniqueFinders=entity.uniqueFinders/>
-<#else>
-<@table_definition dbName=entity.name uniqueFinders=entity.uniqueFinders/>
-</#if>
+<@table_definition dbName=entity.dbName!"${entity.name}" attributes=entity.attributes uniqueFinders=entity.uniqueFinders/>
 <#if entity.abstractEntity>
 @Inheritance(strategy = InheritanceType.JOINED)
 </#if>

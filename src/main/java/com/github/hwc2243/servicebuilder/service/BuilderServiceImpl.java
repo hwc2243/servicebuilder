@@ -130,6 +130,15 @@ public class BuilderServiceImpl implements BuilderService {
 		File projectPackageDir = createPackageDir(outputDir, projectPackageName.replace(".", File.separator));
 		logger.debug("Base package dir = {}", projectPackageDir.getAbsolutePath());
 
+		String multitenantPackageName = "";
+		File multitenantPackageDir = null;
+		if (service.isMultitenant()) {
+			multitenantPackageName = projectPackageName + ".multitenant";
+			multitenantPackageDir = createPackageDir(projectPackageDir, "multitenant");
+			model.put("multitenantPackage", multitenantPackageName);
+			model.put("tenantDiscriminator", service.getTenantDiscriminator());
+		}
+
 		// write the models
 		String localModelPackageName = projectPackageName + ".model";
 		model.put("localModelPackage", localModelPackageName);
@@ -155,6 +164,10 @@ public class BuilderServiceImpl implements BuilderService {
 			model.put("localRepositoryPackage", localRepositoryPackageName);
 			String baseRepositoryPackageName = localRepositoryPackageName + ".base";
 			model.put("baseRepositoryPackage", baseRepositoryPackageName);
+
+			if (service.isMultitenant()) {
+				writeMultitenant(args, model, multitenantPackageDir);
+			}
 
 			File localRepositoryDir = createPackageDir(projectPackageDir, "persistence");
 			File baseRepositoryDir = createPackageDir(localRepositoryDir, "base");
@@ -687,6 +700,39 @@ public class BuilderServiceImpl implements BuilderService {
 
 			if (!implFile.exists() || args.isReplace()) {
 				writeFile(args, entityModel, "local_service_impl.ftl", implFile);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	protected void writeMultitenant(BuilderArgs args, Map<String, Object> baseModel, File outputDir) {
+		try {
+			String multitenantName = "Multitenant.java";
+			writeFile(args, baseModel, "multitenant/multitenant.ftl", new File(outputDir, multitenantName));
+
+			String multitenantConfigName = "MultitenantConfig.java";
+			File multitenantConfigClassFile = new File(outputDir, multitenantConfigName);
+			if (!multitenantConfigClassFile.exists() || args.isReplace()) {
+				writeFile(args, baseModel, "multitenant/multitenant_config.ftl", new File(outputDir, multitenantConfigName));
+			}
+
+			String multitenantRepositoryName = "MultitenantCrudRepository.java";
+			writeFile(args, baseModel, "multitenant/multitenant_repository.ftl", new File(outputDir, multitenantRepositoryName));
+			
+			String multitenantRepositoryImplName = "MultitenantCrudRepositoryImpl.java";
+			writeFile(args, baseModel, "multitenant/multitenant_repository_impl.ftl", new File(outputDir, multitenantRepositoryImplName));
+			
+			String multitenantRepositoryFactoryName = "MultitenantRepositoryFactory.java";
+			writeFile(args, baseModel, "multitenant/multitenant_repository_factory.ftl", new File(outputDir, multitenantRepositoryFactoryName));
+
+			String multitenantRepositoryFactoryBeanName = "MultitenantRepositoryFactoryBean.java";
+			writeFile(args, baseModel, "multitenant/multitenant_repository_factory_bean.ftl", new File(outputDir, multitenantRepositoryFactoryBeanName));
+			
+			String tenantDiscriminatorName = "TenantDiscriminator.java";
+			File tenantDiscriminatorClassFile = new File(outputDir, tenantDiscriminatorName);
+			if (!tenantDiscriminatorClassFile.exists() || args.isReplace()) {
+				writeFile(args, baseModel, "multitenant/tenant_discriminator.ftl", new File(outputDir, tenantDiscriminatorName));
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
