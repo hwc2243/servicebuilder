@@ -60,6 +60,10 @@ import ${localModelPackage}.${referencedEntity.name?cap_first};
 <#if entity.parent??>
 import ${localModelPackage}.${entity.parent?cap_first};
 </#if>
+<#if entity.multitenant>
+
+import ${multitenantPackage}.Multitenant;
+</#if>
 
 @MappedSuperclass
 <#if entity.parent??>
@@ -67,7 +71,7 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 <#else>
 public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?cap_first}> extends AbstractBaseEntity
 </#if>
-    implements Serializable
+    implements <#if entity.multitenant>Multitenant, </#if>Serializable
 {
 <@key_attribute entity entity.key/>
 

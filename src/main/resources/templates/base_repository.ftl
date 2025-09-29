@@ -12,15 +12,15 @@ import ${localModelPackage}.${entity.name?cap_first};
 
 public interface Base${entity.name?cap_first}Persistence<T extends ${entity.name?cap_first}, ID> extends JpaRepository<T, ID>
 {
+<#if entity.multitenant>
+	public List<T> findBy${tenantDiscriminator.name?cap_first} (${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name});
+	
+</#if>
 <#if entity.finders??>
 <#list entity.finders as finder>
-<@finder_processor finder=finder/>
+<@finder_preprocessor finder=finder/>
 
-<#if finder.unique>
-    public T findFirstBy${finderAttributes} (${finderParameters});
-<#else>
-	public List<T> ${finderName} (${finderParameters});
-</#if>
+    public ${finderReturn} ${finderName}<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes} (<#if entity.multitenant>${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name}, </#if>${finderParameters});
 </#list>
 </#if>
 } 

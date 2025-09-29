@@ -130,6 +130,17 @@ public class BuilderServiceImpl implements BuilderService {
 		File projectPackageDir = createPackageDir(outputDir, projectPackageName.replace(".", File.separator));
 		logger.debug("Base package dir = {}", projectPackageDir.getAbsolutePath());
 
+		// write multitenant
+		if (service.isMultitenant()) {
+			String multitenantPackageName = projectPackageName + ".multitenant";
+			model.put("multitenantPackage", multitenantPackageName);
+			File multitenantDir = createPackageDir(projectPackageDir, "multitenant");
+			
+			model.put("tenantDiscriminator", service.getTenantDiscriminator());
+			
+			writeMultitenant(args, model, service, multitenantDir);
+		}
+		
 		// write the models
 		String localModelPackageName = projectPackageName + ".model";
 		model.put("localModelPackage", localModelPackageName);
@@ -693,6 +704,25 @@ public class BuilderServiceImpl implements BuilderService {
 		}
 	}
 
+	protected void writeMultitenant (BuilderArgs args, Map<String, Object> baseModel, Service service, File outputDir) {
+		try
+		{
+			File multitenantFile = new File(outputDir, "Multitenant.java");
+			writeFile(args, baseModel, "multitenant/multitenant.ftl", multitenantFile);
+			
+			File tenantDiscriminatorFile = new File(outputDir, "TenantDiscriminator.java");
+			if (!tenantDiscriminatorFile.exists() || args.isReplace()) {
+				writeFile(args, baseModel, "multitenant/tenant_discriminator.ftl", tenantDiscriminatorFile);
+			}
+			
+			File multitenantServiceFile = new File(outputDir, "MultitenantServiceImpl.java");
+			writeFile(args, baseModel, "multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+	}
+	
 	protected void writeFile(BuilderArgs args, Map<String, Object> model, String templateName, File outputFile)
 			throws IOException, TemplateException {
 		logger.info("Creating {}", outputFile);
