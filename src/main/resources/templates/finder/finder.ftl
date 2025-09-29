@@ -1,4 +1,4 @@
-<#macro finder_processor finder>
+<#macro finder_preprocessor finder>
 <#assign finderName = "">
 <#assign finderAttributes = "">
 <#assign finderArguments = "">
@@ -13,9 +13,11 @@
 <#assign finderParameters += " ">
 <#assign finderParameters += finderParameter.name>
 <#if finder.unique>
-<#assign finderName = "fetchBy" + finderAttributes>
+<#assign finderName = "findFirstBy">
+<#assign finderReturn = "T">
 <#else>
-<#assign finderName = "findBy" + finderAttributes>
+<#assign finderName = "findBy">
+<#assign finderReturn = "List<T>">
 </#if>
 </#list>
 </#macro>
