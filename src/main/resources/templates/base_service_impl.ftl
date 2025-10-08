@@ -15,8 +15,8 @@ import ${localRepositoryPackage}.${entity.name?cap_first}Persistence;
 import ${baseRepositoryPackage}.Base${entity.name?cap_first}Persistence;
 <#if entity.multitenant>
 
-import ${multitenantPackage}.Multitenant;
-import ${multitenantPackage}.MultitenantServiceImpl;
+import ${baseModelPackage}.Multitenant;
+import ${baseServicePackage}.MultitenantServiceImpl;
 </#if>
 
 public abstract class Base${entity.name?cap_first}ServiceImpl<T extends ${entity.name?cap_first}<#if entity.multitenant> & Multitenant</#if>, ID>

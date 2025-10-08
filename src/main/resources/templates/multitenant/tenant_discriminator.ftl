@@ -1,5 +1,6 @@
-package ${multitenantPackage};
+package ${localServicePackage};
 
+import ${baseModelPackage}.Multitenant;
 
 public class TenantDiscriminator implements Multitenant {
 

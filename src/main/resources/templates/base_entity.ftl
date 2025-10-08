@@ -2,14 +2,14 @@
 <#include "entity/equals_hashcode.ftl">
 <#include "/attribute/enum.ftl">
 <#include "/attribute/key.ftl">
-<#include "/attribute/primitive.ftl">
+<#include "/attribute/standard.ftl">
 <#include "/attribute/one_to_one.ftl">
 <#include "/attribute/one_to_many.ftl">
 <#include "/attribute/many_to_one.ftl">
 <#include "/attribute/many_to_many.ftl">
 <#include "/accessor/enum.ftl">
 <#include "/accessor/key.ftl">
-<#include "/accessor/primitive.ftl">
+<#include "/accessor/standard.ftl">
 <#include "/accessor/one_to_one.ftl">
 <#include "/accessor/one_to_many.ftl">
 <#include "/accessor/many_to_one.ftl">
@@ -60,10 +60,6 @@ import ${localModelPackage}.${referencedEntity.name?cap_first};
 <#if entity.parent??>
 import ${localModelPackage}.${entity.parent?cap_first};
 </#if>
-<#if entity.multitenant>
-
-import ${multitenantPackage}.Multitenant;
-</#if>
 
 @MappedSuperclass
 <#if entity.parent??>
@@ -80,7 +76,7 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 <@enum_attribute entity=entity attribute=attribute/>
   
 <#else>
-<@primitive_attribute entity=entity attribute=attribute/>
+<@standard_attribute entity=entity attribute=attribute/>
   
 </#if>
 </#list>
@@ -108,7 +104,7 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 <@enum_accessors entity=entity attribute=attribute/>
 
 <#else>
-<@primitive_accessors entity=entity attribute=attribute/>
+<@standard_accessors entity=entity attribute=attribute/>
 
 </#if>
 </#list>

@@ -1,4 +1,4 @@
-<#macro primitive_accessors entity attribute>
+<#macro standard_accessors entity attribute>
   public ${className(attribute.type.javaType)} get${attribute.name?cap_first} ()
   {
     return this.${attribute.name};

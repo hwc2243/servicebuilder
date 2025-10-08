@@ -29,8 +29,10 @@
             <xs:enumeration value="float" />
             <xs:enumeration value="double" />
             <xs:enumeration value="string" />
-            <xs:enumeration value="localdate" />
-            <xs:enumeration value="localtime" />
+            <xs:enumeration value="date" />
+            <xs:enumeration value="time" />
+            <xs:enumeration value="datetime" />
+            <xs:enumeration value="money" />
         </xs:restriction>
     </xs:simpleType>
 
@@ -131,10 +133,10 @@
 	<!-- New API element which is optional -->
 	<xs:element name="api">
 		<xs:complexType>
-			<xs:sequence>
+			<xs:all>
 				<xs:element ref="internal" minOccurs="0" maxOccurs="1"/>
 				<xs:element ref="external" minOccurs="0" maxOccurs="1"/>
-			</xs:sequence>
+			</xs:all>
 		</xs:complexType>
 	</xs:element>
 	

@@ -1,7 +1,20 @@
+<#include "/functions.ftl">
 <#include "/entity/table.ftl">
 <#include "/entity/builder_class.ftl">
 <#include "/entity/builder_constructor.ftl">
 package ${localModelPackage};
+
+<#list entity.attributes as attribute>
+<#if attribute.type == "ENUM">
+<#if attribute.enumClass?has_content>
+import ${attribute.enumClass};
+<#else>
+import ${localModelPackage}.${attribute.name?cap_first}Type;
+</#if>
+<#elseif attribute.type.javaType?last_index_of(".") gt 0>
+import ${attribute.type.javaType};
+</#if>
+</#list>
 
 import java.io.Serializable;
 
