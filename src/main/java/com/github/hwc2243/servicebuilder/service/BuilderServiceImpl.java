@@ -130,15 +130,8 @@ public class BuilderServiceImpl implements BuilderService {
 		File projectPackageDir = createPackageDir(outputDir, projectPackageName.replace(".", File.separator));
 		logger.debug("Base package dir = {}", projectPackageDir.getAbsolutePath());
 
-		// write multitenant
 		if (service.isMultitenant()) {
-			String multitenantPackageName = projectPackageName + ".multitenant";
-			model.put("multitenantPackage", multitenantPackageName);
-			File multitenantDir = createPackageDir(projectPackageDir, "multitenant");
-			
 			model.put("tenantDiscriminator", service.getTenantDiscriminator());
-			
-			writeMultitenant(args, model, service, multitenantDir);
 		}
 		
 		// write the models
@@ -147,21 +140,27 @@ public class BuilderServiceImpl implements BuilderService {
 		String baseModelPackageName = localModelPackageName + ".base";
 		model.put("baseModelPackage", baseModelPackageName);
 
-		File localModelDir = createPackageDir(projectPackageDir, "model");
-		File baseModelDir = createPackageDir(localModelDir, "base");
-		try {
-			writeFile(args, model, "abstract_base_entity.ftl", new File(baseModelDir, "AbstractBaseEntity.java"));
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		if (args.getBuildType().contains(BuilderArgs.BuildType.ALL) || args.getBuildType().contains(BuilderArgs.BuildType.MODEL)) {
+			File localModelDir = createPackageDir(projectPackageDir, "model");
+			File baseModelDir = createPackageDir(localModelDir, "base");
+			try {
+				if (service.isMultitenant()) {
+					File multitenantFile = new File(baseModelDir, "Multitenant.java");
+					writeFile(args, model, "multitenant/multitenant.ftl", multitenantFile);
+				}
+				writeFile(args, model, "abstract_base_entity.ftl", new File(baseModelDir, "AbstractBaseEntity.java"));
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+
+			service.getEntities().stream().forEach(entity -> {
+				writeBaseEntity(args, model, entity, baseModelDir);
+				writeLocalEntity(args, model, entity, localModelDir);
+			});
 		}
 
-		service.getEntities().stream().forEach(entity -> {
-			writeBaseEntity(args, model, entity, baseModelDir);
-			writeLocalEntity(args, model, entity, localModelDir);
-		});
-
 		// write the repositories
-		if (needPersistence) {
+		if (needPersistence && (args.getBuildType().contains(BuilderArgs.BuildType.ALL) || args.getBuildType().contains(BuilderArgs.BuildType.SERVICE))) {
 			String localRepositoryPackageName = projectPackageName + ".persistence";
 			model.put("localRepositoryPackage", localRepositoryPackageName);
 			String baseRepositoryPackageName = localRepositoryPackageName + ".base";
@@ -188,6 +187,15 @@ public class BuilderServiceImpl implements BuilderService {
 			try {
 				writeFile(args, model, "service_exception.ftl", new File(localServiceDir, "ServiceException.java"));
 				writeFile(args, model, "base_entity_service.ftl", new File(baseServiceDir, "EntityService.java"));
+				if (service.isMultitenant()) {
+					File tenantDiscriminatorFile = new File(localServiceDir, "TenantDiscriminator.java");
+					if (!tenantDiscriminatorFile.exists() || args.isReplace()) {
+						writeFile(args, model, "multitenant/tenant_discriminator.ftl", tenantDiscriminatorFile);
+					}
+					File multitenantServiceFile = new File(baseServiceDir, "MultitenantServiceImpl.java");
+					writeFile(args, model, "multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
+
+				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
@@ -707,16 +715,8 @@ public class BuilderServiceImpl implements BuilderService {
 	protected void writeMultitenant (BuilderArgs args, Map<String, Object> baseModel, Service service, File outputDir) {
 		try
 		{
-			File multitenantFile = new File(outputDir, "Multitenant.java");
-			writeFile(args, baseModel, "multitenant/multitenant.ftl", multitenantFile);
 			
-			File tenantDiscriminatorFile = new File(outputDir, "TenantDiscriminator.java");
-			if (!tenantDiscriminatorFile.exists() || args.isReplace()) {
-				writeFile(args, baseModel, "multitenant/tenant_discriminator.ftl", tenantDiscriminatorFile);
-			}
 			
-			File multitenantServiceFile = new File(outputDir, "MultitenantServiceImpl.java");
-			writeFile(args, baseModel, "multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

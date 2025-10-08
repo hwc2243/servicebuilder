@@ -3,12 +3,12 @@
 
 <#list entity.attributes as attribute>
 <#assign fieldType = (attribute.type == "ENUM")?then((attribute.enumClass?has_content)?then(attribute.enumClass, attribute.name?cap_first + "Type"), attribute.type.javaType)>
-        private ${fieldType} ${attribute.name} = null;
+        private ${className(fieldType)} ${attribute.name} = null;
 </#list>
 
 <#list entity.attributes as attribute>
 <#assign fieldType = (attribute.type == "ENUM")?then((attribute.enumClass?has_content)?then(attribute.enumClass, attribute.name?cap_first + "Type"), attribute.type.javaType)>
-        public Builder ${attribute.name}(${fieldType} ${attribute.name}) {
+        public Builder ${attribute.name}(${className(fieldType)} ${attribute.name}) {
             this.${attribute.name} = ${attribute.name};
             return this;
         }

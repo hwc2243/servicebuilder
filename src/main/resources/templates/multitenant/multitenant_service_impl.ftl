@@ -1,4 +1,8 @@
-package ${multitenantPackage};
+package ${baseServicePackage};
+
+import ${baseModelPackage}.Multitenant;
+
+import ${localServicePackage}.TenantDiscriminator;
 
 import java.util.List;
 import java.util.Collection;

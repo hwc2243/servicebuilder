@@ -12,8 +12,10 @@ public enum DataType {
     FLOAT("float", "Float"),
     DOUBLE("double", "Double"),
     STRING("string", "String"),
-    LOCALDATE("localdate", "java.time.LocalDate"),
-    LOCALTIME("localtime", "java.time.LocalTime");
+    DATE("date", "java.time.LocalDate"),
+    TIME("time", "java.time.LocalTime"),
+    DATETIME("datetime", "java.time.LocalDateTime"),
+    MONEY("money", "java.math.BigDecimal");
     
     private final String value;
     private final String javaType;
