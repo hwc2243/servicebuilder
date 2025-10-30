@@ -1,14 +1,6 @@
-package ${localServicePackage};
+package ${multitenantServicePackage};
 
-import ${baseModelPackage}.Multitenant;
+public interface TenantDiscriminator {
 
-public class TenantDiscriminator implements Multitenant {
-
-	public TenantDiscriminator() {
-		// TODO Auto-generated constructor stub
-	}
-
-	public ${tenantDiscriminator.type.javaType} get${tenantDiscriminator.name?cap_first} () {
-		throw new IllegalStateException("TenantDiscriminator.get${tenantDiscriminator.name?cap_first}() needs to be implemented.");
-	}
+	public ${tenantDiscriminator.type.javaType} get${tenantDiscriminator.name?cap_first} ();
 }
