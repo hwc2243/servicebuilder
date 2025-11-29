@@ -281,12 +281,30 @@ public class BuilderServiceImpl implements BuilderService {
 			String clientBaseRestPackageName = clientRestPackageName + ".base";
 			model.put("clientBaseRestPackage", clientBaseRestPackageName);
 			File clientBaseRestDir = createPackageDir(clientRestDir, "base");
+
+			String clientRepositoryPackageName = clientPackageName + ".repository";
+			model.put("clientRepositoryPackage", clientRepositoryPackageName);
+			File clientRepositoryDir = createPackageDir(clientPackageDir, "repository");
+			
+			String clientBaseRepositoryPackageName = clientRepositoryPackageName + ".base";
+			model.put("clientBaseRepositoryPackage", clientBaseRepositoryPackageName);
+			File clientBaseRepositoryDir = createPackageDir(clientRepositoryDir, "base");
+
+			String clientServicePackageName = clientPackageName + ".service";
+			model.put("clientServicePackage", clientServicePackageName);
+			File clientServiceDir = createPackageDir(clientPackageDir, "service");
+			
+			String clientBaseServicePackageName = clientServicePackageName + ".base";
+			model.put("clientBaseServicePackage", clientBaseServicePackageName);
+			File clientBaseServiceDir = createPackageDir(clientServiceDir, "base");
 			
 			try {
 				writeFile(args, model, "/client/abstract_client_base_entity.ftl",
 						new File(clientBaseModelDir, "AbstractBaseEntity.java"));
 				writeFile(args, model, "/client/abstract_client_base_rest.ftl",
 						new File(clientBaseRestDir, "AbstractRestClient.java"));
+				writeFile(args, model, "client/client_service_exception.ftl", new File(clientServiceDir, "ServiceException.java"));
+				writeFile(args, model, "client/client_entity_service.ftl", new File(clientBaseServiceDir, "EntityService.java"));
 			} catch (TemplateException ex) {
 				throw new ServiceException("Failed to create client classes", ex);
 			}
@@ -296,6 +314,12 @@ public class BuilderServiceImpl implements BuilderService {
 				writeClientEntity(args, model, entity, clientModelDir);
 				writeClientBaseRest(args, model, entity, clientBaseRestDir);
 				writeClientRest(args, model, entity, clientRestDir);
+				if (entity.isPersistence()) {
+					writeClientBaseRepository(args, model, entity, clientBaseRepositoryDir);
+					writeClientRepository(args, model, entity, clientRepositoryDir);
+				}
+				writeClientBaseService(args, model, entity, clientBaseServiceDir);
+				writeClientService(args, model, entity, clientServiceDir);
 			});
 			
 			if (service.isMultitenant()) {
@@ -318,6 +342,10 @@ public class BuilderServiceImpl implements BuilderService {
 					if (!headerProviderFile.exists() || args.isReplace()) {
 						writeFile(args, model, "client/header_provider.ftl", headerProviderFile);
 					}
+					
+					model.put("multitenantBaseServicePackage", clientBaseServicePackageName);
+					File multitenantServiceFile = new File(clientBaseServiceDir, "MultitenantServiceImpl.java");
+					writeFile(args, model, "multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
 				} catch (TemplateException ex) {
 					throw new ServiceException("Failed to create client multitenant", ex);
 				}
@@ -717,7 +745,10 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "client/client_entity.ftl", classFile);
+			
+			if (!classFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "client/client_entity.ftl", classFile);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -745,7 +776,9 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "client/client_rest.ftl", classFile);
+			if (!classFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "client/client_rest.ftl", classFile);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -760,6 +793,76 @@ public class BuilderServiceImpl implements BuilderService {
 			entityModel.put("entity", entity);
 
 			writeFile(args, entityModel, "client/client_base_rest.ftl", classFile);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	protected void writeClientRepository(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
+		try {
+			String className = StringUtils.capitalize(entity.getName()) + "Persistence.java";
+			File classFile = new File(outputDir, className);
+
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+
+			if (!classFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "client/client_repository.ftl", classFile);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	protected void writeClientBaseRepository(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
+		try {
+			String className = "Base" + StringUtils.capitalize(entity.getName()) + "Persistence.java";
+			File classFile = new File(outputDir, className);
+
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+
+			writeFile(args, entityModel, "client/client_base_repository.ftl", classFile);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	protected void writeClientService (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
+		try {
+			String serviceName = StringUtils.capitalize(entity.getName()) + "Service.java";
+			File serviceFile = new File(outputDir, serviceName);
+			String implName = StringUtils.capitalize(entity.getName()) + "ServiceImpl.java";
+			File implFile = new File(outputDir, implName);
+
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+
+			if (!serviceFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "client/client_service.ftl", serviceFile);
+			}
+
+			if (!implFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "client/client_service_impl.ftl", implFile);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	protected void writeClientBaseService(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
+		try {
+			String serviceName = "Base" + StringUtils.capitalize(entity.getName()) + "Service.java";
+			File serviceFile = new File(outputDir, serviceName);
+			String implName = "Base" + StringUtils.capitalize(entity.getName()) + "ServiceImpl.java";
+			File implFile = new File(outputDir, implName);
+
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+
+			writeFile(args, entityModel, "client/client_base_service.ftl", serviceFile);
+			writeFile(args, entityModel, "client/client_base_service_impl.ftl", implFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

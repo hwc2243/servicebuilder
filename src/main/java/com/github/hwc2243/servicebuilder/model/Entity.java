@@ -30,7 +30,6 @@ public class Entity {
 	
 	@Getter
 	@Setter
-	@JsonIgnore
 	protected Key key;
 	
 	@Getter

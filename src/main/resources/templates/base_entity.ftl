@@ -1,5 +1,5 @@
 <#include "/functions.ftl">
-<#include "entity/equals_hashcode.ftl">
+<#include "/entity/equals_hashcode.ftl">
 <#include "/attribute/enum.ftl">
 <#include "/attribute/key.ftl">
 <#include "/attribute/standard.ftl">

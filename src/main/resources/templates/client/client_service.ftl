@@ -1,0 +1,9 @@
+package ${clientServicePackage};
+
+import ${clientBaseServicePackage}.Base${entity.name?cap_first}Service;
+
+import ${clientModelPackage}.${entity.name?cap_first};
+
+public interface ${entity.name?cap_first}Service extends Base${entity.name?cap_first}Service<${entity.name?cap_first},Long>
+{
+}

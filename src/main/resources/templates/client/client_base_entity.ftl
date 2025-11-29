@@ -62,7 +62,7 @@ import ${clientModelPackage}.${entity.parent?cap_first};
 </#if>
 <#if entity.multitenant>
 
-import ${baseModelPackage}.Multitenant;
+import ${clientBaseModelPackage}.Multitenant;
 </#if>
 
 @MappedSuperclass
