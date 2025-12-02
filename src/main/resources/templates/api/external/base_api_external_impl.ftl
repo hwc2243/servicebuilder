@@ -56,7 +56,7 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("DELETE")>
 	@DeleteMapping("/{id}")
 	@Override
-    public ResponseEntity<${baseEntityName}> delete${baseEntityName}(@PathVariable Long id) 
+    public ResponseEntity<${baseEntityName}> delete${baseEntityName}(@PathVariable ${entity.key.type.javaType} id) 
     {
       try
       {
@@ -74,7 +74,7 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("READ")>
 	@GetMapping("/{id}")
 	@Override
-	public ResponseEntity<${baseEntityName}> get${baseEntityName} (@PathVariable Long id)
+	public ResponseEntity<${baseEntityName}> get${baseEntityName} (@PathVariable ${entity.key.type.javaType} id)
 	{
 		${baseEntityName} ${entity.name} = null;
 		
@@ -142,18 +142,29 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("UPDATE")>
     @PutMapping("/{id}")
     @Override
-    public ResponseEntity<${baseEntityName}> update${baseEntityName}(@PathVariable Long id, @RequestBody ${baseEntityName} ${entity.name})
+    public ResponseEntity<${baseEntityName}> update${baseEntityName}(@PathVariable ${entity.key.type.javaType} id, @RequestBody ${baseEntityName} ${entity.name})
     {
       ${baseEntityName} updated${baseEntityName} = null;
-      
+
+<#if entity.key.type.value == "string" || entity.key.type.value == "uuid" >
+      if (${entity.name}.getId() == null || "".equals(${entity.name}.getId()))
+      {
+      	${entity.name}.setId(id);
+      }
+      else if (!${entity.name}.getId().equals(id))
+      {
+        return ResponseEntity.badRequest().build();
+      }
+<#else>
       if (${entity.name}.getId() == 0) 
       {
       	${entity.name}.setId(id);
       }
       else if (id != ${entity.name}.getId())
       {
-         return ResponseEntity.badRequest().build();
+        return ResponseEntity.badRequest().build();
       }
+</#if>
       try
       {
         ${baseEntityName} existing${baseEntityName} = ${entity.name}Service.get(id);

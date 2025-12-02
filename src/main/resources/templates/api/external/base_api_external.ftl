@@ -19,11 +19,11 @@ public interface BaseExternal${baseEntityName}Rest
 </#if>
 	
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("DELETE")>
-    public ResponseEntity<${baseEntityName}> delete${baseEntityName}(Long id); 
+    public ResponseEntity<${baseEntityName}> delete${baseEntityName}(${entity.key.type.javaType} id); 
 </#if>
 
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("READ")>
-	public ResponseEntity<${baseEntityName}> get${baseEntityName} (Long id);
+	public ResponseEntity<${baseEntityName}> get${baseEntityName} (${entity.key.type.javaType} id);
 	
 	public ResponseEntity<List<${baseEntityName}>> list${baseEntityName}s ();
 	
@@ -36,6 +36,6 @@ public interface BaseExternal${baseEntityName}Rest
 </#if>
 	
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("UPDATE")>
-    public ResponseEntity<${baseEntityName}> update${baseEntityName} (Long id, ${baseEntityName} ${entity.name});
+    public ResponseEntity<${baseEntityName}> update${baseEntityName} (${entity.key.type.javaType} id, ${baseEntityName} ${entity.name});
 </#if>
 }

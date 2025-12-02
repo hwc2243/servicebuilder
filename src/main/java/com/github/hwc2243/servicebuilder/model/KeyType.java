@@ -7,7 +7,8 @@ package com.github.hwc2243.servicebuilder.model;
 public enum KeyType {
     INT("int", "Integer"),
     LONG("long", "Long"),
-    STRING("string", "String");
+    STRING("string", "String"),
+    UUID("uuid", "String");
     
     private final String value;
     private final String javaType;

@@ -11,30 +11,41 @@ import ${clientModelPackage}.${className};
 
 import com.google.gson.reflect.TypeToken;
 
-public abstract class Base${className}RestClient
+public abstract class Base${className}RestClient<T extends ${className}>
 <#if entity.multitenant>
   extends MultitenantRestClient  
 <#else>
   extends AbstractRestClient
 </#if>
 {
+	protected String hostPath = "http://localhost:8080";
+	protected String apiPath = "/api/external/${entity.name}";
 
 	public Base${className}RestClient() {
 		super();
 	}
 	
-	public CompletableFuture<${className}> get (long id) {
+	public CompletableFuture<T> create (T entity) {
 		try {
-			${className} ${variableName} = doGet("http://localhost:8080", "/api/external/menu/" + id, new TypeToken<${className}>() {}.getType());
+			T ${variableName} = doPost(hostPath, apiPath, entity, new TypeToken<${className}>() {}.getType());
 			return CompletableFuture.completedFuture(${variableName});
 		} catch (IOException | InterruptedException e) {
 			return CompletableFuture.failedFuture(e);
 		}
 	}
 	
-	public CompletableFuture<List<${className}>> findAll () {
+	public CompletableFuture<T> get (long id) {
 		try {
-			List<${className}> ${variableName}s = doGet("http://localhost:8080", "/api/external/menu",
+			T ${variableName} = doGet(hostPath, apiPath + "/" + id, new TypeToken<${className}>() {}.getType());
+			return CompletableFuture.completedFuture(${variableName});
+		} catch (IOException | InterruptedException e) {
+			return CompletableFuture.failedFuture(e);
+		}
+	}
+	
+	public CompletableFuture<List<T>> findAll () {
+		try {
+			List<T> ${variableName}s = doGet(hostPath, apiPath,
 					new TypeToken<List<${className}>>() {}.getType());
 			
 			return CompletableFuture.completedFuture(${variableName}s);

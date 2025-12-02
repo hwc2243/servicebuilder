@@ -3,6 +3,12 @@ package ${clientBaseRestPackage};
 import ${clientBaseRestPackage}.HeaderProvider;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializer;
 
 import java.io.IOException;
 
@@ -12,13 +18,20 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import java.time.LocalDateTime;
+
+import java.time.format.DateTimeFormatter;
+
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class AbstractRestClient {
 
-	protected Gson gson = new Gson();
+	protected Gson gson = initializeGson();
+	
+	protected Map<String, String> baseHeaders = Map.of("Content-Type", "application/json");
 
     @Autowired
     protected HeaderProvider headerProvider;
@@ -26,30 +39,43 @@ public abstract class AbstractRestClient {
 	public AbstractRestClient() {
 	}
 
+	private Gson initializeGson() {
+        // Use ISO standard format for consistency
+        final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+        // Custom serializer for LocalDateTime: converts object to JSON string
+        JsonSerializer<LocalDateTime> serializer = (src, typeOfSrc, context) -> {
+            if (src == null) return null;
+            return new JsonPrimitive(formatter.format(src));
+        };
+
+        // Custom deserializer for LocalDateTime: converts JSON string back to object
+        JsonDeserializer<LocalDateTime> deserializer = (json, typeOfT, context) -> {
+            if (json == null || json.getAsString().isEmpty()) return null;
+            try {
+                return LocalDateTime.parse(json.getAsString(), formatter);
+            } catch (Exception e) {
+                throw new JsonParseException("Failed to parse LocalDateTime: " + json.getAsString(), e);
+            }
+        };
+
+        // Build the Gson instance with the registered adapters
+        return new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, serializer)
+            .registerTypeAdapter(LocalDateTime.class, deserializer)
+            // Optional: Set pretty printing for easier debugging during development
+            .setPrettyPrinting()
+            .create();
+    }
+    
 	protected Map<String, String> getHeaders ()
 	{
-	    return headerProvider.get();
+		Map<String, String> headers = new HashMap<>(baseHeaders);
+		headers.putAll(headerProvider.get());
+		return headers;
 	};
 	
 	protected <T> T doGet (String hostPath, String apiPath, Class<T> targetClass) throws IOException, InterruptedException {
-		/*
-		HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
-		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-				.uri(java.net.URI.create("http://localhost:8080" + apiPath))
-				.GET();
-		
-		Map<String, String> headers = getHeaders();
-		if (headers != null && !headers.isEmpty()) {
-		    headers.forEach(requestBuilder::header); 
-		}
-		
-		if (applicationModel.getOrganizationId() > -1) {
-            String orgId = String.valueOf(applicationModel.getOrganizationId());
-            requestBuilder.header("organization_id", orgId);
-			requestBuilder.header("Authorization", "Bearer " + applicationModel.getTokenResponse().access_token());
-            System.out.println("API Call with organization-id: " + orgId);
-        }
-        */
         
 		HttpRequest request	= createGet(hostPath, apiPath);
 
@@ -66,19 +92,6 @@ public abstract class AbstractRestClient {
 	}
 	
 	public <T> T doGet (String hostPath, String apiPath, Type targetType) throws IOException, InterruptedException {
-        
-        /*
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-            .uri(java.net.URI.create("http://localhost:8080" + apiPath))
-            .header("Authorization", "Bearer " + applicationModel.getTokenResponse().access_token())
-            .GET();
-
-        if (applicationModel.getOrganizationId() > -1) {
-            String orgId = String.valueOf(applicationModel.getOrganizationId());
-            requestBuilder.header("organization_id", orgId);
-            System.out.println("API Call with organization-id: " + orgId);
-        }
-        */
 
 		HttpRequest request	= createGet(hostPath, apiPath);
 
@@ -98,6 +111,49 @@ public abstract class AbstractRestClient {
         }
 	}
 	
+	protected <T> T doPost (String hostPath, String apiPath, Object payload, Class<T> targetClass) throws IOException, InterruptedException {
+		return doPost(hostPath, apiPath, payload, (Type) targetClass);
+	}
+	
+	/**
+	 * Executes an HTTP POST request with a JSON body and attempts to parse the response.
+	 * Expects 201 (Created) or 200 (OK) for success.
+	 * @param <T> The type of the object expected in the response body.
+	 * @param hostPath The base URL of the service.
+	 * @param apiPath The specific API path.
+	 * @param payload The object to serialize as the request body.
+	 * @param targetType The Type/Class used for Gson deserialization.
+	 * @return The parsed object from the response body.
+	 */
+	public <T> T doPost (String hostPath, String apiPath, Object payload, Type targetType) throws IOException, InterruptedException {
+		HttpRequest request	= createPost(hostPath, apiPath, payload);
+		
+		HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+		HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+		if (response.statusCode() == 201 || response.statusCode() == 200) {
+			T result = gson.fromJson(response.body(), targetType);
+			return result;
+		} else {
+			throw new IOException(String.format(
+				"POST API Call Failed. Status: %d. Response Body: %s",
+				response.statusCode(),
+				response.body()
+			));
+		}
+	}
+	
+	protected HttpRequest createDelete (String hostPath, String apiPath)
+	{
+		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+				.uri(java.net.URI.create(hostPath + apiPath))
+				.DELETE();
+		
+		applyHeaders(requestBuilder);
+		
+		return requestBuilder.build();
+	}
+	
 	protected HttpRequest createGet (String hostPath, String apiPath)
 	{
 	    HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
@@ -105,11 +161,39 @@ public abstract class AbstractRestClient {
 				.uri(java.net.URI.create(hostPath + apiPath))
 				.GET();
 		
-		Map<String, String> headers = getHeaders();
-		if (headers != null && !headers.isEmpty()) {
-		    headers.forEach(requestBuilder::header); 
-		}
+		applyHeaders(requestBuilder);
 		
 		return requestBuilder.build();
+	}
+	
+	protected HttpRequest createPost (String hostPath, String apiPath, Object payload)
+	{
+		String jsonPayload = gson.toJson(payload);
+		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+				.uri(java.net.URI.create(hostPath + apiPath))
+				.POST(HttpRequest.BodyPublishers.ofString(jsonPayload));
+		
+		applyHeaders(requestBuilder);
+		
+		return requestBuilder.build();
+	}
+
+	protected HttpRequest createPut (String hostPath, String apiPath, Object payload)
+	{
+		String jsonPayload = gson.toJson(payload);
+		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+				.uri(java.net.URI.create(hostPath + apiPath))
+				.PUT(HttpRequest.BodyPublishers.ofString(jsonPayload));
+		
+		applyHeaders(requestBuilder);
+		
+		return requestBuilder.build();
+	}
+	
+	protected void applyHeaders(HttpRequest.Builder requestBuilder) {
+		Map<String, String> headers = getHeaders();
+		if (headers != null && !headers.isEmpty()) {
+			headers.forEach(requestBuilder::header);
+		}
 	}
 }

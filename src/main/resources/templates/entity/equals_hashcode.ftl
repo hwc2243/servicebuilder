@@ -14,6 +14,10 @@
 			return false;
 			
 		Base${entity.name?cap_first} other = (Base${entity.name?cap_first}) obj;
+<#if entity.key.type.value == "uuid" || entity.key.type.value == "string">
+		return this.get${key.name?cap_first}().equals(other.get${key.name?cap_first}());
+<#else>		
 		return ${key.name} == other.${key.name};
+</#if>
 	}
 </#macro>

@@ -52,6 +52,9 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+<#if entity.key.type.value == "uuid">
+import java.util.UUID;
+</#if>
 
 import ${clientModelPackage}.${entity.name?cap_first};
 <#list referencedEntitiesMap[entity.name] as referencedEntity>
@@ -100,6 +103,14 @@ public abstract class Base${entity.name?cap_first}<T extends Base${entity.name?c
 
 </#if>
 </#list>
+<#if entity.key.type.value == "uuid">
+  public Base${entity.name?cap_first} ()
+  {
+    if (${entity.key.name} == null || "".equals(${entity.key.name})) {
+      ${entity.key.name} = UUID.randomUUID().toString();
+    }
+  }
+</#if>
 
 <@key_accessors entity=entity key=entity.key/>
 
