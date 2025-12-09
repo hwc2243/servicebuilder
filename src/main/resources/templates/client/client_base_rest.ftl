@@ -11,6 +11,8 @@ import ${clientModelPackage}.${className};
 
 import com.google.gson.reflect.TypeToken;
 
+import org.springframework.beans.factory.annotation.Value;
+
 public abstract class Base${className}RestClient<T extends ${className}>
 <#if entity.multitenant>
   extends MultitenantRestClient  
@@ -18,7 +20,10 @@ public abstract class Base${className}RestClient<T extends ${className}>
   extends AbstractRestClient
 </#if>
 {
-	protected String hostPath = "http://localhost:8080";
+<#noparse>
+	@Value("${apiHostName:http://localhost:8080}")
+</#noparse>
+	protected String hostPath;
 	protected String apiPath = "/api/external/${entity.name}";
 
 	public Base${className}RestClient() {
@@ -33,7 +38,25 @@ public abstract class Base${className}RestClient<T extends ${className}>
 			return CompletableFuture.failedFuture(e);
 		}
 	}
-	
+
+/*
+    public CompletableFuture<T> get (long id) {
+    // 1. supplyAsync moves the execution to a worker thread (usually ForkJoinPool.commonPool())
+    return CompletableFuture.supplyAsync(() -> {
+        try {
+            // 2. This synchronous call (doGet) now executes on a background thread.
+            // Note: We use the target type here, which is Organization in your case
+            return doGet(hostPath, apiPath + "/" + id, new TypeToken<Organization>() {}.getType());
+        } catch (IOException | InterruptedException e) {
+            // 3. If an exception occurs, it must be thrown inside the supplier
+            // This causes the CompletableFuture to complete exceptionally.
+            throw new RuntimeException(e);
+        }
+    });
+    // The .exceptionally() or .handle() method is often used after this 
+    // to process the exception on the main thread if needed.
+    }
+*/	
 	public CompletableFuture<T> get (long id) {
 		try {
 			T ${variableName} = doGet(hostPath, apiPath + "/" + id, new TypeToken<${className}>() {}.getType());
