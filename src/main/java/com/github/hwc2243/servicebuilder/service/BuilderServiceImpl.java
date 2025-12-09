@@ -149,7 +149,7 @@ public class BuilderServiceImpl implements BuilderService {
 		model.put("baseModelPackage", baseModelPackageName);
 		model.put("multitenantModelPackage", baseModelPackageName);
 
-		if (args.getBuildType().contains(BuilderArgs.BuildType.ALL) || args.getBuildType().contains(BuilderArgs.BuildType.MODEL)) {
+		if (args.getBuildType().contains(BuilderArgs.BuildType.ALL) || args.getBuildType().contains(BuilderArgs.BuildType.SERVICE)) {
 			File localModelDir = createPackageDir(projectPackageDir, "model");
 			File baseModelDir = createPackageDir(localModelDir, "base");
 			try {
@@ -453,15 +453,16 @@ public class BuilderServiceImpl implements BuilderService {
 					break;
 
 				case ONE_TO_MANY:
-					targetEntity = entityMap.get(related.getEntityName());
+					if (related.isBidirectional()) {
+						targetEntity = entityMap.get(related.getEntityName());
 
-					Related targetRelationship = new Related();
-					targetRelationship.setName(entity.getName());
-					targetRelationship.setEntityName(entity.getName());
-					targetRelationship.setRelationshipType(RelationshipType.MANY_TO_ONE);
-					targetEntity.addRelated(targetRelationship);
-					logger.info("  adding {} to {}", targetRelationship.getName(), targetEntity.getName());
-
+						Related targetRelationship = new Related();
+						targetRelationship.setName(entity.getName());
+						targetRelationship.setEntityName(entity.getName());
+						targetRelationship.setRelationshipType(RelationshipType.MANY_TO_ONE);
+						targetEntity.addRelated(targetRelationship);
+						logger.info("  adding {} to {}", targetRelationship.getName(), targetEntity.getName());
+					}
 					break;
 
 				case MANY_TO_MANY:
@@ -469,7 +470,7 @@ public class BuilderServiceImpl implements BuilderService {
 					logger.info("    relationship {} target {}", related.getName(), related.getEntityName());
 					if (StringUtils.isNotBlank(related.getMappedBy())) {
 						targetEntity = entityMap.get(related.getEntityName());
-						targetRelationship = targetEntity.getRelated(related.getMappedBy());
+						Related targetRelationship = targetEntity.getRelated(related.getMappedBy());
 						targetRelationship.setOwner(true);
 					} else {
 						related.setOwner(true);
@@ -749,6 +750,12 @@ public class BuilderServiceImpl implements BuilderService {
 			if (!classFile.exists() || args.isReplace()) {
 				writeFile(args, entityModel, "client/client_entity.ftl", classFile);
 			}
+			
+			entity.getAttributes().stream()
+				.filter(attribute -> DataType.ENUM == attribute.getType())
+				.forEach(attribute -> {
+					writeClientEnum(args, baseModel, attribute, outputDir);
+				});
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -767,6 +774,24 @@ public class BuilderServiceImpl implements BuilderService {
 			ex.printStackTrace();
 		}
 	}
+	
+	protected void writeClientEnum(BuilderArgs args, Map<String, Object> baseModel, Attribute attribute,
+			File outputDir) {
+		try {
+			String enumName = StringUtils.capitalize(attribute.getName()) + "Type.java";
+			File enumFile = new File(outputDir, enumName);
+
+			if (!enumFile.exists() || args.isReplace()) {
+				Map<String, Object> enumModel = new HashMap<>(baseModel);
+				enumModel.put("attribute", attribute);
+
+				writeFile(args, enumModel, "client/client_enum.ftl", enumFile);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
 
 	protected void writeClientRest(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
 		try {

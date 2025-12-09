@@ -111,6 +111,32 @@ public abstract class AbstractRestClient {
         }
 	}
 	
+	protected <T> T doPatch (String hostPath, String apiPath, Object payload, Class<T> targetClass) throws IOException, InterruptedException {
+		return doPatch(hostPath, apiPath, payload, (Type) targetClass);
+	}
+	
+	public <T> T doPatch (String hostPath, String apiPath, Object payload, Type targetType) throws IOException, InterruptedException {
+		HttpRequest request	= createPatch(hostPath, apiPath, payload);
+		
+		HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+		HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+		if (response.statusCode() == 200 || response.statusCode() == 204) {
+			if (response.body() != null && !response.body().isEmpty() && targetType != Void.class) {
+                // If body is present and a return type is expected
+                T result = gson.fromJson(response.body(), targetType);
+			    return result;
+            }
+            return null; // For 204 No Content
+		} else {
+			throw new IOException(String.format(
+				"PATCH API Call Failed. Status: %d. Response Body: %s",
+				response.statusCode(),
+				response.body()
+			));
+		}
+	}
+	
 	protected <T> T doPost (String hostPath, String apiPath, Object payload, Class<T> targetClass) throws IOException, InterruptedException {
 		return doPost(hostPath, apiPath, payload, (Type) targetClass);
 	}
@@ -143,6 +169,28 @@ public abstract class AbstractRestClient {
 		}
 	}
 	
+	protected <R> R doPut (String hostPath, String apiPath, Object payload, Class<R> targetClass) throws IOException, InterruptedException {
+		return doPut(hostPath, apiPath, payload, (Type) targetClass);
+	}
+	
+	public <R> R doPut (String hostPath, String apiPath, Object payload, Type targetType) throws IOException, InterruptedException {
+		HttpRequest request	= createPut(hostPath, apiPath, payload);
+		
+		HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+		HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+		if (response.statusCode() == 200) {
+			R result = gson.fromJson(response.body(), targetType);
+			return result;
+		} else {
+			throw new IOException(String.format(
+				"PUT API Call Failed. Status: %d. Response Body: %s",
+				response.statusCode(),
+				response.body()
+			));
+		}
+	}
+	
 	protected HttpRequest createDelete (String hostPath, String apiPath)
 	{
 		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
@@ -160,6 +208,19 @@ public abstract class AbstractRestClient {
 		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
 				.uri(java.net.URI.create(hostPath + apiPath))
 				.GET();
+		
+		applyHeaders(requestBuilder);
+		
+		return requestBuilder.build();
+	}
+	
+	protected HttpRequest createPatch (String hostPath, String apiPath, Object payload)
+	{
+		String jsonPayload = gson.toJson(payload);
+		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+				.uri(java.net.URI.create(hostPath + apiPath))
+                // PATCH requires the use of the non-standard method() builder
+				.method("PATCH", HttpRequest.BodyPublishers.ofString(jsonPayload)); 
 		
 		applyHeaders(requestBuilder);
 		

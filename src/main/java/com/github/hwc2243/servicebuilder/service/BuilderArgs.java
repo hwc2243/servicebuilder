@@ -20,7 +20,7 @@ public class BuilderArgs {
 
 	@Parameter(
 			names = {"-b", "--build-type"},
-			description = "The build type: all, client, model, service (default all)",
+			description = "The build type: all, client, service (default all)",
 			converter = BuildTypeConverter.class)
 	@Builder.Default
 	private List<BuildType> buildType = List.of(BuildType.ALL);
@@ -57,7 +57,7 @@ public class BuilderArgs {
 	
 	
 	public enum BuildType {
-		ALL, CLIENT, MODEL, SERVICE
+		ALL, CLIENT, SERVICE
 	}
 
 	
