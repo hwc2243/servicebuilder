@@ -37,7 +37,7 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	@Test
 	public void whenFinder_hasBadColumn () throws Exception
 	{
-		assertThrows(ServiceException.class, () -> {
+		assertThrows(BuildException.class, () -> {
 			File serviceFile = this.loadFile("bad-finder-attribute.xml");
 			builderService.build(serviceFile, args);
 		});
@@ -53,7 +53,7 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	@Test
 	public void whenBidirectionalRelationship_hasBadRelated () throws Exception
 	{
-		assertThrows(ServiceException.class, () -> {
+		assertThrows(BuildException.class, () -> {
 			File serviceFile = this.loadFile("related/many-to-many-bi-bad-related.xml");
 			builderService.build(serviceFile, args);
 		});
@@ -62,17 +62,17 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	@Test
 	public void whenBidirectionalRelationship_hasBadMappedBy () throws Exception
 	{
-		assertThrows(ServiceException.class, () -> {
+		assertThrows(BuildException.class, () -> {
 			File serviceFile = this.loadFile("related/many-to-many-bi-no-mapped-by.xml");
 			builderService.build(serviceFile, args);
 		});
 		
-		assertThrows(ServiceException.class, () -> {
+		assertThrows(BuildException.class, () -> {
 			File serviceFile = this.loadFile("related/many-to-many-bi-both-mapped-by.xml");
 			builderService.build(serviceFile, args);
 		});
 
-		assertThrows(ServiceException.class, () -> {
+		assertThrows(BuildException.class, () -> {
 			File serviceFile = this.loadFile("related/many-to-many-bi-wrong-mapped-by.xml");
 			builderService.build(serviceFile, args);
 		});
@@ -89,7 +89,7 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	@Test
 	public void whenMultitenant_NoDiscriminator () throws Exception
 	{
-		assertThrows(ServiceException.class, () -> {
+		assertThrows(BuildException.class, () -> {
 			File serviceFile = this.loadFile("multitenant/multi-no-discriminator.xml");
 			builderService.build(serviceFile, args);
 		});
@@ -98,7 +98,7 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	@Test
 	public void whenNoMultitenant_HasDiscriminator () throws Exception
 	{
-		assertThrows(ServiceException.class, () -> {
+		assertThrows(BuildException.class, () -> {
 			File serviceFile = this.loadFile("multitenant/no-multi-discriminator.xml");
 			builderService.build(serviceFile, args);
 		});

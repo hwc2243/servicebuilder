@@ -1,4 +1,4 @@
-package ${clientModelPackage};
+package ${dtoPackage};
 
 import java.util.stream.Stream;
 

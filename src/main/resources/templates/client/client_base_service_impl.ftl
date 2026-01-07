@@ -18,6 +18,15 @@ import ${clientBaseRepositoryPackage}.Base${entity.name?cap_first}Persistence;
 import ${clientBaseModelPackage}.Multitenant;
 import ${clientBaseServicePackage}.MultitenantServiceImpl;
 </#if>
+<#list entity.attributes as attribute>
+<#if attribute.type.value == "enum">
+<#if attribute.enumClass?has_content>
+import ${attribute.enumClass};
+<#else>
+import ${dtoPackage}.${attribute.name?cap_first}Type;
+</#if>
+</#if>
+</#list>
 
 public abstract class Base${entity.name?cap_first}ServiceImpl<T extends ${entity.name?cap_first}<#if entity.multitenant> & Multitenant</#if>, ID>
 <#if entity.multitenant>

@@ -1,0 +1,4 @@
+1. Create a model package that contains DTO objects
+2. When DTOs are created provided toDTO/fromDTO methods on the services
+3. Rest endpoints should use DTOs not entity models
+4. Create an interface for DTOs

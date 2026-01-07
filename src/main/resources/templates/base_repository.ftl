@@ -9,6 +9,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import ${baseModelPackage}.Base${entity.name?cap_first};
 import ${localModelPackage}.${entity.name?cap_first};
+<#list entity.attributes as attribute>
+<#if attribute.type.value == "enum">
+<#if attribute.enumClass?has_content>
+import ${attribute.enumClass};
+<#else>
+import ${localModelPackage}.${attribute.name?cap_first}Type;
+</#if>
+</#if>
+</#list>
 
 public interface Base${entity.name?cap_first}Persistence<T extends ${entity.name?cap_first}, ID> extends JpaRepository<T, ID>
 {

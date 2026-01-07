@@ -5,3 +5,14 @@
     <#return fullyQualifiedName>
   </#if>
 </#function>
+<#function attributeTypeClass attribute>
+  <#if attribute.type == "ENUM">
+    <#if attribute.enumClass?has_content>
+      <#return attribute.enumClass>
+    <#else>
+      <#return "${attribute.name?cap_first}Type"> 
+    </#if>
+  <#else>
+    <#return className(attribute.type.javaType)> 
+  </#if>
+</#function>

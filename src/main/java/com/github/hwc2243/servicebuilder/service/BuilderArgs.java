@@ -57,7 +57,7 @@ public class BuilderArgs {
 	
 	
 	public enum BuildType {
-		ALL, CLIENT, SERVICE
+		ALL, DTO, CLIENT, SERVICE
 	}
 
 	

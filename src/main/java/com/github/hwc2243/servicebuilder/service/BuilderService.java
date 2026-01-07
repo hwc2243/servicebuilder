@@ -7,9 +7,9 @@ import com.github.hwc2243.servicebuilder.model.Service;
 
 public interface BuilderService {
 	
-	public void build (BuilderArgs args) throws ServiceException, IOException;
+	public void build (BuilderArgs args) throws BuildException;
 
-	public void build (File file, BuilderArgs args) throws ServiceException, IOException;
+	public void build (File file, BuilderArgs args) throws BuildException;
 	
-	public void build (Service service, BuilderArgs args) throws ServiceException, IOException;
+	public void build (Service service, BuilderArgs args) throws BuildException;
 }

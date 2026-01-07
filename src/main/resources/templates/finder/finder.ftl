@@ -9,7 +9,17 @@
 <#if finderArguments?length != 0><#assign finderArguments += ", "><#assign finderParameters += ", "></#if>
 <#assign finderParameter = entity.getAttribute(finderAttribute.name)>
 <#assign finderArguments += finderParameter.name>
-<#assign finderParameters += finderParameter.type.javaType>
+<#assign parameterJavaType = "">
+<#if finderParameter.type.value == "enum">
+<#if finderParameter.enumClass?has_content>
+<#assign parameterJavaType = finderParameter.enumClass>
+<#else>
+<#assign parameterJavaType = finderParameter.name?cap_first + "Type">
+</#if>
+<#else>
+<#assign parameterJavaType = finderParameter.type.javaType>
+</#if>
+<#assign finderParameters += parameterJavaType>
 <#assign finderParameters += " ">
 <#assign finderParameters += finderParameter.name>
 <#if finder.unique>

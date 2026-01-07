@@ -1,4 +1,4 @@
-<#macro key_accessors entity key>
+<#macro key_accessors entity key write_get_key=true> 
   public ${className(key.type.javaType)} get${key.name?cap_first} ()
   {
     return this.${key.name};
@@ -8,9 +8,11 @@
   {
     this.${key.name} = ${key.name};
   }
-  
+
+<#if write_get_key>  
   public Object getKey ()
   {
     return this.${key.name};
   }
+</#if>
 </#macro>
