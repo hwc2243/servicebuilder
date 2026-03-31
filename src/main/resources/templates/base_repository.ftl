@@ -14,7 +14,7 @@ import ${localModelPackage}.${entity.name?cap_first};
 <#if attribute.enumClass?has_content>
 import ${attribute.enumClass};
 <#else>
-import ${localModelPackage}.${attribute.name?cap_first}Type;
+import ${dtoPackage}.${attribute.name?cap_first}Type;
 </#if>
 </#if>
 </#list>

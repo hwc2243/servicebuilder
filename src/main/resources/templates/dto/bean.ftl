@@ -1,6 +1,7 @@
 <#include "/functions.ftl">
 <#include "/accessor/key.ftl">
 <#include "/dto/builder.ftl">
+<#include "/dto/equals_hashcode.ftl">
 <#include "/dto/related.ftl">
 package ${dtoPackage};
 
@@ -17,13 +18,19 @@ import ${attribute.type.javaType};
 </#list>
 
 import java.util.List;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class ${entity.name?cap_first}DTO
 {
   protected ${className(entity.key.type.javaType)} ${entity.key.name};
 
 <#list entity.attributes as attribute>
-<#assign attributeType = attributeTypeClass(attribute)>
+  <#assign attributeType = attributeTypeClass(attribute)>
+  <#if attribute.type.value == "datetime">
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+  </#if>
   protected ${attributeType} ${attribute.name} = null;
   
 </#list>
@@ -54,5 +61,8 @@ public class ${entity.name?cap_first}DTO
 <#list entity.relateds as related>
 <@related_accessor related=related/>
 </#list>
+
+<@equals_hashcode entity=entity key=entity.key/>
+
 <@builder_class entity=entity/>
 }

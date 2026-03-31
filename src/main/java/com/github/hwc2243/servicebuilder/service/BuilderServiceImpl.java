@@ -999,16 +999,20 @@ public class BuilderServiceImpl implements BuilderService {
 			File serviceFile = new File(outputDir, serviceName);
 			String implName = StringUtils.capitalize(entity.getName()) + "ServiceImpl.java";
 			File implFile = new File(outputDir, implName);
-
+			String mapperName = StringUtils.capitalize(entity.getName() + "Mapper.java");
+			File mapperFile = new File(outputDir, mapperName);
+			
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
 			if (!serviceFile.exists() || args.isReplace()) {
 				writeFile(args, entityModel, "local_service.ftl", serviceFile);
 			}
-
 			if (!implFile.exists() || args.isReplace()) {
 				writeFile(args, entityModel, "local_service_impl.ftl", implFile);
+			}
+			if (!mapperFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "entity_mapper.ftl", mapperFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
