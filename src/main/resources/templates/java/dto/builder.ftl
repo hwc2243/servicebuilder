@@ -1,11 +1,18 @@
 <#macro builder_class entity>
-  public static class Builder {
+  public abstract static class Builder {
 
-	private ${className(entity.key.type.javaType)} ${entity.key.name};
+  <@key_attribute entity=entity key=entity.key visibility="private"/>
+
 <#list entity.attributes as attribute>
-<#assign fieldType = (attribute.type == "ENUM")?then((attribute.enumClass?has_content)?then(attribute.enumClass, attribute.name?cap_first + "Type"), attribute.type.javaType)>
-    private ${className(fieldType)} ${attribute.name} = null;
+<#if attribute.type == "ENUM">
+  <@enum_attribute entity=entity attribute=attribute visibility="private"/>
+  
+<#else>
+  <@standard_attribute entity=entity attribute=attribute visibility="private"/>
+  
+</#if>
 </#list>
+
 <#list entity.relateds as related>
 <#if related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE">
     private ${related.entityName?cap_first}DTO ${related.name} = null;
@@ -20,7 +27,7 @@
     }
     
 <#list entity.attributes as attribute>
-<#assign fieldType = (attribute.type == "ENUM")?then((attribute.enumClass?has_content)?then(attribute.enumClass, attribute.name?cap_first + "Type"), attribute.type.javaType)>
+<#assign fieldType = (attribute.type == "ENUM")?then((attribute.enumClass?has_content)?then(attribute.enumClass, entity.name?cap_first + attribute.name?cap_first + "Type"), attribute.type.javaType)>
     public Builder ${attribute.name}(${className(fieldType)} ${attribute.name}) {
       this.${attribute.name} = ${attribute.name};
       return this;
@@ -43,15 +50,13 @@
     /**
      * The build method creates and returns the immutable Entity object.
      */
-    public ${entity.name?cap_first}DTO build() {
-      return new ${entity.name?cap_first}DTO(this);
-    }
+    public abstract ${entity.name?cap_first}DTO build();
   }
 </#macro>
 
 <#macro builder_constructor entity>
   // Private constructor to force the use of the Builder
-  private ${entity.name?cap_first}DTO (Builder builder)
+  protected Base${entity.name?cap_first}DTO (Builder builder)
   {
     this.${entity.key.name} = builder.${entity.key.name};
     <#-- Assign the builder's properties to the entity's properties -->

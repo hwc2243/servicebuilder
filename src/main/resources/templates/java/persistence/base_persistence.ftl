@@ -1,25 +1,28 @@
+<#include "/functions.ftl">
 <#include "/finder/finder.ftl">
-package ${baseRepositoryPackage};
+package ${persistenceBasePackage};
 
 <#if entity.finders??>
-import java.util.List;
-
+<#assign imports += { "java.util.List" : true }>
 </#if>
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import ${baseModelPackage}.Base${entity.name?cap_first};
-import ${localModelPackage}.${entity.name?cap_first};
+<#assign imports += { 
+  "org.springframework.data.jpa.repository.JpaRepository" : true,
+  entityBasePackage + ".Base" + entity.name?cap_first + "Entity" : true,
+  entityPackage + "." + entity.name?cap_first + "Entity" : true 
+}>
 <#list entity.attributes as attribute>
 <#if attribute.type.value == "enum">
 <#if attribute.enumClass?has_content>
-import ${attribute.enumClass};
+<#assign imports += { attribute.enumClass : true }>
 <#else>
-import ${dtoPackage}.${attribute.name?cap_first}Type;
+<#assign imports += { modelPackage +"." + entity.name?cap_first + attribute.name?cap_first + "Type" : true }>
 </#if>
 </#if>
 </#list>
 
-public interface Base${entity.name?cap_first}Persistence<T extends ${entity.name?cap_first}, ID> extends JpaRepository<T, ID>
+<@import imports/>
+
+public interface Base${entity.name?cap_first}Persistence<T extends Base${entity.name?cap_first}Entity, ID> extends JpaRepository<T, ID>
 {
 <#if entity.multitenant>
 	public List<T> findBy${tenantDiscriminator.name?cap_first} (${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name});

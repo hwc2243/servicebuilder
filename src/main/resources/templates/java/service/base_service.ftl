@@ -1,0 +1,35 @@
+<#include "/functions.ftl">
+<#include "/finder/finder.ftl">
+package ${serviceBasePackage};
+
+<#if entity.finders??>
+<#assign imports += { "java.util.List" : true }>
+</#if>
+<#assign imports += { dtoBasePackage + ".Base" + entity.name?cap_first + "DTO" : true }>
+<#list entity.attributes as attribute>
+<#if attribute.type == "ENUM">
+<#if attribute.enumClass?has_content>
+<#assign imports += { attribute.enumClass : true }>
+<#else>
+<#assign imports += { modelPackage + "." + entity.name?cap_first + attribute.name?cap_first + "Type" : true }>
+</#if>
+<#elseif attribute.type.javaType?last_index_of(".") gt 0>
+<#assign imports += { attribute.type.javaType : true }>
+</#if>
+</#list>
+
+<@import imports/>
+
+public interface Base${entity.name?cap_first}Service<D extends Base${entity.name?cap_first}DTO, ID> extends EntityService<D, ID> {
+<#if entity.finders??>
+<#list entity.finders as finder>
+<@finder_preprocessor finder=finder/>
+
+<#if finder.unique>
+	public D fetchBy${finderAttributes} (${finderParameters});
+<#else>
+	public List<D> ${finderName}${finderAttributes} (${finderParameters});
+</#if>
+</#list>
+</#if>
+}

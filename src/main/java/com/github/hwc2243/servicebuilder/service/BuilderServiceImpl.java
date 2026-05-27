@@ -52,13 +52,11 @@ public class BuilderServiceImpl implements BuilderService {
 	protected DefinitionReaderService definitionReaderService;
 
 	public BuilderServiceImpl() throws SAXException {
-		this.freemarker = new Configuration(new Version(2, 3, 20));
-		freemarker.setClassForTemplateLoading(ServiceBuilderApplication.class, "/templates");
-		freemarker.setDefaultEncoding("UTF-8");
-		freemarker.setLocale(Locale.US);
-		freemarker.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-
-		this.definitionReaderService = new DefinitionReaderServiceImpl();
+		this(new DefinitionReaderServiceImpl());
+	}
+	
+	public BuilderServiceImpl (DefinitionReaderService definitionReaderService) {
+		this(initFreemarker(), definitionReaderService);
 	}
 
 	public BuilderServiceImpl(Configuration freemarker, DefinitionReaderService definitionReaderService) {
@@ -66,6 +64,16 @@ public class BuilderServiceImpl implements BuilderService {
 		this.definitionReaderService = definitionReaderService;
 	}
 
+	protected static Configuration initFreemarker () {
+		Configuration freemarker = new Configuration(new Version(2, 3, 20));
+		freemarker.setClassForTemplateLoading(ServiceBuilderApplication.class, "/templates");
+		freemarker.setDefaultEncoding("UTF-8");
+		freemarker.setLocale(Locale.US);
+		freemarker.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+		
+		return freemarker;
+	}
+	
 	@Override
 	public void build(BuilderArgs args) throws BuildException {
 		File file = new File(args.getServiceFile());
@@ -138,25 +146,99 @@ public class BuilderServiceImpl implements BuilderService {
 		File projectPackageDir = createPackageDir(outputDir, projectPackageName.replace(".", File.separator));
 		logger.debug("Base package dir = {}", projectPackageDir.getAbsolutePath());
 
-		if (service.isMultitenant()) {
-			model.put("tenantDiscriminator", service.getTenantDiscriminator());
-		}
-
-		// if we are building dto objects
+		// model package setup
+		String modelPackageName = projectPackageName + ".model";
+		model.put("modelPackage", modelPackageName);
+		File modelPackageDir = createPackageDir(projectPackageDir, "model");
+		String modelBasePackageName = modelPackageName + ".base";
+		model.put("modelBasePackage", modelBasePackageName);
+		File modelBasePackageDir = createPackageDir(modelPackageDir, "base");
+		
+		// entity package setup
+		String entityPackageName = projectPackageName + ".entity";
+		model.put("entityPackage", entityPackageName);
+		File entityPackageDir = createPackageDir(projectPackageDir, "entity");
+		String entityBasePackageName = entityPackageName + ".base";
+		model.put("entityBasePackage", entityBasePackageName);
+		File entityBasePackageDir = createPackageDir(entityPackageDir, "base");
+		
+		// persistence setup
+		String persistencePackageName = projectPackageName + ".persistence";
+		model.put("persistencePackage", persistencePackageName);
+		File persistencePackageDir = createPackageDir(projectPackageDir, "persistence");
+		String pesistenceBasePackageName = persistencePackageName + ".base";
+		model.put("persistenceBasePackage", pesistenceBasePackageName);
+		File persistenceBasePackageDir = createPackageDir(persistencePackageDir, "base");
+		
+		// dto setup
 		String dtoPackageName = projectPackageName + ".dto";
 		model.put("dtoPackage", dtoPackageName);
-		if (args.getBuildType().contains(BuilderArgs.BuildType.ALL)
-				|| args.getBuildType().contains(BuilderArgs.BuildType.DTO)) {
-			File dtoPackageDir = createPackageDir(projectPackageDir, "dto");
-			service.getEntities().stream().forEach(entity -> {
-				writeDTO(args, model, entity, dtoPackageDir);
-				entity.getAttributes().stream().filter(attribute -> DataType.ENUM == attribute.getType())
-				.forEach(attribute -> {
-					writeEnum(args, model, attribute, dtoPackageDir);
-				});
+		File dtoPackageDir = createPackageDir(projectPackageDir, "dto");
+		String dtoBasePackageName = dtoPackageName + ".base";
+		model.put("dtoBasePackage", dtoBasePackageName);
+		File dtoBasePackageDir = createPackageDir(dtoPackageDir, "base");
 
-			});
+		// service setup
+		String servicePackageName = projectPackageName + ".service";
+		model.put("servicePackage", servicePackageName);
+		File servicePackageDir = createPackageDir(projectPackageDir, "service");
+		String serviceBasePackageName = servicePackageName + ".base";
+		model.put("serviceBasePackage", serviceBasePackageName);
+		File serviceBasePackageDir = createPackageDir(servicePackageDir, "base");
+
+		// multitenant setup
+		if (service.isMultitenant()) {
+			model.put("tenantDiscriminator", service.getTenantDiscriminator());
+			model.put("multitenantBaseModelPackage", modelBasePackageName);
+			model.put("multitenantModelPackage", modelPackageName);
+			model.put("multitenantBaseServicePackage", serviceBasePackageName);
+			model.put("multitenantServicePackage", servicePackageName);
+			
+			File tenantDiscriminatorFile = new File(servicePackageDir, "TenantDiscriminator.java");
+			if (!tenantDiscriminatorFile.exists() || args.isReplace()) {
+				writeFile(args, model, "java/multitenant/tenant_discriminator.ftl", tenantDiscriminatorFile);
+			}
+			
+			File multitenantFile = new File(modelBasePackageDir, "Multitenant.java");
+			writeFile(args, model, "java/model/multitenant.ftl", multitenantFile);
+			
+			File multitenantServiceFile = new File(serviceBasePackageDir, "MultitenantServiceImpl.java");
+			writeFile(args, model, "java/multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
 		}
+
+		writeFile(args, model, "java/entity/abstract_base_entity.ftl", new File(entityBasePackageDir, "AbstractBaseEntity.java"));
+		writeFile(args, model, "java/service/service_exception.ftl", new File(servicePackageDir, "ServiceException.java"));
+		writeFile(args, model, "java/service/base_entity_service.ftl", new File(serviceBasePackageDir, "EntityService.java"));
+
+		service.getEntities().stream().forEach(entity -> {
+			// write the models
+			writeBaseModel(args, model, entity, modelBasePackageDir);
+			writeExtensionModel(args, model, entity, modelPackageDir);
+			entity.getAttributes().stream()
+			    .filter(attribute -> DataType.ENUM == attribute.getType())
+			    .forEach(attribute -> {
+				  writeEnum(args, model, entity, attribute, modelPackageDir);
+			    });
+			
+			// write the entities
+			writeBaseEntity(args, model, entity, entityBasePackageDir);
+			writeExtensionEntity(args, model, entity, entityPackageDir);
+			
+			// write the persistence
+			writeBasePersistence(args, model, entity, persistenceBasePackageDir);
+			writeExtensionPersistence(args, model, entity, persistencePackageDir);
+
+			// write the dtos
+			writeBaseDTO(args, model, entity, dtoBasePackageDir);
+			writeExtensionDTO(args, model, entity, dtoPackageDir);
+			
+			// write the services
+			writeBaseService(args, model, entity, serviceBasePackageDir);
+			writeExtensionService(args, model, entity, servicePackageDir);
+			
+		});	
+		
+		/*
 
 		// if we are building client code
 		File clientPackageDir = null;
@@ -167,71 +249,16 @@ public class BuilderServiceImpl implements BuilderService {
 			clientPackageDir = createPackageDir(projectPackageDir, "client");
 		}
 
-		// write the models
-		String localModelPackageName = projectPackageName + ".model";
-		model.put("localModelPackage", localModelPackageName);
-		String baseModelPackageName = localModelPackageName + ".base";
-		model.put("baseModelPackage", baseModelPackageName);
-		model.put("multitenantModelPackage", baseModelPackageName);
-
-		if (args.getBuildType().contains(BuilderArgs.BuildType.ALL)
-				|| args.getBuildType().contains(BuilderArgs.BuildType.SERVICE)) {
-			File localModelDir = createPackageDir(projectPackageDir, "model");
-			File baseModelDir = createPackageDir(localModelDir, "base");
-			try {
-				if (service.isMultitenant()) {
-					File multitenantFile = new File(baseModelDir, "Multitenant.java");
-					writeFile(args, model, "multitenant/multitenant.ftl", multitenantFile);
-				}
-				writeFile(args, model, "abstract_base_entity.ftl", new File(baseModelDir, "AbstractBaseEntity.java"));
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-
-			service.getEntities().stream().forEach(entity -> {
-				writeBaseEntity(args, model, entity, baseModelDir);
-				writeLocalEntity(args, model, entity, localModelDir);
-			});
-		}
-
 		// write the repositories
 		if (needPersistence && (args.getBuildType().contains(BuilderArgs.BuildType.ALL)
 				|| args.getBuildType().contains(BuilderArgs.BuildType.SERVICE))) {
-			String localRepositoryPackageName = projectPackageName + ".persistence";
-			model.put("localRepositoryPackage", localRepositoryPackageName);
-			String baseRepositoryPackageName = localRepositoryPackageName + ".base";
-			model.put("baseRepositoryPackage", baseRepositoryPackageName);
-
-			File localRepositoryDir = createPackageDir(projectPackageDir, "persistence");
-			File baseRepositoryDir = createPackageDir(localRepositoryDir, "base");
-			service.getEntities().stream().forEach(entity -> {
-				if (entity.isPersistence()) {
-					writeBaseRepository(args, model, entity, baseRepositoryDir);
-					writeLocalRepository(args, model, entity, localRepositoryDir);
-				}
-			});
+			
 
 			// write the services
-			String localServicePackageName = projectPackageName + ".service";
-			model.put("localServicePackage", localServicePackageName);
-			File localServiceDir = createPackageDir(projectPackageDir, "service");
-
-			String baseServicePackageName = localServicePackageName + ".base";
-			model.put("baseServicePackage", baseServicePackageName);
-			File baseServiceDir = createPackageDir(localServiceDir, "base");
 
 			try {
-				writeFile(args, model, "service_exception.ftl", new File(localServiceDir, "ServiceException.java"));
-				writeFile(args, model, "base_entity_service.ftl", new File(baseServiceDir, "EntityService.java"));
 				if (service.isMultitenant()) {
-					model.put("multitenantBaseServicePackage", baseServicePackageName);
-					model.put("multitenantServicePackage", localServicePackageName);
-					File tenantDiscriminatorFile = new File(localServiceDir, "TenantDiscriminator.java");
-					if (!tenantDiscriminatorFile.exists() || args.isReplace()) {
-						writeFile(args, model, "multitenant/tenant_discriminator.ftl", tenantDiscriminatorFile);
-					}
-					File multitenantServiceFile = new File(baseServiceDir, "MultitenantServiceImpl.java");
-					writeFile(args, model, "multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
+					
 
 				}
 			} catch (Exception ex) {
@@ -347,9 +374,6 @@ public class BuilderServiceImpl implements BuilderService {
 			});
 
 			if (service.isMultitenant()) {
-				model.put("multitenantModelPackage", clientBaseModelPackageName);
-				model.put("multitenantBaseServicePackage", clientBaseRestPackageName);
-				model.put("multitenantServicePackage", clientRestPackageName);
 
 				File multitenantFile = new File(clientBaseModelDir, "Multitenant.java");
 				writeFile(args, model, "multitenant/multitenant.ftl", multitenantFile);
@@ -372,6 +396,7 @@ public class BuilderServiceImpl implements BuilderService {
 				writeFile(args, model, "multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
 			}
 		}
+		*/
 	}
 
 	protected Map<String, Entity> buildEntityMap(Service service) {
@@ -643,6 +668,172 @@ public class BuilderServiceImpl implements BuilderService {
 		validateEntityMap(entityMap);
 	}
 
+	protected void writeEnum (BuilderArgs args, Map<String, Object> baseModel, Entity entity, Attribute attribute,
+			File outputDir) throws BuildException {
+		if (StringUtils.isBlank(attribute.getEnumClass())) {
+			String enumName = StringUtils.capitalize(entity.getName()) + StringUtils.capitalize(attribute.getName()) + (attribute.getName().endsWith("Type") ? ".java" : "Type.java");
+			File enumFile = new File(outputDir, enumName);
+
+			if (!enumFile.exists() || args.isReplace()) {
+				Map<String, Object> enumModel = new HashMap<>(baseModel);
+				enumModel.put("entity", entity);
+				enumModel.put("attribute", attribute);
+			
+				writeFile(args, enumModel, "java/model/enum.ftl", enumFile);
+			}
+		}
+	}
+
+
+	protected void writeBaseModel (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) throws BuildException {
+		String className = "Base" + StringUtils.capitalize(entity.getName()) + ".java";
+		File classFile = new File(outputDir, className);
+			
+		Map<String, Object> entityModel = new HashMap<>(baseModel);
+		entityModel.put("entity", entity);
+
+		writeFile(args, entityModel, "java/model/base_model.ftl", classFile);
+	}
+	
+	protected void writeExtensionModel (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) throws BuildException {
+		String className = StringUtils.capitalize(entity.getName()) + ".java";
+		File classFile = new File(outputDir, className);
+			
+		if (!classFile.exists() || args.isReplace()) {
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+			
+			writeFile(args, entityModel, "java/model/model.ftl", classFile);
+		} 
+	}
+	
+	protected void writeBaseEntity(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) throws BuildException {
+		String className = "Base" + StringUtils.capitalize(entity.getName()) + "Entity.java";
+		File classFile = new File(outputDir, className);
+		
+		Map<String, Object> entityModel = new HashMap<>(baseModel);
+		entityModel.put("entity", entity);
+
+		writeFile(args, entityModel, "java/entity/base_entity.ftl", classFile);
+	}
+	
+	protected void writeExtensionEntity(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
+		try {
+			String className = StringUtils.capitalize(entity.getName()) + "Entity.java";
+			File classFile = new File(outputDir, className);
+
+			if (!classFile.exists() || args.isReplace()) {
+				Map<String, Object> entityModel = new HashMap<>(baseModel);
+				entityModel.put("entity", entity);
+
+				writeFile(args, entityModel, "java/entity/entity.ftl", classFile);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
+
+	protected void writeBasePersistence (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
+		try {
+			String className = "Base" + StringUtils.capitalize(entity.getName()) + "Persistence.java";
+			File classFile = new File(outputDir, className);
+
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+
+			writeFile(args, entityModel, "java/persistence/base_persistence.ftl", classFile);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	protected void writeExtensionPersistence (BuilderArgs args, Map<String, Object> baseModel, Entity entity,
+			File outputDir) {
+		try {
+			String className = StringUtils.capitalize(entity.getName()) + "Persistence.java";
+			File classFile = new File(outputDir, className);
+
+			if (!classFile.exists() || args.isReplace()) {
+				Map<String, Object> entityModel = new HashMap<>(baseModel);
+				entityModel.put("entity", entity);
+
+				writeFile(args, entityModel, "java/persistence/persistence.ftl", classFile);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	protected void writeBaseDTO (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir)
+			throws BuildException {
+		String className = "Base" + StringUtils.capitalize(entity.getName()) + "DTO.java";
+		File classFile = new File(outputDir, className);
+
+		Map<String, Object> entityModel = new HashMap<>(baseModel);
+		entityModel.put("entity", entity);
+
+		writeFile(args, entityModel, "java/dto/base_dto.ftl", classFile);
+	}
+
+	protected void writeExtensionDTO (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir)
+			throws BuildException {
+		String className = StringUtils.capitalize(entity.getName()) + "DTO.java";
+		File classFile = new File(outputDir, className);
+
+		if (!classFile.exists() || args.isReplace()) {
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+
+			writeFile(args, entityModel, "java/dto/dto.ftl", classFile);
+		}
+	}
+
+	protected void writeBaseService(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
+		try {
+			String serviceName = "Base" + StringUtils.capitalize(entity.getName()) + "Service.java";
+			File serviceFile = new File(outputDir, serviceName);
+			String implName = "Base" + StringUtils.capitalize(entity.getName()) + "ServiceImpl.java";
+			File implFile = new File(outputDir, implName);
+
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+
+			writeFile(args, entityModel, "java/service/base_service.ftl", serviceFile);
+			writeFile(args, entityModel, "java/service/base_service_impl.ftl", implFile);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	protected void writeExtensionService(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
+		try {
+			String serviceName = StringUtils.capitalize(entity.getName()) + "Service.java";
+			File serviceFile = new File(outputDir, serviceName);
+			String implName = StringUtils.capitalize(entity.getName()) + "ServiceImpl.java";
+			File implFile = new File(outputDir, implName);
+			String mapperName = StringUtils.capitalize(entity.getName() + "Mapper.java");
+			File mapperFile = new File(outputDir, mapperName);
+			
+			Map<String, Object> entityModel = new HashMap<>(baseModel);
+			entityModel.put("entity", entity);
+
+			if (!serviceFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "java/service/service.ftl", serviceFile);
+			}
+			if (!implFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "java/service/service_impl.ftl", implFile);
+			}
+			if (!mapperFile.exists() || args.isReplace()) {
+				writeFile(args, entityModel, "java/service/mapper.ftl", mapperFile);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	
 	protected void writeApiBaseExternal(BuilderArgs args, Map<String, Object> baseModel, Entity entity,
 			File outputDir) {
 		try {
@@ -725,50 +916,7 @@ public class BuilderServiceImpl implements BuilderService {
 		}
 	}
 
-	protected void writeBaseEntity(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
-		try {
-			String className = "Base" + StringUtils.capitalize(entity.getName()) + ".java";
-			File classFile = new File(outputDir, className);
 
-			Map<String, Object> entityModel = new HashMap<>(baseModel);
-			entityModel.put("entity", entity);
-
-			writeFile(args, entityModel, "base_entity.ftl", classFile);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	protected void writeBaseRepository(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
-		try {
-			String className = "Base" + StringUtils.capitalize(entity.getName()) + "Persistence.java";
-			File classFile = new File(outputDir, className);
-
-			Map<String, Object> entityModel = new HashMap<>(baseModel);
-			entityModel.put("entity", entity);
-
-			writeFile(args, entityModel, "base_repository.ftl", classFile);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	protected void writeBaseService(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
-		try {
-			String serviceName = "Base" + StringUtils.capitalize(entity.getName()) + "Service.java";
-			File serviceFile = new File(outputDir, serviceName);
-			String implName = "Base" + StringUtils.capitalize(entity.getName()) + "ServiceImpl.java";
-			File implFile = new File(outputDir, implName);
-
-			Map<String, Object> entityModel = new HashMap<>(baseModel);
-			entityModel.put("entity", entity);
-
-			writeFile(args, entityModel, "base_service.ftl", serviceFile);
-			writeFile(args, entityModel, "base_service_impl.ftl", implFile);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
 
 	protected void writeClientEntity(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
 		try {
@@ -904,58 +1052,6 @@ public class BuilderServiceImpl implements BuilderService {
 		}
 	}
 
-	protected void writeDTO (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir)
-			throws BuildException {
-		String className = StringUtils.capitalize(entity.getName()) + "DTO.java";
-		File classFile = new File(outputDir, className);
-
-		if (!classFile.exists() || args.isReplace()) {
-			Map<String, Object> entityModel = new HashMap<>(baseModel);
-			entityModel.put("entity", entity);
-
-			writeFile(args, entityModel, "dto/bean.ftl", classFile);
-		}
-	}
-	
-	protected void writeEnum (BuilderArgs args, Map<String, Object> baseModel, Attribute attribute,
-			File outputDir) {
-		try {
-			String enumName = StringUtils.capitalize(attribute.getName()) + "Type.java";
-			File enumFile = new File(outputDir, enumName);
-
-			if (!enumFile.exists() || args.isReplace()) {
-				Map<String, Object> enumModel = new HashMap<>(baseModel);
-				enumModel.put("attribute", attribute);
-
-				writeFile(args, enumModel, "dto/enum.ftl", enumFile);
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	protected void writeLocalEntity(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
-		try {
-			String className = StringUtils.capitalize(entity.getName()) + ".java";
-			File classFile = new File(outputDir, className);
-
-			if (!classFile.exists() || args.isReplace()) {
-				Map<String, Object> entityModel = new HashMap<>(baseModel);
-				entityModel.put("entity", entity);
-
-				writeFile(args, entityModel, "local_entity.ftl", classFile);
-			}
-			/*
-			entity.getAttributes().stream().filter(attribute -> DataType.ENUM == attribute.getType())
-					.forEach(attribute -> {
-						writeLocalEnum(args, baseModel, attribute, outputDir);
-					});
-					*/
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-
-	}
 
 	/*
 	protected void writeLocalEnum(BuilderArgs args, Map<String, Object> baseModel, Attribute attribute,
@@ -975,49 +1071,6 @@ public class BuilderServiceImpl implements BuilderService {
 		}
 	}
 	*/
-
-	protected void writeLocalRepository(BuilderArgs args, Map<String, Object> baseModel, Entity entity,
-			File outputDir) {
-		try {
-			String className = StringUtils.capitalize(entity.getName()) + "Persistence.java";
-			File classFile = new File(outputDir, className);
-
-			if (!classFile.exists() || args.isReplace()) {
-				Map<String, Object> entityModel = new HashMap<>(baseModel);
-				entityModel.put("entity", entity);
-
-				writeFile(args, entityModel, "local_repository.ftl", classFile);
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	protected void writeLocalService(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
-		try {
-			String serviceName = StringUtils.capitalize(entity.getName()) + "Service.java";
-			File serviceFile = new File(outputDir, serviceName);
-			String implName = StringUtils.capitalize(entity.getName()) + "ServiceImpl.java";
-			File implFile = new File(outputDir, implName);
-			String mapperName = StringUtils.capitalize(entity.getName() + "Mapper.java");
-			File mapperFile = new File(outputDir, mapperName);
-			
-			Map<String, Object> entityModel = new HashMap<>(baseModel);
-			entityModel.put("entity", entity);
-
-			if (!serviceFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "local_service.ftl", serviceFile);
-			}
-			if (!implFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "local_service_impl.ftl", implFile);
-			}
-			if (!mapperFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "entity_mapper.ftl", mapperFile);
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
 
 	protected void writeMultitenant(BuilderArgs args, Map<String, Object> baseModel, Service service, File outputDir) {
 		try {

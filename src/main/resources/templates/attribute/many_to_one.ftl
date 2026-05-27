@@ -1,5 +1,5 @@
-<#macro many_to_one_attribute entity related>
+<#macro many_to_one_attribute entity related type>
   @ManyToOne
   @JoinColumn(name= "${related.name}Id", nullable=true)
-  protected ${related.entityName?cap_first} ${related.name};
+  protected ${type} ${related.name};
 </#macro>

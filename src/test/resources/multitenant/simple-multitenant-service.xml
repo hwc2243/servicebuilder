@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="test" package="test.simple_multitenant" multitenant="true">
+
+	<tenant-discriminator name="tenantId" type="long" />
+	
+	<entity name="simpleMultitenant" multitenant="true">
+		<attribute name="colA" type="int"/>
+	</entity>
+</service>

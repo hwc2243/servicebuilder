@@ -16,3 +16,9 @@
     <#return className(attribute.type.javaType)> 
   </#if>
 </#function>
+<#assign imports = {}>
+<#macro import imports>
+<#list imports?keys?sort as importClass>
+import ${importClass};
+</#list>
+</#macro>

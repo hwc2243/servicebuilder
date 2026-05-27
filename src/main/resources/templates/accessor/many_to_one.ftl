@@ -1,11 +1,16 @@
-<#macro many_to_one_accessors entity related >
-  public ${related.entityName?cap_first} get${related.name?cap_first} ()
+<#macro many_to_one_accessors_impl entity related type>
+  public ${type} get${related.name?cap_first} ()
   {
-    return (${related.entityName?cap_first})this.${related.name};
+    return this.${related.name};
   }
   
-  public void set${related.name?cap_first} (${related.entityName?cap_first} ${related.name})
+  public void set${related.name?cap_first} (${type} ${related.name})
   {
     this.${related.name} = ${related.name};
   }
+</#macro>
+<#macro many_to_one_accessors_api entity related type>
+  public ${type} get${related.name?cap_first} ();
+  public void set${related.name?cap_first} (${type} ${related.name});
+  
 </#macro>

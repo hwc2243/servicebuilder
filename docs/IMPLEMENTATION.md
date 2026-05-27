@@ -10,17 +10,13 @@ The FreeMarker templates (`.ftl`) used by the engine must be organized in the fo
         │   ├── BaseModel.ftl
         │   └── ExtensionModel.ftl
         ├── entity/
-        │   ├── BaseEntity.ftl
         │   ├── BaseEntityImpl.ftl        
-        │   ├── ExtensionEntity.ftl
         │   └── ExtensionEntityImpl.ftl
         ├── persistence/
         │   ├── BasePersistence.ftl
         │   └── ExtensionPersistence.ftl
         ├── dto/
-        │   ├── BaseDTO.ftl
         │   ├── BaseDTOImpl.ftl
-        │   ├── ExtensionDTO.ftl
         │   └── ExtensionDTOImpl.ftl
         ├── service/
         │   ├── BaseService.ftl

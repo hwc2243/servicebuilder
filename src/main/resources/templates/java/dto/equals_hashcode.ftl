@@ -13,7 +13,7 @@
 		if (getClass() != obj.getClass())
 			return false;
 			
-		${entity.name?cap_first}DTO other = (${entity.name?cap_first}DTO) obj;
+		Base${entity.name?cap_first}DTO other = (Base${entity.name?cap_first}DTO) obj;
 <#if entity.key.type.value == "uuid" || entity.key.type.value == "string">
 		return this.get${key.name?cap_first}().equals(other.get${key.name?cap_first}());
 <#else>		

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="test" package="test.simple_enum">
+	<entity name="simpleEnum">
+		<attribute name="colA" type="int"/>
+		<attribute name="colB" type="enum" enum-values="C D" />
+	</entity>
+</service>
