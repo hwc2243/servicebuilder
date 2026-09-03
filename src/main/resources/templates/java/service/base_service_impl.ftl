@@ -18,7 +18,7 @@ package ${serviceBasePackage};
 <#if attribute.enumClass?has_content>
 <#assign imports += { attribute.enumClass : true }>
 <#else>
-<#assign imports += { modelPackage + "." + entity.name?cap_first + attribute.name?cap_first + "Type" : true }>
+<#assign imports += { modelPackage + "." + entity.name?cap_first + attribute.name?cap_first : true }>
 </#if>
 <#elseif attribute.type.javaType?last_index_of(".") gt 0>
 <#assign imports += { attribute.type.javaType : true }>
@@ -37,10 +37,10 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
 <#if entity.multitenant>
   extends MultitenantServiceImpl
 </#if>
-  implements Base${entity.name?cap_first}Service<D, ${entity.key.type.javaType}> {
+  implements Base${entity.name?cap_first}Service<D, ID> {
 
   @Autowired
-  private Base${entity.name?cap_first}Persistence<E, ${entity.key.type.javaType}> base${entity.name?cap_first}Persistence;
+  private Base${entity.name?cap_first}Persistence<E, ID> base${entity.name?cap_first}Persistence;
   
   @Autowired
   protected ${entity.name?cap_first}Persistence ${entity.name}Persistence;
