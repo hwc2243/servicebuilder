@@ -12,7 +12,7 @@ package ${servicePackage};
   "org.mapstruct.Named": true
 }>
 
-<#list entity.relateds as related>
+<#list inheritedAndOwnRelateds(entity) as related>
   <#assign imports += {
     dtoPackage + "." + related.entityName?cap_first + "DTO": true,
     entityPackage + "." + related.entityName?cap_first + "Entity": true
@@ -25,7 +25,7 @@ package ${servicePackage};
 public interface ${entity.name?cap_first}Mapper {
 
   @Named("${entity.name}Default")
-<#list entity.relateds as related>
+<#list inheritedAndOwnRelateds(entity) as related>
   @Mapping(target = "${related.name}", ignore = true)
 </#list>
   ${entity.name?cap_first}DTO toDto(${entity.name?cap_first}Entity entity);
@@ -44,7 +44,7 @@ public interface ${entity.name?cap_first}Mapper {
   <#assign relatedEntity = entityMap[related.entityName]>
 
   @Named("${related.entityName}Default")
-  <#list relatedEntity.relateds as nestedRelated>
+  <#list inheritedAndOwnRelateds(relatedEntity) as nestedRelated>
   @Mapping(target = "${nestedRelated.name}", ignore = true)
   </#list>
   ${related.entityName?cap_first}DTO ${related.entityName}ToDto(
@@ -61,16 +61,20 @@ public interface ${entity.name?cap_first}Mapper {
 
 </#list>
 
-<#list entity.relateds as related>
+<#if !entity.abstractEntity>
+<#list inheritedAndOwnRelateds(entity) as related>
   @Mapping(target = "${related.name}", ignore = true)
 </#list>
   ${entity.name?cap_first}Entity toEntity(${entity.name?cap_first}DTO dto);
 
+</#if>
   @IterableMapping(qualifiedByName = "${entity.name}Default")
   List<${entity.name?cap_first}DTO> toDtos(List<${entity.name?cap_first}Entity> entities);
 
   @IterableMapping(qualifiedByName = "${entity.name}Shallow")
   List<${entity.name?cap_first}DTO> toDtosShallow(List<${entity.name?cap_first}Entity> entities);
 
+<#if !entity.abstractEntity>
   List<${entity.name?cap_first}Entity> toEntities(List<${entity.name?cap_first}DTO> dtos);
+</#if>
 }

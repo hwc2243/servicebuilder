@@ -1,4 +1,5 @@
 <#include "/functions.ftl">
+<#include "/entity_core.ftl">
 <#include "/accessor/enum.ftl">
 <#include "/accessor/key.ftl">
 <#include "/accessor/standard.ftl">
@@ -13,7 +14,7 @@ package ${modelBasePackage};
 <#if attribute.enumClass?has_content>
 <#assign imports += { attribute.enumClass : true }>
 <#else>
-<#assign imports += { modelPackage +"." + entity.name?cap_first + attribute.name?cap_first + "Type" : true }>
+<#assign imports += { modelPackage +"." + entity.name?cap_first + attribute.name?cap_first : true }>
 </#if>
 <#elseif attribute.type.javaType?last_index_of(".") gt 0>
 <#assign imports += { attribute.type.javaType : true }>
@@ -26,26 +27,21 @@ package ${modelBasePackage};
   "java.util.Set" : true 
 }>
 <#if entity.key.type.value == "uuid">
-<#assign imports += { "java.util.UUID" : true }>
+  <#assign imports += { "java.util.UUID" : true }>
 </#if>
 <#list referencedEntitiesMap[entity.name] as referencedEntity>
-<#assign imports += { modelPackage + "." + referencedEntity.name?cap_first : true }>
+  <#assign imports += { modelPackage + "." + referencedEntity.name?cap_first : true }>
+</#list>
+<#list inheritedAndOwnModelGenericTypes(entity) as genericType>
+  <#assign imports += { modelPackage + "." + genericType : true }>
 </#list>
 <@import imports/>
 
-<#assign genericParams = []>
-<#list entity.relateds as related>
-  <#assign genericParams += [related.entityName?upper_case]>
-</#list>
-
-<#assign genericDeclaration = "">
-<#if genericParams?size gt 0>
-  <#assign genericDeclaration = "<" + genericParams?join(", ") + ">">
-</#if>
-
+<#assign genericDeclaration = asGenericDeclaration(inheritedAndOwnGenericPlaceholders(entity))>
+<#assign parentGenericDeclaration = asGenericDeclaration(parentGenericPlaceholders(entity))>
 public interface Base${entity.name?cap_first}${genericDeclaration}
-<#if entity.parent??>
- extends Base${entity.parent.name?cap_first}, <#if entity.multitenant>Multitenant, </#if>Serializable
+<#if entity.parent?? && entity.parent?has_content>
+ extends Base${entity.parent?cap_first}${parentGenericDeclaration}, <#if entity.multitenant>Multitenant, </#if>Serializable
 <#else>
  extends <#if entity.multitenant>Multitenant, </#if>Serializable
 </#if>

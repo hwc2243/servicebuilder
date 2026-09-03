@@ -124,4 +124,9 @@ public class Entity {
 	{
 		relateds.add(related);
 	}
+	
+	@Override
+	public String toString () {
+		return name;
+	}
 }

@@ -145,7 +145,7 @@
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref="key" minOccurs="0" maxOccurs="unbounded"/>
-				<xs:element ref="attribute" minOccurs="1" maxOccurs="unbounded"/>
+				<xs:element ref="attribute" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element ref="related" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element ref="finder" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element ref="api" minOccurs="0" maxOccurs="1"/>

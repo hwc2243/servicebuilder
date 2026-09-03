@@ -27,7 +27,7 @@
     }
     
 <#list entity.attributes as attribute>
-<#assign fieldType = (attribute.type == "ENUM")?then((attribute.enumClass?has_content)?then(attribute.enumClass, entity.name?cap_first + attribute.name?cap_first + "Type"), attribute.type.javaType)>
+<#assign fieldType = (attribute.type == "ENUM")?then((attribute.enumClass?has_content)?then(attribute.enumClass, entity.name?cap_first + attribute.name?cap_first), attribute.type.javaType)>
     public Builder ${attribute.name}(${className(fieldType)} ${attribute.name}) {
       this.${attribute.name} = ${attribute.name};
       return this;

@@ -16,7 +16,7 @@ package ${dtoBasePackage};
 <#if attribute.enumClass?has_content>
 <#assign imports += { attribute.enumClass : true }>
 <#else>
-<#assign imports += { modelPackage + "." + entity.name?cap_first + attribute.name?cap_first + "Type" : true }>
+<#assign imports += { modelPackage + "." + entity.name?cap_first + attribute.name?cap_first : true }>
 </#if>
 <#elseif attribute.type.javaType?last_index_of(".") gt 0>
 <#assign imports += { attribute.type.javaType : true }>
@@ -28,8 +28,8 @@ package ${dtoBasePackage};
 <#list referencedEntitiesMap[entity.name] as referencedEntity>
 <#assign imports += { dtoPackage + "." + referencedEntity.name?cap_first + "DTO": true }>
 </#list>
-<#if entity.parent??>
-<#assign imports += { dtoBasePackage + ".Base" + entity.parent.name?cap_first + "DTO" : true }>
+<#if entity.parent?has_content>
+<#assign imports += { dtoBasePackage + ".Base" + entity.parent?cap_first + "DTO" : true }>
 </#if>
 <#assign imports +=  {
   "java.io.Serializable": true,
@@ -43,18 +43,18 @@ package ${dtoBasePackage};
  <#if entity.multitenant>
  <#assign imports += { modelBasePackage + ".Multitenant" : true }>
  </#if>
+<#list inheritedAndOwnDtoGenericTypes(entity) as genericType>
+  <#assign imports += { dtoPackage + "." + genericType : true }>
+</#list>
 
 <@import imports/>
 
-<#assign modelGenericTypes = []>
-<#list entity.relateds as related>
-  <#assign modelGenericTypes += [related.entityName?cap_first + "DTO"]>
-</#list>
-<#assign modelGenericDeclaration = "">
-<#if modelGenericTypes?size gt 0>
-  <#assign modelGenericDeclaration = "<" + modelGenericTypes?join(", ") + ">">
-</#if>
+<#assign modelGenericDeclaration = asGenericDeclaration(inheritedAndOwnDtoGenericTypes(entity))>
+<#assign modelGenericDeclaration = asGenericDeclaration(inheritedAndOwnDtoGenericTypes(entity))>
 public abstract class Base${entity.name?cap_first}DTO
+<#if entity.parent?? && entity.parent?has_content>
+extends Base${entity.parent?cap_first}DTO
+</#if>
 implements Base${entity.name?cap_first}${modelGenericDeclaration}, <#if entity.multitenant>Multitenant, </#if> Serializable
 {
 <@key_attribute entity entity.key/>

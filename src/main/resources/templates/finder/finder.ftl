@@ -14,7 +14,7 @@
 <#if finderParameter.enumClass?has_content>
 <#assign parameterJavaType = finderParameter.enumClass>
 <#else>
-<#assign parameterJavaType = finderParameter.name?cap_first + "Type">
+<#assign parameterJavaType = finderParameter.name?cap_first>
 </#if>
 <#else>
 <#assign parameterJavaType = finderParameter.type.javaType>

@@ -2,6 +2,6 @@
 <#if attribute.enumClass?has_content>
   ${visibility} ${attribute.enumClass} ${attribute.name} = null;
 <#else>
-  ${visibility} ${entity.name?cap_first}${attribute.name?cap_first}Type ${attribute.name} = null;
+  ${visibility} ${entity.name?cap_first}${attribute.name?cap_first} ${attribute.name} = null;
 </#if>
 </#macro>

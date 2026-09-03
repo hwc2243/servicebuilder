@@ -3,11 +3,16 @@ package ${dtoPackage};
 <#assign imports +=  {
   dtoBasePackage + ".Base" + entity.name?cap_first + "DTO": true
 }>
+<#list inheritedAndOwnDtoGenericTypes(entity) as genericType>
+  <#assign imports += { dtoPackage + "." + genericType : true }>
+</#list>
 
 <@import imports/>
 
 public class ${entity.name?cap_first}DTO extends Base${entity.name?cap_first}DTO
 {
+  private static final long serialVersionUID = 1L;
+
   public ${entity.name?cap_first}DTO () {
   }
   
@@ -20,4 +25,4 @@ public class ${entity.name?cap_first}DTO extends Base${entity.name?cap_first}DTO
       return new ${entity.name?cap_first}DTO(this);
     }
   }
-} 
+}

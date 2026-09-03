@@ -10,12 +10,12 @@
     this.${attribute.name} = ${attribute.name};
   }
 <#else>
-  public ${entity.name?cap_first}${attribute.name?cap_first}Type get${attribute.name?cap_first} ()
+  public ${entity.name?cap_first}${attribute.name?cap_first} get${attribute.name?cap_first} ()
   {
     return this.${attribute.name};
   }
   
-  public void set${attribute.name?cap_first} (${entity.name?cap_first}${attribute.name?cap_first}Type ${attribute.name})
+  public void set${attribute.name?cap_first} (${entity.name?cap_first}${attribute.name?cap_first} ${attribute.name})
   {
     this.${attribute.name} = ${attribute.name};
   }
@@ -27,8 +27,8 @@
   public void set${attribute.name?cap_first} (${attribute.enumClass} ${attribute.name});
 
 <#else>
-  public ${entity.name?cap_first}${attribute.name?cap_first}Type get${attribute.name?cap_first} ();
-  public void set${attribute.name?cap_first} (${entity.name?cap_first}${attribute.name?cap_first}Type ${attribute.name});
+  public ${entity.name?cap_first}${attribute.name?cap_first} get${attribute.name?cap_first} ();
+  public void set${attribute.name?cap_first} (${entity.name?cap_first}${attribute.name?cap_first} ${attribute.name});
   
 </#if>
 </#macro>

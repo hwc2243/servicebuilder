@@ -45,12 +45,18 @@ public class Attribute {
 	protected List<String> enumValues = null;
 	
 	@JacksonXmlProperty(isAttribute = true, localName = "enum-values")
-    public void setEnumValues (String enumValues) {
-        if (enumValues != null && !enumValues.isEmpty()) {
-            this.enumValues = Arrays.stream(enumValues.split("\\s+"))
-                                    .map(String::trim)
-                                    .collect(Collectors.toList());
-            logger.info("Set enum values: " + this.enumValues);
-        }
-    }
+	public void setEnumValues(String enumValues) {
+	    if (enumValues != null && !enumValues.isBlank()) {
+	        this.enumValues = Arrays.stream(enumValues.trim().split("[,\\s]+"))
+	                                .map(String::trim)
+	                                .filter(value -> !value.isEmpty())
+	                                .collect(Collectors.toList());
+	        logger.info("Set enum values: {}", this.enumValues);
+	    }
+	}
+	
+	@Override
+	public String toString () {
+		return type.getJavaType() + " " + name;
+	}
 }

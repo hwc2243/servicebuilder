@@ -11,7 +11,7 @@ package ${serviceBasePackage};
 <#if attribute.enumClass?has_content>
 <#assign imports += { attribute.enumClass : true }>
 <#else>
-<#assign imports += { modelPackage + "." + entity.name?cap_first + attribute.name?cap_first + "Type" : true }>
+<#assign imports += { modelPackage + "." + entity.name?cap_first + attribute.name?cap_first : true }>
 </#if>
 <#elseif attribute.type.javaType?last_index_of(".") gt 0>
 <#assign imports += { attribute.type.javaType : true }>

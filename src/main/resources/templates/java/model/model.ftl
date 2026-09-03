@@ -13,7 +13,7 @@ package ${modelPackage};
 <#if attribute.enumClass?has_content>
 <#assign imports += { attribute.enumClass : true }>
 <#else>
-<#assign imports += { modelPackage +"." + entity.name?cap_first + attribute.name?cap_first + "Type" : true }>
+<#assign imports += { modelPackage +"." + entity.name?cap_first + attribute.name?cap_first : true }>
 </#if>
 <#elseif attribute.type.javaType?last_index_of(".") gt 0>
 <#assign imports += { attribute.type.javaType : true }>
@@ -30,22 +30,19 @@ package ${modelPackage};
 <#list referencedEntitiesMap[entity.name] as referencedEntity>
 <#assign imports += { modelPackage + "." + referencedEntity.name?cap_first : true }>
 </#list>
-<#if entity.parent??>
+<#if entity.parent?has_content>
 <#assign imports += { modelPackage + "." + entity.parent?cap_first : true }>
 </#if>
 <#assign imports += { modelBasePackage + ".Base" + entity.name?cap_first : true }>
+<#list inheritedAndOwnModelGenericTypes(entity) as genericType>
+  <#assign imports += { modelPackage + "." + genericType : true }>
+</#list>
 <@import imports/>
 
-<#assign genericParams = []>
-<#list entity.relateds as related>
-  <#assign genericParams += [related.entityName?upper_case]>
-</#list>
-<#assign genericDeclaration = "">
-<#if genericParams?size gt 0>
-  <#assign genericDeclaration = "<" + genericParams?join(", ") + ">">
-</#if>
-<#if entity.parent??>
-public interface ${entity.name?cap_first}${genericDeclaration} extends Base${entity.parent.name?cap_first}${genericDeclaration}, Base${entity.name?cap_first}${genericDeclaration} 
+<#assign genericDeclaration = asGenericDeclaration(inheritedAndOwnGenericPlaceholders(entity))>
+<#assign parentGenericDeclaration = asGenericDeclaration(parentGenericPlaceholders(entity))>
+<#if entity.parent?has_content>
+public interface ${entity.name?cap_first}${genericDeclaration} extends ${entity.parent?cap_first}${parentGenericDeclaration}, Base${entity.name?cap_first}${genericDeclaration}
 <#else>
 public interface ${entity.name?cap_first}${genericDeclaration} extends Base${entity.name?cap_first}${genericDeclaration}
 </#if>

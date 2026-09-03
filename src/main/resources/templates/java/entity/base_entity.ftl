@@ -21,7 +21,7 @@ package ${entityBasePackage};
 <#if attribute.enumClass?has_content>
 <#assign imports += { attribute.enumClass : true }>
 <#else>
-<#assign imports += { modelPackage +"." + entity.name?cap_first + attribute.name?cap_first + "Type" : true }>
+<#assign imports += { modelPackage +"." + entity.name?cap_first + attribute.name?cap_first : true }>
 </#if>
 <#elseif attribute.type.javaType?last_index_of(".") gt 0>
 <#assign imports += { attribute.type.javaType : true }>
@@ -36,8 +36,8 @@ package ${entityBasePackage};
 <#list referencedEntitiesMap[entity.name] as referencedEntity>
 <#assign imports += { entityPackage + "." + referencedEntity.name?cap_first + "Entity" : true }>
 </#list>
-<#if entity.parent??>
-<#assign imports += { entityBasePackage + ".Base" + entity.parent.name?cap_first + "Entity" : true }>
+<#if entity.parent?has_content>
+<#assign imports += { entityBasePackage + ".Base" + entity.parent?cap_first + "Entity" : true }>
 </#if>
 <#assign imports +=  {
   jpaPackage + ".CascadeType" : true,
@@ -66,22 +66,17 @@ package ${entityBasePackage};
   modelPackage + "." + entity.name?cap_first: true,
   modelBasePackage + ".Base" + entity.name?cap_first: true
 }>
+<#list inheritedAndOwnEntityGenericTypes(entity) as genericType>
+  <#assign imports += { entityPackage + "." + genericType : true }>
+</#list>
 
 <@import imports/>
 
-<#assign modelGenericTypes = []>
-<#list entity.relateds as related>
-  <#assign modelGenericTypes += [related.entityName?cap_first + "Entity"]>
-</#list>
-
-<#assign modelGenericDeclaration = "">
-<#if modelGenericTypes?size gt 0>
-  <#assign modelGenericDeclaration = "<" + modelGenericTypes?join(", ") + ">">
-</#if>
+<#assign modelGenericDeclaration = asGenericDeclaration(inheritedAndOwnEntityGenericTypes(entity))>
 @MappedSuperclass
-<#if entity.parent??>
+<#if entity.parent?has_content>
 public abstract class Base${entity.name?cap_first}Entity<T extends Base${entity.name?cap_first}Entity<T>>
-  extends Base${entity.parent.name?cap_first}Entity<T>
+  extends Base${entity.parent?cap_first}Entity<T>
 <#else>
 public abstract class Base${entity.name?cap_first}Entity<T extends Base${entity.name?cap_first}Entity<T>> extends AbstractBaseEntity
 </#if>

@@ -1,4 +1,3 @@
-<#include "/core.ftl">
 <#include "/functions.ftl">
 package ${baseInternalApiPackage};
 

@@ -99,7 +99,7 @@ public class BuilderServiceImpl implements BuilderService {
 	}
 
 	@Override
-	public void build(Service service, BuilderArgs args) throws BuildException {
+	public void build (Service service, BuilderArgs args) throws BuildException {
 		boolean needPersistence = false;
 		boolean needInternalApi = false;
 		boolean needExternalApi = false;
@@ -224,17 +224,19 @@ public class BuilderServiceImpl implements BuilderService {
 			writeBaseEntity(args, model, entity, entityBasePackageDir);
 			writeExtensionEntity(args, model, entity, entityPackageDir);
 			
-			// write the persistence
-			writeBasePersistence(args, model, entity, persistenceBasePackageDir);
-			writeExtensionPersistence(args, model, entity, persistencePackageDir);
-
 			// write the dtos
 			writeBaseDTO(args, model, entity, dtoBasePackageDir);
 			writeExtensionDTO(args, model, entity, dtoPackageDir);
 			
-			// write the services
-			writeBaseService(args, model, entity, serviceBasePackageDir);
-			writeExtensionService(args, model, entity, servicePackageDir);
+			if (!entity.isAbstractEntity()) {
+				// write the persistence
+				writeBasePersistence(args, model, entity, persistenceBasePackageDir);
+				writeExtensionPersistence(args, model, entity, persistencePackageDir);
+
+				// write the services
+				writeBaseService(args, model, entity, serviceBasePackageDir);
+				writeExtensionService(args, model, entity, servicePackageDir);
+			}
 			
 		});	
 		
@@ -671,7 +673,7 @@ public class BuilderServiceImpl implements BuilderService {
 	protected void writeEnum (BuilderArgs args, Map<String, Object> baseModel, Entity entity, Attribute attribute,
 			File outputDir) throws BuildException {
 		if (StringUtils.isBlank(attribute.getEnumClass())) {
-			String enumName = StringUtils.capitalize(entity.getName()) + StringUtils.capitalize(attribute.getName()) + (attribute.getName().endsWith("Type") ? ".java" : "Type.java");
+			String enumName = StringUtils.capitalize(entity.getName()) + StringUtils.capitalize(attribute.getName()) + ".java";
 			File enumFile = new File(outputDir, enumName);
 
 			if (!enumFile.exists() || args.isReplace()) {
