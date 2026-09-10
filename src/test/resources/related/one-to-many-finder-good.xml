@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="relatedFinder" package="test.related_finder">
+    <entity name="documentLibrary">
+        <attribute name="name" type="string"/>
+        <related name="objects" entity="documentObject" relationship="one_to_many" collection="list" mapped-by="library"/>
+    </entity>
+    <entity name="documentObject" abstract="true">
+        <attribute name="name" type="string"/>
+        <related name="library" entity="documentLibrary" relationship="many_to_one"/>
+        <related name="parentFolder" entity="documentFolder" relationship="many_to_one"/>
+        <finder unique="true">
+            <finder-attribute name="name"/>
+            <finder-attribute name="library"/>
+            <finder-attribute name="parentFolder"/>
+        </finder>
+    </entity>
+    <entity name="documentFolder" parent="documentObject"/>
+    <entity name="documentFile" parent="documentObject"/>
+</service>

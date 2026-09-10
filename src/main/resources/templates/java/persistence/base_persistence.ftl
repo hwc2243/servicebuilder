@@ -31,12 +31,10 @@ public interface Base${entity.name?cap_first}Persistence<E extends ${entity.name
     public List<E> findBy${tenantDiscriminator.name?cap_first}(${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name});
 </#if>
 
-<#if entity.finders??>
-<#list entity.finders as finder>
+<#list inheritedAndOwnFinders(entity) as finder>
 <@finder_preprocessor finder=finder/>
 
-    public ${finderReturn} ${finderName}<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant>${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name}, </#if>${finderParameters});
+    public <#if finder.unique>E<#else>List<E></#if> ${finderName}<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant>${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name}, </#if>${finderParameters});
 
 </#list>
-</#if>
 }

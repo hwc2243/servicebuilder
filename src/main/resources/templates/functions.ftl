@@ -122,6 +122,44 @@
   <#return relateds>
 </#function>
 
+<#function inheritedAndOwnAttributes targetEntity>
+  <#assign attributes = []>
+  <#if targetEntity.parent?? && targetEntity.parent?has_content>
+    <#assign parentEntity = entityMap[targetEntity.parent]>
+    <#assign attributes += inheritedAndOwnAttributes(parentEntity)>
+  </#if>
+  <#assign attributes += targetEntity.attributes>
+  <#return attributes>
+</#function>
+
+<#function inheritedAndOwnFinders targetEntity>
+  <#assign finders = []>
+  <#if targetEntity.parent?? && targetEntity.parent?has_content>
+    <#assign parentEntity = entityMap[targetEntity.parent]>
+    <#assign finders += inheritedAndOwnFinders(parentEntity)>
+  </#if>
+  <#assign finders += targetEntity.finders>
+  <#return finders>
+</#function>
+
+<#function inheritedAttribute targetEntity name>
+  <#list inheritedAndOwnAttributes(targetEntity) as attribute>
+    <#if attribute.name == name>
+      <#return attribute>
+    </#if>
+  </#list>
+  <#return "">
+</#function>
+
+<#function inheritedRelated targetEntity name>
+  <#list inheritedAndOwnRelateds(targetEntity) as related>
+    <#if related.name == name>
+      <#return related>
+    </#if>
+  </#list>
+  <#return "">
+</#function>
+
 <#assign imports = {}>
 <#macro import imports>
 <#list imports?keys?sort as importClass>

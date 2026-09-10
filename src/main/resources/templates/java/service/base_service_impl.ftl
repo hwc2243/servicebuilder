@@ -41,7 +41,7 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
 
   @Autowired
   private Base${entity.name?cap_first}Persistence<E, ID> base${entity.name?cap_first}Persistence;
-  
+
   @Autowired
   protected ${entity.name?cap_first}Persistence ${entity.name}Persistence;
 
@@ -83,25 +83,24 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
 </#if>
     return toDtos(entities);
   }
-<#if entity.finders??>
-<#list entity.finders as finder>
+<#list inheritedAndOwnFinders(entity) as finder>
 <@finder_preprocessor finder=finder/>
 
 <#if finder.unique>
   @Override
   public D fetchBy${finderAttributes} (${finderParameters})
   {
-	return base${entity.name?cap_first}Persistence.findFirstBy${finderAttributes}(${finderArguments});
+	return toDto(base${entity.name?cap_first}Persistence.findFirstBy${finderAttributes}(${finderArguments}));
   }
 <#else>
   @Override
   public List<D> ${finderName}${finderAttributes} (${finderParameters})
   {
-	return base${entity.name?cap_first}Persistence.${finderName}<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant>tenantDiscriminator.get${tenantDiscriminator.name?cap_first}(),</#if>${finderArguments});
+	return toDtos(base${entity.name?cap_first}Persistence.${finderName}<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant>tenantDiscriminator.get${tenantDiscriminator.name?cap_first}(),</#if>${finderArguments}));
   }
 </#if>
 </#list>
-</#if>  
+
 
   @Override
   public D get (ID id) throws ServiceException

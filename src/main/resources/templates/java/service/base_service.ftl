@@ -21,8 +21,7 @@ package ${serviceBasePackage};
 <@import imports/>
 
 public interface Base${entity.name?cap_first}Service<D extends Base${entity.name?cap_first}DTO, ID> extends EntityService<D, ID> {
-<#if entity.finders??>
-<#list entity.finders as finder>
+<#list inheritedAndOwnFinders(entity) as finder>
 <@finder_preprocessor finder=finder/>
 
 <#if finder.unique>
@@ -31,5 +30,4 @@ public interface Base${entity.name?cap_first}Service<D extends Base${entity.name
 	public List<D> ${finderName}${finderAttributes} (${finderParameters});
 </#if>
 </#list>
-</#if>
 }

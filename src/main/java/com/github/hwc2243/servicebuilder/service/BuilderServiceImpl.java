@@ -587,15 +587,45 @@ public class BuilderServiceImpl implements BuilderService {
 
 	}
 
-	protected void validateFinders(Entity entity) throws BuildException {
+	protected void validateFinders(Entity entity, Map<String, Entity> entityMap) throws BuildException {
 		for (Finder finder : entity.getFinders()) {
 			for (FinderAttribute attribute : finder.getFinderAttributes()) {
-				if (entity.getAttribute(attribute.getName()) == null) {
+				Related related = findRelated(entity, attribute.getName(), entityMap);
+				if (findAttribute(entity, attribute.getName(), entityMap) == null && related == null) {
 					throw new BuildException(String.format("Finder %s on %s is invalid, %s is not an attribute.",
+							"findBy" + finder.buildFinderColumnNames(), entity.getName(), attribute.getName()));
+				} else if (related != null && related.getRelationshipType() != RelationshipType.MANY_TO_ONE
+						&& related.getRelationshipType() != RelationshipType.ONE_TO_ONE) {
+					throw new BuildException(String.format(
+							"Finder %s on %s is invalid, %s must be a scalar, many-to-one, or one-to-one attribute.",
 							"findBy" + finder.buildFinderColumnNames(), entity.getName(), attribute.getName()));
 				}
 			}
 		}
+	}
+
+	protected Attribute findAttribute(Entity entity, String name, Map<String, Entity> entityMap) {
+		Entity current = entity;
+		while (current != null) {
+			Attribute attribute = current.getAttribute(name);
+			if (attribute != null) {
+				return attribute;
+			}
+			current = StringUtils.isBlank(current.getParent()) ? null : entityMap.get(current.getParent());
+		}
+		return null;
+	}
+
+	protected Related findRelated(Entity entity, String name, Map<String, Entity> entityMap) {
+		Entity current = entity;
+		while (current != null) {
+			Related related = current.getRelated(name);
+			if (related != null) {
+				return related;
+			}
+			current = StringUtils.isBlank(current.getParent()) ? null : entityMap.get(current.getParent());
+		}
+		return null;
 	}
 
 	protected void validateRelated(Entity entity, Map<String, Entity> entityMap) throws BuildException {
@@ -662,7 +692,7 @@ public class BuilderServiceImpl implements BuilderService {
 		for (Entity entity : entityMap.values()) {
 			logger.info("Validating entity: " + entity.getName());
 			validateAttributes(entity, service.getTenantDiscriminator());
-			validateFinders(entity);
+			validateFinders(entity, entityMap);
 			validateRelated(entity, entityMap);
 			validateEntity(entity);
 		}

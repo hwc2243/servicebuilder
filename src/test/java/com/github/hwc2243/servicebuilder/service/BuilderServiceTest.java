@@ -66,6 +66,22 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	}
 
 	@Test
+	public void whenFinder_hasToOneRelationship_isGood() throws Exception {
+		File serviceFile = loadFile("related/one-to-many-finder-good.xml");
+		builderService.build(serviceFile, args);
+
+		Path generatedRoot = Paths.get(TMPDIR, "test", "related_finder");
+		String filePersistence = Files.readString(generatedRoot.resolve("persistence/base/BaseDocumentFilePersistence.java"));
+		String folderPersistence = Files.readString(generatedRoot.resolve("persistence/base/BaseDocumentFolderPersistence.java"));
+		String entity = Files.readString(generatedRoot.resolve("entity/base/BaseDocumentLibraryEntity.java"));
+
+		assertTrue(filePersistence.contains("findFirstByNameAndLibraryIdAndParentFolderId(String name, Long libraryId, Long parentFolderId)"));
+		assertTrue(folderPersistence.contains("findFirstByNameAndLibraryIdAndParentFolderId(String name, Long libraryId, Long parentFolderId)"));
+		assertTrue(entity.contains("@OneToMany(mappedBy = \"library\""));
+		assertFalse(entity.contains("@JoinColumn(name = \"documentLibraryId\")"));
+	}
+
+	@Test
 	public void whenBidirectionalRelationship_isGood() throws Exception {
 		File serviceFile = this.loadFile("related/many-to-many-bi-good.xml");
 		builderService.build(serviceFile, args);
