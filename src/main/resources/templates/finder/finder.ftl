@@ -4,6 +4,18 @@
 <#assign finderAttributes = "">
 <#assign finderArguments = "">
 <#assign finderParameters = "">
+<#assign finderPersistenceParameters = "">
+<#assign finderServiceParameters = "">
+<#assign finderCollectionRelated = "">
+<#if finder.name?has_content>
+<#assign finderCollectionRelated = inheritedRelated(entity, finder.finderAttributes?first.name)>
+<#assign finderCollectionEntity = entityMap[finderCollectionRelated.entityName]>
+<#assign finderName = "findBy">
+<#assign finderAttributes = finder.name?cap_first>
+<#assign finderArguments = finder.name>
+<#assign finderPersistenceParameters = finderCollectionEntity.name?cap_first + "Entity " + finder.name>
+<#assign finderServiceParameters = finderCollectionEntity.name?cap_first + "DTO " + finder.name>
+<#else>
 <#list finder.finderAttributes as finderAttribute>
 <#assign finderArgumentName = finderAttribute.name>
 <#assign parameterJavaType = "">
@@ -40,4 +52,5 @@
 <#assign finderReturn = "List<T>">
 </#if>
 </#list>
+</#if>
 </#macro>

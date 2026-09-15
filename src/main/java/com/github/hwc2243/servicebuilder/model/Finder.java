@@ -15,6 +15,11 @@ import lombok.Setter;
 public class Finder {
 	@Getter
 	@Setter
+	@JacksonXmlProperty(localName = "name")
+	protected String name;
+
+	@Getter
+	@Setter
 	@JacksonXmlElementWrapper(useWrapping = false)
 	@JacksonXmlProperty(localName = "finder-attribute")
 	protected LinkedHashSet<FinderAttribute> finderAttributes;

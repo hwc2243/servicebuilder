@@ -82,6 +82,21 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	}
 
 	@Test
+	public void whenNamedCollectionFinder_isGood() throws Exception {
+		testService("named-collection-finder-service.xml");
+
+		Path generatedRoot = Paths.get(TMPDIR, "test", "named_finder");
+		String persistence = Files.readString(generatedRoot.resolve("persistence/base/BaseMemberPersistence.java"));
+		String service = Files.readString(generatedRoot.resolve("service/base/BaseMemberService.java"));
+		String serviceImpl = Files.readString(generatedRoot.resolve("service/base/BaseMemberServiceImpl.java"));
+
+		assertTrue(persistence.contains("@Query(\"select entity from MemberEntity entity join entity.sessions session where session = :session\")"));
+		assertTrue(persistence.contains("List<E> findBySession(@Param(\"session\") SessionEntity session);"));
+		assertTrue(service.contains("List<D> findBySession (SessionDTO session);"));
+		assertTrue(serviceImpl.contains("baseMemberPersistence.findBySession(sessionMapper.toEntity(session))"));
+	}
+
+	@Test
 	public void whenBidirectionalRelationship_isGood() throws Exception {
 		File serviceFile = this.loadFile("related/many-to-many-bi-good.xml");
 		builderService.build(serviceFile, args);

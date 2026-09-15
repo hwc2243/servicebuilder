@@ -104,6 +104,7 @@
 				<xs:element ref="finder-attribute" minOccurs="1" maxOccurs="unbounded"/>
 			</xs:sequence>
 			<xs:attribute name="unique" type="xs:boolean" use="optional" default="false"/>
+			<xs:attribute name="name" type="xs:string" use="optional"/>
 		</xs:complexType>
 	</xs:element>
 	

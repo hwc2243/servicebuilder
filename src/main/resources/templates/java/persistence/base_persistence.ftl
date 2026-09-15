@@ -21,6 +21,17 @@ package ${persistenceBasePackage};
 </#if>
 </#if>
 </#list>
+<#list inheritedAndOwnFinders(entity) as finder>
+<#if finder.name?has_content>
+<#assign finderRelated = inheritedRelated(entity, finder.finderAttributes?first.name)>
+<#assign finderCollectionEntity = entityMap[finderRelated.entityName]>
+<#assign imports += {
+  "org.springframework.data.jpa.repository.Query" : true,
+  "org.springframework.data.repository.query.Param" : true,
+  entityPackage + "." + finderCollectionEntity.name?cap_first + "Entity" : true
+}>
+</#if>
+</#list>
 
 <@import imports/>
 
@@ -34,7 +45,12 @@ public interface Base${entity.name?cap_first}Persistence<E extends ${entity.name
 <#list inheritedAndOwnFinders(entity) as finder>
 <@finder_preprocessor finder=finder/>
 
+<#if finderCollectionRelated?has_content>
+    @Query("select entity from ${entity.name?cap_first}Entity entity join entity.${finderCollectionRelated.name} ${finder.name} where ${finder.name} = :${finder.name}")
+    public List<E> ${finderName}${finderAttributes}(@Param("${finder.name}") ${finderPersistenceParameters});
+<#else>
     public <#if finder.unique>E<#else>List<E></#if> ${finderName}<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant>${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name}, </#if>${finderParameters});
+</#if>
 
 </#list>
 }

@@ -17,6 +17,13 @@ package ${serviceBasePackage};
 <#assign imports += { attribute.type.javaType : true }>
 </#if>
 </#list>
+<#list inheritedAndOwnFinders(entity) as finder>
+<#if finder.name?has_content>
+<#assign finderRelated = inheritedRelated(entity, finder.finderAttributes?first.name)>
+<#assign finderCollectionEntity = entityMap[finderRelated.entityName]>
+<#assign imports += { dtoPackage + "." + finderCollectionEntity.name?cap_first + "DTO" : true }>
+</#if>
+</#list>
 
 <@import imports/>
 
@@ -24,7 +31,9 @@ public interface Base${entity.name?cap_first}Service<D extends Base${entity.name
 <#list inheritedAndOwnFinders(entity) as finder>
 <@finder_preprocessor finder=finder/>
 
-<#if finder.unique>
+<#if finderCollectionRelated?has_content>
+	public List<D> ${finderName}${finderAttributes} (${finderServiceParameters});
+<#elseif finder.unique>
 	public D fetchBy${finderAttributes} (${finderParameters});
 <#else>
 	public List<D> ${finderName}${finderAttributes} (${finderParameters});

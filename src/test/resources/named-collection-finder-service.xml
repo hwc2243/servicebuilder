@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="namedFinder" package="test.named_finder">
+    <entity name="session">
+        <attribute name="name" type="string"/>
+    </entity>
+
+    <entity name="member">
+        <attribute name="firstName" type="string"/>
+        <attribute name="lastName" type="string"/>
+
+        <related name="sessions" entity="session" collection="set" relationship="many_to_many"/>
+
+        <finder name="session">
+            <finder-attribute name="sessions"/>
+        </finder>
+    </entity>
+</service>

@@ -24,6 +24,23 @@ package ${serviceBasePackage};
 <#assign imports += { attribute.type.javaType : true }>
 </#if>
 </#list>
+<#assign namedFinderRelateds = []>
+<#assign namedFinderNames = []>
+<#list inheritedAndOwnFinders(entity) as finder>
+<#if finder.name?has_content>
+<#assign finderRelated = inheritedRelated(entity, finder.finderAttributes?first.name)>
+<#if !namedFinderNames?seq_contains(finder.name)>
+<#assign namedFinderNames += [finder.name]>
+<#assign namedFinderRelateds += [finderRelated]>
+<#assign finderCollectionEntity = entityMap[finderRelated.entityName]>
+<#assign imports += {
+  dtoPackage + "." + finderCollectionEntity.name?cap_first + "DTO" : true,
+  entityPackage + "." + finderCollectionEntity.name?cap_first + "Entity" : true,
+  servicePackage + "." + finderCollectionEntity.name?cap_first + "Mapper" : true
+}>
+</#if>
+</#if>
+</#list>
 <#if entity.multitenant>
 <#assign imports += {
  modelBasePackage + ".Multitenant" : true,
@@ -44,6 +61,11 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
 
   @Autowired
   protected ${entity.name?cap_first}Persistence ${entity.name}Persistence;
+
+<#list namedFinderRelateds as related>
+  @Autowired
+  protected ${related.entityName?cap_first}Mapper ${namedFinderNames[related_index]}Mapper;
+</#list>
 
     @Override
   public D create (D dto) throws ServiceException
@@ -86,7 +108,13 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
 <#list inheritedAndOwnFinders(entity) as finder>
 <@finder_preprocessor finder=finder/>
 
-<#if finder.unique>
+<#if finderCollectionRelated?has_content>
+  @Override
+  public List<D> ${finderName}${finderAttributes} (${finderServiceParameters})
+  {
+	return toDtos(base${entity.name?cap_first}Persistence.${finderName}${finderAttributes}(${finder.name}Mapper.toEntity(${finder.name})));
+  }
+<#elseif finder.unique>
   @Override
   public D fetchBy${finderAttributes} (${finderParameters})
   {

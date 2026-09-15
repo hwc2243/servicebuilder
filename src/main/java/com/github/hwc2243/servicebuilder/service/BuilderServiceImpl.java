@@ -589,6 +589,33 @@ public class BuilderServiceImpl implements BuilderService {
 
 	protected void validateFinders(Entity entity, Map<String, Entity> entityMap) throws BuildException {
 		for (Finder finder : entity.getFinders()) {
+			if (StringUtils.isNotBlank(finder.getName())) {
+				if (finder.getFinderAttributes().size() != 1) {
+					throw new BuildException(String.format("Named finder %s on %s must have exactly one finder attribute.",
+							finder.getName(), entity.getName()));
+				}
+
+				FinderAttribute finderAttribute = finder.getFinderAttributes().iterator().next();
+				Related related = findRelated(entity, finderAttribute.getName(), entityMap);
+				if (related == null || (related.getRelationshipType() != RelationshipType.ONE_TO_MANY
+						&& related.getRelationshipType() != RelationshipType.MANY_TO_MANY)) {
+					throw new BuildException(String.format(
+							"Named finder %s on %s must reference a one-to-many or many-to-many relationship.",
+							finder.getName(), entity.getName()));
+				}
+				if (finder.isUnique()) {
+					throw new BuildException(String.format("Named collection finder %s on %s cannot be unique.",
+							finder.getName(), entity.getName()));
+				}
+				Entity relatedEntity = entityMap.get(related.getEntityName());
+				if (relatedEntity.isAbstractEntity()) {
+					throw new BuildException(String.format(
+							"Named collection finder %s on %s cannot reference abstract entity %s.", finder.getName(),
+							entity.getName(), related.getEntityName()));
+				}
+				continue;
+			}
+
 			for (FinderAttribute attribute : finder.getFinderAttributes()) {
 				Related related = findRelated(entity, attribute.getName(), entityMap);
 				if (findAttribute(entity, attribute.getName(), entityMap) == null && related == null) {
