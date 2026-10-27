@@ -29,6 +29,11 @@ public class Finder {
 	@Setter
 	@JacksonXmlProperty(localName = "unique")
 	protected boolean unique;
+
+	@Getter
+	@Setter
+	@JacksonXmlProperty(localName = "tenant-scoped")
+	protected boolean tenantScoped = true;
 		
 	public String buildFinderColumnNames ()
 	{

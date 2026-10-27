@@ -101,21 +101,23 @@ public class BuilderServiceImpl implements BuilderService {
 	@Override
 	public void build (Service service, BuilderArgs args) throws BuildException {
 		boolean needPersistence = false;
-		boolean needInternalApi = false;
-		boolean needExternalApi = false;
+		boolean tempNeedInternalApi = false;
+		boolean tempNeedExternalApi = false;
 		for (Entity entity : service.getEntities()) {
 			if (entity.isPersistence()) {
 				needPersistence = true;
 			}
 			if (entity.getApi() != null) {
 				if (entity.getApi().getInternal() != null) {
-					needInternalApi = true;
+					tempNeedInternalApi = true;
 				}
 				if (entity.getApi().getExternal() != null) {
-					needExternalApi = true;
+					tempNeedExternalApi = true;
 				}
 			}
 		}
+		final boolean needInternalApi = tempNeedInternalApi;
+		final boolean needExternalApi = tempNeedExternalApi;
 
 		Map<String, Object> model = new HashMap<>();
 		model.put("jpaPackage", args.getJpaPackage());
@@ -123,6 +125,7 @@ public class BuilderServiceImpl implements BuilderService {
 		Map<String, Entity> entityMap = buildEntityMap(service);
 		validateService(service, entityMap);
 		postProcess(entityMap);
+		validateKeyOnlyRelationships(entityMap);
 
 		model.put("entityMap", entityMap);
 		Map<String, List<Entity>> referencedEntitiesMap = buildReferencedEntitiesMap(entityMap);
@@ -185,6 +188,16 @@ public class BuilderServiceImpl implements BuilderService {
 		String serviceBasePackageName = servicePackageName + ".base";
 		model.put("serviceBasePackage", serviceBasePackageName);
 		File serviceBasePackageDir = createPackageDir(servicePackageDir, "base");
+		String eventPackageName = servicePackageName + ".event";
+		model.put("eventPackage", eventPackageName);
+		File eventPackageDir = createPackageDir(servicePackageDir, "event");
+
+		writeFile(args, model, "java/event/service_event.ftl", new File(eventPackageDir, "ServiceEvent.java"));
+		writeFile(args, model, "java/event/crud_operation.ftl", new File(eventPackageDir, "CrudOperation.java"));
+		writeFile(args, model, "java/event/entity_crud_event.ftl", new File(eventPackageDir, "EntityCrudEvent.java"));
+		writeFile(args, model, "java/event/service_event_bus.ftl", new File(eventPackageDir, "ServiceEventBus.java"));
+		writeFile(args, model, "java/event/spring_service_event_bus.ftl",
+				new File(eventPackageDir, "SpringServiceEventBus.java"));
 
 		// multitenant setup
 		if (service.isMultitenant()) {
@@ -209,6 +222,36 @@ public class BuilderServiceImpl implements BuilderService {
 		writeFile(args, model, "java/entity/abstract_base_entity.ftl", new File(entityBasePackageDir, "AbstractBaseEntity.java"));
 		writeFile(args, model, "java/service/service_exception.ftl", new File(servicePackageDir, "ServiceException.java"));
 		writeFile(args, model, "java/service/base_entity_service.ftl", new File(serviceBasePackageDir, "EntityService.java"));
+
+		// api setup
+		String apiPackageName = projectPackageName + ".api";
+		final File apiPackageDir = (needInternalApi || needExternalApi)
+				? createPackageDir(projectPackageDir, "api")
+				: null;
+
+		final File internalApiPackageDir = needInternalApi
+				? createPackageDir(apiPackageDir, "internal")
+				: null;
+		final File baseInternalApiPackageDir = needInternalApi
+				? createPackageDir(internalApiPackageDir, "base")
+				: null;
+		if (needInternalApi) {
+			String internalApiPackageName = apiPackageName + ".internal";
+			model.put("internalApiPackage", internalApiPackageName);
+			model.put("baseInternalApiPackage", internalApiPackageName + ".base");
+		}
+
+		final File externalApiPackageDir = needExternalApi
+				? createPackageDir(apiPackageDir, "external")
+				: null;
+		final File baseExternalApiPackageDir = needExternalApi
+				? createPackageDir(externalApiPackageDir, "base")
+				: null;
+		if (needExternalApi) {
+			String externalApiPackageName = apiPackageName + ".external";
+			model.put("externalApiPackage", externalApiPackageName);
+			model.put("baseExternalApiPackage", externalApiPackageName + ".base");
+		}
 
 		service.getEntities().stream().forEach(entity -> {
 			// write the models
@@ -238,7 +281,24 @@ public class BuilderServiceImpl implements BuilderService {
 				writeExtensionService(args, model, entity, servicePackageDir);
 			}
 			
-		});	
+			if (needInternalApi) {
+				if (entity.getApi() != null) {
+					if (entity.getApi().getInternal() != null) {
+						writeApiBaseInternal(args, model, entity, baseInternalApiPackageDir);
+						writeApiInternal(args, model, entity, internalApiPackageDir);
+					}
+				}
+			}
+
+			if (needExternalApi) {
+				if (entity.getApi() != null) {
+					if (entity.getApi().getExternal() != null) {
+						writeApiBaseExternal(args, model, entity, baseExternalApiPackageDir);
+						writeApiExternal(args, model, entity, externalApiPackageDir);
+					}
+				}
+			}
+		});
 		
 		/*
 
@@ -274,49 +334,6 @@ public class BuilderServiceImpl implements BuilderService {
 				}
 			});
 
-			if (needInternalApi || needExternalApi) {
-				// write the rest packages
-				String apiPackageName = projectPackageName + ".api";
-				File apiPackageDir = createPackageDir(projectPackageDir, "api");
-
-				if (needInternalApi) {
-					String internalApiPackageName = apiPackageName + ".internal";
-					model.put("internalApiPackage", internalApiPackageName);
-					File internalApiPackageDir = createPackageDir(apiPackageDir, "internal");
-
-					String baseInternalApiPackageName = internalApiPackageName + ".base";
-					model.put("baseInternalApiPackage", baseInternalApiPackageName);
-					File baseInternalApiPackageDir = createPackageDir(internalApiPackageDir, "base");
-
-					service.getEntities().stream().forEach(entity -> {
-						if (entity.getApi() != null) {
-							if (entity.getApi().getInternal() != null) {
-								writeApiBaseInternal(args, model, entity, baseInternalApiPackageDir);
-								writeApiInternal(args, model, entity, internalApiPackageDir);
-							}
-						}
-					});
-				}
-
-				if (needExternalApi) {
-					String externalApiPackageName = apiPackageName + ".external";
-					model.put("externalApiPackage", externalApiPackageName);
-					File externalApiPackageDir = createPackageDir(apiPackageDir, "external");
-
-					String baseExternalApiPackage = externalApiPackageName + ".base";
-					model.put("baseExternalApiPackage", baseExternalApiPackage);
-					File baseExternalApiPackageDir = createPackageDir(externalApiPackageDir, "base");
-
-					service.getEntities().stream().forEach(entity -> {
-						if (entity.getApi() != null) {
-							if (entity.getApi().getInternal() != null) {
-								writeApiBaseExternal(args, model, entity, baseExternalApiPackageDir);
-								writeApiExternal(args, model, entity, externalApiPackageDir);
-							}
-						}
-					});
-				}
-			}
 		}
 
 		// if we are building client code, write the models and rest services
@@ -533,6 +550,19 @@ public class BuilderServiceImpl implements BuilderService {
 	protected void validateEntityMap(Map<String, Entity> entityMap) throws BuildException {
 	}
 
+	protected void validateKeyOnlyRelationships(Map<String, Entity> entityMap) throws BuildException {
+		for (Entity entity : entityMap.values()) {
+			for (Related related : entity.getRelateds()) {
+				if (related.isKeyOnly() && related.getRelationshipType() == RelationshipType.ONE_TO_ONE
+						&& related.isOwner()) {
+					throw new BuildException("Inverse one-to-one relationship '" + related.getName()
+							+ "' on " + entity.getName()
+							+ " cannot use key-only; the owning side must hold the key.");
+				}
+			}
+		}
+	}
+
 	protected void validateAttributes(Entity entity, TenantDiscriminator tenantDiscriminator) throws BuildException {
 		for (Attribute attribute : entity.getAttributes()) {
 			// ensure enum attributes are properly defined
@@ -674,6 +704,11 @@ public class BuilderServiceImpl implements BuilderService {
 				throw new BuildException("Related entity '" + related.getEntityName()
 						+ "' must have a relationship type defined for entity: " + entity.getName());
 			} else if (related.getRelationshipType() == RelationshipType.MANY_TO_MANY) {
+				if (related.isKeyOnly()) {
+					throw new BuildException("Related entity '" + related.getName()
+							+ "' on " + entity.getName()
+							+ " cannot use key-only with a many-to-many relationship.");
+				}
 				Related relatedEntityRelated = relatedEntity.getRelated(entity.getName() + "s");
 				if (relatedEntityRelated == null) {
 					// if there is no relatedEntity related definition assume this unidirectional
@@ -694,8 +729,18 @@ public class BuilderServiceImpl implements BuilderService {
 				}
 				related.setBidirectional(true);
 			} else if (related.getRelationshipType() == RelationshipType.ONE_TO_MANY) {
+				if (related.isKeyOnly()) {
+					throw new BuildException("Related entity '" + related.getName()
+							+ "' on " + entity.getName()
+							+ " cannot use key-only with a one-to-many relationship.");
+				}
 			} else if (related.getRelationshipType() == RelationshipType.MANY_TO_ONE) {
 			} else if (related.getRelationshipType() == RelationshipType.ONE_TO_ONE) {
+				if (related.isKeyOnly() && related.isOwner()) {
+					throw new BuildException("Inverse one-to-one relationship '" + related.getName()
+							+ "' on " + entity.getName()
+							+ " cannot use key-only; the owning side must hold the key.");
+				}
 			} else {
 				throw new BuildException("Related entity '" + related.getEntityName()
 						+ "' has an invalid relationship type for entity: " + entity.getName());
@@ -905,8 +950,8 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "api/external/base_api_external.ftl", classFile);
-			writeFile(args, entityModel, "api/external/base_api_external_impl.ftl", implFile);
+			writeFile(args, entityModel, "java/api/external/base_api_external.ftl", classFile);
+			writeFile(args, entityModel, "java/api/external/base_api_external_impl.ftl", implFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -924,10 +969,10 @@ public class BuilderServiceImpl implements BuilderService {
 			entityModel.put("entity", entity);
 
 			if (!classFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "api/external/api_external.ftl", classFile);
+				writeFile(args, entityModel, "java/api/external/api_external.ftl", classFile);
 			}
 			if (!implFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "api/external/api_external_impl.ftl", implFile);
+				writeFile(args, entityModel, "java/api/external/api_external_impl.ftl", implFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -946,8 +991,8 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "api/internal/base_api_internal.ftl", classFile);
-			writeFile(args, entityModel, "api/internal/base_api_internal_impl.ftl", implFile);
+			writeFile(args, entityModel, "java/api/internal/base_api_internal.ftl", classFile);
+			writeFile(args, entityModel, "java/api/internal/base_api_internal_impl.ftl", implFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -965,10 +1010,10 @@ public class BuilderServiceImpl implements BuilderService {
 			entityModel.put("entity", entity);
 
 			if (!classFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "api/internal/api_internal.ftl", classFile);
+				writeFile(args, entityModel, "java/api/internal/api_internal.ftl", classFile);
 			}
 			if (!implFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "api/internal/api_internal_impl.ftl", implFile);
+				writeFile(args, entityModel, "java/api/internal/api_internal_impl.ftl", implFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();

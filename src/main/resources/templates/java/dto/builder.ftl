@@ -14,7 +14,12 @@
 </#list>
 
 <#list entity.relateds as related>
-<#if related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE">
+<#if isTenantKeyOnly(entity, related)>
+<#-- The tenant discriminator field is already part of the DTO attributes. -->
+<#elseif related.keyOnly>
+    <#assign relatedEntity = entityMap[related.entityName]>
+    private ${className(relatedEntity.key.type.javaType)} ${related.name}Id = null;
+<#elseif related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE">
     private ${related.entityName?cap_first}DTO ${related.name} = null;
 <#else>
     private ${related.collectionType.collectionType}<${related.entityName?cap_first}DTO> ${related.name} = null;
@@ -35,7 +40,14 @@
 
 </#list>
 <#list entity.relateds as related>
-<#if related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE">
+<#if isTenantKeyOnly(entity, related)>
+<#-- The tenant discriminator builder field is already part of the DTO attributes. -->
+<#elseif related.keyOnly>
+    public Builder ${related.name}Id (${className(entityMap[related.entityName].key.type.javaType)} ${related.name}Id) {
+      this.${related.name}Id = ${related.name}Id;
+      return this;
+    }
+<#elseif related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE">
     public Builder ${related.name}(${related.entityName?cap_first}DTO ${related.name}) {
       this.${related.name} = ${related.name};
       return this;
@@ -64,7 +76,13 @@
     this.${attribute.name} = builder.${attribute.name};
 </#list>
 <#list entity.relateds as related>
+<#if isTenantKeyOnly(entity, related)>
+<#-- The tenant discriminator is copied with the regular attribute fields. -->
+<#elseif related.keyOnly>
+    this.${related.name}Id = builder.${related.name}Id;
+<#else>
     this.${related.name} = builder.${related.name};
+</#if>
 </#list>
   }
 </#macro>

@@ -28,6 +28,11 @@ public class Related {
 	@Setter
 	@JacksonXmlProperty(localName="collection")
 	protected CollectionType collectionType = CollectionType.LIST;
+
+	@Getter
+	@Setter
+	@JacksonXmlProperty(localName="key-only")
+	protected boolean keyOnly = false;
 	
 	@Getter
 	@Setter

@@ -25,6 +25,11 @@ package ${dtoBasePackage};
 <#if entity.key.type.value == "uuid">
 <#assign imports += { "java.util.UUID" : true }>
 </#if>
+<#list entity.relateds as related>
+<#if related.keyOnly && entityMap[related.entityName].key.type.value == "uuid">
+<#assign imports += { "java.util.UUID" : true }>
+</#if>
+</#list>
 <#list referencedEntitiesMap[entity.name] as referencedEntity>
 <#assign imports += { dtoPackage + "." + referencedEntity.name?cap_first + "DTO": true }>
 </#list>

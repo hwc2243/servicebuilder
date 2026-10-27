@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="uniqueRelatedFinder" package="test.unique_related_finder">
+    <entity name="member">
+        <attribute name="name" type="string"/>
+    </entity>
+
+    <entity name="meeting">
+        <attribute name="date" type="date"/>
+    </entity>
+
+    <entity name="attendance">
+        <attribute name="present" type="boolean"/>
+
+        <related name="member" entity="member" relationship="many_to_one"/>
+        <related name="meeting" entity="meeting" relationship="many_to_one"/>
+
+        <finder unique="true">
+            <finder-attribute name="member"/>
+            <finder-attribute name="meeting"/>
+        </finder>
+    </entity>
+</service>

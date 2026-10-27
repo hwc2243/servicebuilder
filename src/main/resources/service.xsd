@@ -104,6 +104,7 @@
 				<xs:element ref="finder-attribute" minOccurs="1" maxOccurs="unbounded"/>
 			</xs:sequence>
 			<xs:attribute name="unique" type="xs:boolean" use="optional" default="false"/>
+			<xs:attribute name="tenant-scoped" type="xs:boolean" use="optional" default="true"/>
 			<xs:attribute name="name" type="xs:string" use="optional"/>
 		</xs:complexType>
 	</xs:element>
@@ -117,6 +118,7 @@
 			<xs:attribute ref="bidirectional" />
 			<xs:attribute ref="owner" />
 			<xs:attribute ref="mapped-by" />
+			<xs:attribute name="key-only" type="xs:boolean" default="false" />
 		</xs:complexType>
 	</xs:element>
 	

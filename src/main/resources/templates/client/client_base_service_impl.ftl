@@ -81,15 +81,15 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<T extends ${entity
 
 <#if finder.unique>
   @Override
-  public T fetchBy${finderAttributes} (${finderParameters})
+  public T fetchBy<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes} (${finderParameters})
   {
-	return base${entity.name?cap_first}Persistence.findFirstBy${finderAttributes}(${finderArguments});
+	return base${entity.name?cap_first}Persistence.findFirstBy<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant && finder.tenantScoped>tenantDiscriminator.get${tenantDiscriminator.name?cap_first}(),</#if>${finderArguments});
   }
 <#else>
   @Override
   public List<T> ${finderName}${finderAttributes} (${finderParameters})
   {
-	return base${entity.name?cap_first}Persistence.${finderName}<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant>tenantDiscriminator.get${tenantDiscriminator.name?cap_first}(),</#if>${finderArguments});
+	return base${entity.name?cap_first}Persistence.${finderName}<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant && finder.tenantScoped>tenantDiscriminator.get${tenantDiscriminator.name?cap_first}(),</#if>${finderArguments});
   }
 </#if>
 </#list>

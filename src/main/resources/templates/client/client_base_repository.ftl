@@ -29,7 +29,7 @@ public interface Base${entity.name?cap_first}Persistence<T extends ${entity.name
 <#list entity.finders as finder>
 <@finder_preprocessor finder=finder/>
 
-    public ${finderReturn} ${finderName}<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes} (<#if entity.multitenant>${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name}, </#if>${finderParameters});
+    public ${finderReturn} ${finderName}<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes} (<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name}, </#if>${finderParameters});
 </#list>
 </#if>
-} 
+}

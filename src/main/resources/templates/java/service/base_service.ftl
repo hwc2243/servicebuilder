@@ -34,7 +34,7 @@ public interface Base${entity.name?cap_first}Service<D extends Base${entity.name
 <#if finderCollectionRelated?has_content>
 	public List<D> ${finderName}${finderAttributes} (${finderServiceParameters});
 <#elseif finder.unique>
-	public D fetchBy${finderAttributes} (${finderParameters});
+	public D fetchBy<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes} (${finderParameters});
 <#else>
 	public List<D> ${finderName}${finderAttributes} (${finderParameters});
 </#if>

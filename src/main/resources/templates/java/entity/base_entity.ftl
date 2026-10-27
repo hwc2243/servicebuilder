@@ -33,6 +33,11 @@ package ${entityBasePackage};
 <#if entity.key.type.value == "uuid">
 <#assign imports += { "java.util.UUID" : true }>
 </#if>
+<#list entity.relateds as related>
+<#if related.keyOnly && entityMap[related.entityName].key.type.value == "uuid">
+<#assign imports += { "java.util.UUID" : true }>
+</#if>
+</#list>
 <#list referencedEntitiesMap[entity.name] as referencedEntity>
 <#assign imports += { entityPackage + "." + referencedEntity.name?cap_first + "Entity" : true }>
 </#list>
@@ -95,7 +100,14 @@ public abstract class Base${entity.name?cap_first}Entity<T extends Base${entity.
 </#list>
 
 <#list entity.relateds as related>
-<#if related.relationshipType.name() == "ONE_TO_ONE">
+<#if isTenantKeyOnly(entity, related)>
+<#-- The tenant discriminator attribute already represents this relationship. -->
+<#elseif related.keyOnly>
+<#assign relatedEntity = entityMap[related.entityName]>
+  @Column(name = "${related.name}Id")
+  protected ${className(relatedEntity.key.type.javaType)} ${related.name}Id = null;
+
+<#elseif related.relationshipType.name() == "ONE_TO_ONE">
 <@one_to_one_attribute entity=entity related=related type=related.entityName?cap_first + "Entity"/>
   
 <#elseif related.relationshipType.name() == "ONE_TO_MANY">
@@ -130,7 +142,21 @@ public abstract class Base${entity.name?cap_first}Entity<T extends Base${entity.
 </#if>
 </#list>
 <#list entity.relateds as related>
-<#if related.relationshipType.name() == "ONE_TO_ONE">
+<#if isTenantKeyOnly(entity, related)>
+<#-- The tenant discriminator accessors already represent this relationship. -->
+<#elseif related.keyOnly>
+<#assign relatedEntity = entityMap[related.entityName]>
+  public ${className(relatedEntity.key.type.javaType)} get${related.name?cap_first}Id ()
+  {
+    return this.${related.name}Id;
+  }
+
+  public void set${related.name?cap_first}Id (${className(relatedEntity.key.type.javaType)} ${related.name}Id)
+  {
+    this.${related.name}Id = ${related.name}Id;
+  }
+
+<#elseif related.relationshipType.name() == "ONE_TO_ONE">
 <@one_to_one_accessors_impl entity=entity related=related type=related.entityName?cap_first + "Entity"/>
 
 <#elseif related.relationshipType.name() == "ONE_TO_MANY">

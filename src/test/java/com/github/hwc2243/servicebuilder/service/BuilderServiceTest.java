@@ -1,6 +1,7 @@
 package com.github.hwc2243.servicebuilder.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -56,6 +57,56 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	public void whenSimpleMultitenant_isGood() throws Exception {
 		testService("multitenant/simple-multitenant-service.xml");
 	}
+
+	@Test
+	public void whenKeyOnlyRelationship_isGeneratedAsKey() throws Exception {
+		testService("key-only-service.xml");
+
+		Path generatedRoot = Paths.get(TMPDIR, "test", "key_only");
+		String entity = Files.readString(generatedRoot.resolve("entity/base/BaseRallyEntity.java"));
+		String model = Files.readString(generatedRoot.resolve("model/base/BaseRally.java"));
+		String dto = Files.readString(generatedRoot.resolve("dto/base/BaseRallyDTO.java"));
+
+		assertTrue(entity.contains("protected Long userId"));
+		assertTrue(entity.contains("Long getUserId ()"));
+		assertTrue(entity.contains("void setUserId (Long userId)"));
+		assertFalse(entity.contains("UserEntity user"));
+		assertTrue(model.contains("Long getUserId ();"));
+		assertTrue(dto.contains("protected Long userId"));
+		assertTrue(dto.contains("Long getUserId ()"));
+	}
+
+	@Test
+	public void whenKeyOnlyCollection_isRejected() throws Exception {
+		assertThrows(BuildException.class, () -> {
+			File serviceFile = loadFile("key-only-collection-service.xml");
+			builderService.build(serviceFile, args);
+		});
+	}
+
+	@Test
+	public void whenKeyOnlyMatchesTenantDiscriminator_isGeneratedOnce() throws Exception {
+		testService("multitenant/key-only-discriminator-service.xml");
+
+		Path generatedRoot = Paths.get(TMPDIR, "com", "rallyapp", "rallymaster");
+		String entity = Files.readString(
+				generatedRoot.resolve("entity/base/BaseOrganizationMembershipEntity.java"));
+		String persistence = Files.readString(generatedRoot.resolve(
+				"persistence/base/BaseOrganizationMembershipPersistence.java"));
+		String service = Files.readString(generatedRoot.resolve(
+				"service/base/BaseOrganizationMembershipService.java"));
+
+		assertTrue(entity.contains("protected Long organizationId = null;"));
+		assertFalse(entity.contains("protected Long organizationIdId"));
+		assertFalse(entity.contains("OrganizationEntity organization"));
+		assertEquals(1, entity.lines()
+				.filter(line -> line.contains("protected Long organizationId = null;"))
+				.count());
+		assertTrue(persistence.contains("findByUserId(Long userId)"));
+		assertFalse(persistence.contains("findByOrganizationIdAndUserId"));
+		assertTrue(service.contains("findByUserId (Long userId)"));
+		assertFalse(service.contains("findByOrganizationIdAndUserId"));
+	}
 	
 	@Test
 	public void whenFinder_hasBadColumn() throws Exception {
@@ -94,6 +145,55 @@ public class BuilderServiceTest extends AbstractServiceTest {
 		assertTrue(persistence.contains("List<E> findBySession(@Param(\"session\") SessionEntity session);"));
 		assertTrue(service.contains("List<D> findBySession (SessionDTO session);"));
 		assertTrue(serviceImpl.contains("baseMemberPersistence.findBySession(sessionMapper.toEntity(session))"));
+	}
+
+	@Test
+	public void whenEvents_areGenerated() throws Exception {
+		testService("simple-service.xml");
+
+		Path generatedRoot = Paths.get(TMPDIR, "test", "simple");
+		String event = Files.readString(generatedRoot.resolve("service/event/EntityCrudEvent.java"));
+		String serviceImpl = Files.readString(generatedRoot.resolve("service/base/BaseSimpleServiceImpl.java"));
+
+		assertTrue(event.contains("public final class EntityCrudEvent<T> implements ServiceEvent"));
+		assertTrue(serviceImpl.contains("@Autowired(required = false)"));
+		assertTrue(serviceImpl.contains("import org.springframework.transaction.annotation.Transactional;"));
+		assertEquals(3, serviceImpl.lines().filter(line -> line.trim().equals("@Transactional")).count());
+		assertTrue(serviceImpl.contains("publishCrudEvent(CrudOperation.CREATED, savedDto)"));
+		assertTrue(serviceImpl.contains("publishCrudEvent(CrudOperation.UPDATED, savedDto)"));
+		assertTrue(serviceImpl.contains("publishCrudEvent(CrudOperation.DELETED, deletedDto)"));
+		String eventBus = Files.readString(generatedRoot.resolve("service/event/SpringServiceEventBus.java"));
+		assertTrue(eventBus.contains("publisher.publishEvent(event);"));
+		assertFalse(eventBus.contains("@TransactionalEventListener"));
+	}
+
+	@Test
+	public void whenInternalAndExternalApis_areGenerated() throws Exception {
+		File serviceFile = loadFile("api-service.xml");
+		builderService.build(serviceFile, args);
+
+		Path generatedRoot = Paths.get(TMPDIR, "test", "api");
+		assertTrue(Files.exists(generatedRoot.resolve("api/internal/base/BaseInternalWidgetRest.java")));
+		assertTrue(Files.exists(generatedRoot.resolve("api/internal/base/BaseInternalWidgetRestImpl.java")));
+		assertTrue(Files.exists(generatedRoot.resolve("api/internal/InternalWidgetRest.java")));
+		assertTrue(Files.exists(generatedRoot.resolve("api/internal/InternalWidgetRestImpl.java")));
+		assertTrue(Files.exists(generatedRoot.resolve("api/external/base/BaseExternalWidgetRest.java")));
+		assertTrue(Files.exists(generatedRoot.resolve("api/external/base/BaseExternalWidgetRestImpl.java")));
+		assertTrue(Files.exists(generatedRoot.resolve("api/external/ExternalWidgetRest.java")));
+		assertTrue(Files.exists(generatedRoot.resolve("api/external/ExternalWidgetRestImpl.java")));
+	}
+
+	@Test
+	public void whenUniqueFinder_hasRelationships_usesJoinColumns() throws Exception {
+		testService("unique-related-finder-service.xml");
+
+		Path generatedRoot = Paths.get(TMPDIR, "test", "unique_related_finder");
+		String entity = Files.readString(generatedRoot.resolve("entity/AttendanceEntity.java"));
+
+		assertTrue(entity.contains("\"member_id\""));
+		assertTrue(entity.contains("\"meeting_id\""));
+		assertFalse(entity.contains("\"member\""));
+		assertFalse(entity.contains("\"meeting\""));
 	}
 
 	@Test

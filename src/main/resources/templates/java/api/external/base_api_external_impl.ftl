@@ -1,4 +1,6 @@
 <#include "/functions.ftl">
+<#assign baseEntityName = entity.name?cap_first>
+<#assign dtoName = baseEntityName + "DTO">
 package ${baseExternalApiPackage};
 
 import java.util.List;
@@ -19,10 +21,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import ${localModelPackage}.${baseEntityName};
+import ${dtoPackage}.${dtoName};
 
-import ${localServicePackage}.${baseEntityName}Service;
-import ${localServicePackage}.ServiceException;
+import ${servicePackage}.${baseEntityName}Service;
+import ${servicePackage}.ServiceException;
 
 import ${baseExternalApiPackage}.BaseExternal${baseEntityName}Rest;
 
@@ -34,9 +36,9 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("CREATE")>
 	@PostMapping
 	@Override
-	public ResponseEntity<${baseEntityName}> create${baseEntityName} (@RequestBody ${baseEntityName} ${entity.name})
+	public ResponseEntity<${dtoName}> create${baseEntityName} (@RequestBody ${dtoName} ${entity.name})
 	{
-	  ${baseEntityName} new${baseEntityName} = null;
+	  ${dtoName} new${baseEntityName} = null;
 	  
 	  try
 	  {
@@ -55,7 +57,7 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("DELETE")>
 	@DeleteMapping("/{id}")
 	@Override
-    public ResponseEntity<${baseEntityName}> delete${baseEntityName}(@PathVariable ${entity.key.type.javaType} id) 
+    public ResponseEntity<Void> delete${baseEntityName}(@PathVariable ${entity.key.type.javaType} id)
     {
       try
       {
@@ -73,9 +75,9 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("READ")>
 	@GetMapping("/{id}")
 	@Override
-	public ResponseEntity<${baseEntityName}> get${baseEntityName} (@PathVariable ${entity.key.type.javaType} id)
+	public ResponseEntity<${dtoName}> get${baseEntityName} (@PathVariable ${entity.key.type.javaType} id)
 	{
-		${baseEntityName} ${entity.name} = null;
+		${dtoName} ${entity.name} = null;
 		
 		try	{
 			${entity.name} = ${entity.name}Service.get(id);
@@ -94,11 +96,11 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
     
     @GetMapping
     @Override
-    public ResponseEntity<List<${baseEntityName}>> list${baseEntityName}s ()
+    public ResponseEntity<List<${dtoName}>> list${baseEntityName}s ()
     {
         try
         {
-        	List<${baseEntityName}> ${entity.name}s = ${entity.name}Service.findAll();
+        List<${dtoName}> ${entity.name}s = ${entity.name}Service.findAll();
         	return ResponseEntity.ok(${entity.name}s);
         }
         catch (ServiceException ex)
@@ -110,8 +112,8 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
 
     @GetMapping("/search")
     @Override  
-    public ResponseEntity<List<${baseEntityName}>> search${baseEntityName}s (
-<#assign searchableAttributes = entity.attributes?filter(a -> a.name != "id" && a.type == "String")>
+	public ResponseEntity<List<${dtoName}>> search${baseEntityName}s (
+<#assign searchableAttributes = entity.attributes?filter(a -> a.name != "id" && a.type == "string")>
 <#list searchableAttributes as attribute>
       @RequestParam(required = false) String ${attribute.name}<#sep>,</#sep>
 </#list>
@@ -119,8 +121,8 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
 	{
 	  try
 	  {
-	    List<${baseEntityName}> all${baseEntityName}s = ${entity.name}Service.findAll();
-	    List<${baseEntityName}> filtered${baseEntityName}s = all${baseEntityName}s.stream()
+	    List<${dtoName}> all${baseEntityName}s = ${entity.name}Service.findAll();
+	    List<${dtoName}> filtered${baseEntityName}s = all${baseEntityName}s.stream()
 <#list entity.attributes as attribute>
 <#if attribute.name != "id" && attribute.type == "string">
           .filter(item -> ${attribute.name} == null || item.get${attribute.name?cap_first}().equalsIgnoreCase(${attribute.name}))
@@ -141,9 +143,9 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("UPDATE")>
     @PutMapping("/{id}")
     @Override
-    public ResponseEntity<${baseEntityName}> update${baseEntityName}(@PathVariable ${entity.key.type.javaType} id, @RequestBody ${baseEntityName} ${entity.name})
+	    public ResponseEntity<${dtoName}> update${baseEntityName}(@PathVariable ${entity.key.type.javaType} id, @RequestBody ${dtoName} ${entity.name})
     {
-      ${baseEntityName} updated${baseEntityName} = null;
+	      ${dtoName} updated${baseEntityName} = null;
 
 <#if entity.key.type.value == "string" || entity.key.type.value == "uuid" >
       if (${entity.name}.getId() == null || "".equals(${entity.name}.getId()))
@@ -166,7 +168,7 @@ public abstract class BaseExternal${baseEntityName}RestImpl implements BaseExter
 </#if>
       try
       {
-        ${baseEntityName} existing${baseEntityName} = ${entity.name}Service.get(id);
+        ${dtoName} existing${baseEntityName} = ${entity.name}Service.get(id);
         if (existing${baseEntityName} == null)
         {
           return ResponseEntity.notFound().build();

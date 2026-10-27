@@ -29,6 +29,11 @@ package ${modelBasePackage};
 <#if entity.key.type.value == "uuid">
   <#assign imports += { "java.util.UUID" : true }>
 </#if>
+<#list entity.relateds as related>
+  <#if related.keyOnly && entityMap[related.entityName].key.type.value == "uuid">
+    <#assign imports += { "java.util.UUID" : true }>
+  </#if>
+</#list>
 <#list referencedEntitiesMap[entity.name] as referencedEntity>
   <#assign imports += { modelPackage + "." + referencedEntity.name?cap_first : true }>
 </#list>
@@ -58,7 +63,14 @@ public interface Base${entity.name?cap_first}${genericDeclaration}
 </#if>
 </#list>
 <#list entity.relateds as related>
-<#if related.relationshipType.name() == "ONE_TO_ONE">
+<#if isTenantKeyOnly(entity, related)>
+<#-- The tenant discriminator accessors already represent this relationship. -->
+<#elseif related.keyOnly>
+<#assign relatedEntity = entityMap[related.entityName]>
+  public ${className(relatedEntity.key.type.javaType)} get${related.name?cap_first}Id ();
+  public void set${related.name?cap_first}Id (${className(relatedEntity.key.type.javaType)} ${related.name}Id);
+
+<#elseif related.relationshipType.name() == "ONE_TO_ONE">
 <@one_to_one_accessors_api entity=entity related=related type=related.entityName?upper_case/>
 
 <#elseif related.relationshipType.name() == "ONE_TO_MANY">

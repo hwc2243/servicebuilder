@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="api" package="test.api">
+	<entity name="widget">
+		<attribute name="name" type="string"/>
+
+		<api>
+			<internal operations="CREATE READ UPDATE DELETE"/>
+			<external operations="READ"/>
+		</api>
+	</entity>
+</service>

@@ -22,7 +22,7 @@ public interface Base${entity.name?cap_first}Service<T extends Base${entity.name
 <@finder_preprocessor finder=finder/>
 
 <#if finder.unique>
-	public T fetchBy${finderAttributes} (${finderParameters});
+	public T fetchBy<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes} (${finderParameters});
 <#else>
 	public List<T> ${finderName}${finderAttributes} (${finderParameters});
 </#if>

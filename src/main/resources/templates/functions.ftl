@@ -6,6 +6,11 @@
   </#if>
 </#function>
 
+<#function isTenantKeyOnly entity related>
+  <#return related.keyOnly && entity.multitenant && tenantDiscriminator??
+      && related.name + "Id" == tenantDiscriminator.name>
+</#function>
+
 <#function attributeTypeClass attribute>
   <#if attribute.type == "ENUM">
     <#if attribute.enumClass?has_content>
@@ -21,7 +26,9 @@
 <#function relatedGenericNames targetEntity suffix="">
   <#assign names = []>
   <#list targetEntity.relateds as related>
-    <#assign names += [related.entityName?cap_first + suffix]>
+    <#if !related.keyOnly>
+      <#assign names += [related.entityName?cap_first + suffix]>
+    </#if>
   </#list>
   <#return names>
 </#function>
@@ -29,7 +36,9 @@
 <#function relatedGenericPlaceholders targetEntity>
   <#assign names = []>
   <#list targetEntity.relateds as related>
-    <#assign names += [related.entityName?upper_case]>
+    <#if !related.keyOnly>
+      <#assign names += [related.entityName?upper_case]>
+    </#if>
   </#list>
   <#return names>
 </#function>

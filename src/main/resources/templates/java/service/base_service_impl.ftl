@@ -5,13 +5,18 @@ package ${serviceBasePackage};
   "java.util.List": true,
   "java.util.Optional": true,
   "org.springframework.beans.factory.annotation.Autowired" : true,
+  "org.springframework.transaction.annotation.Transactional" : true,
   dtoBasePackage + ".Base" + entity.name?cap_first + "DTO" : true,
   dtoPackage + "." + entity.name?cap_first + "DTO" : true,
   entityBasePackage + ".Base" + entity.name?cap_first + "Entity" : true,
   entityPackage + "." + entity.name?cap_first + "Entity" : true,
   persistencePackage + "." + entity.name?cap_first + "Persistence" : true,
   persistenceBasePackage + ".Base" + entity.name?cap_first + "Persistence" : true,
-  servicePackage + ".ServiceException" : true
+  servicePackage + ".ServiceException" : true,
+  eventPackage + ".CrudOperation" : true,
+  eventPackage + ".EntityCrudEvent" : true,
+  eventPackage + ".ServiceEvent" : true,
+  eventPackage + ".ServiceEventBus" : true
 }>
 <#list entity.attributes as attribute>
 <#if attribute.type == "ENUM">
@@ -62,12 +67,16 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
   @Autowired
   protected ${entity.name?cap_first}Persistence ${entity.name}Persistence;
 
+  @Autowired(required = false)
+  protected ServiceEventBus serviceEventBus;
+
 <#list namedFinderRelateds as related>
   @Autowired
   protected ${related.entityName?cap_first}Mapper ${namedFinderNames[related_index]}Mapper;
 </#list>
 
     @Override
+  @Transactional
   public D create (D dto) throws ServiceException
   {
   <#if entity.multitenant>
@@ -78,12 +87,16 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
   </#if>
     E entity = toEntity(dto);
     E saved = base${entity.name?cap_first}Persistence.save(entity);
-    return toDto(saved);
+    D savedDto = toDto(saved);
+    publishCrudEvent(CrudOperation.CREATED, savedDto);
+    return savedDto;
   }
   
   @Override
+  @Transactional
   public void delete (ID id) throws ServiceException
   {
+    D deletedDto = serviceEventBus == null ? null : get(id);
   <#if entity.multitenant>
     try {
       get(id);
@@ -93,6 +106,9 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
     
   </#if>
     base${entity.name?cap_first}Persistence.deleteById(id);
+    if (deletedDto != null) {
+      publishCrudEvent(CrudOperation.DELETED, deletedDto);
+    }
   }
   
   @Override
@@ -116,15 +132,15 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
   }
 <#elseif finder.unique>
   @Override
-  public D fetchBy${finderAttributes} (${finderParameters})
+  public D fetchBy<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes} (${finderParameters})
   {
-	return toDto(base${entity.name?cap_first}Persistence.findFirstBy${finderAttributes}(${finderArguments}));
+	return toDto(base${entity.name?cap_first}Persistence.findFirstBy<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant && finder.tenantScoped>tenantDiscriminator.get${tenantDiscriminator.name?cap_first}(),</#if>${finderArguments}));
   }
 <#else>
   @Override
-  public List<D> ${finderName}${finderAttributes} (${finderParameters})
+  public List<D> ${finderName}<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes} (${finderParameters})
   {
-	return toDtos(base${entity.name?cap_first}Persistence.${finderName}<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant>tenantDiscriminator.get${tenantDiscriminator.name?cap_first}(),</#if>${finderArguments}));
+	return toDtos(base${entity.name?cap_first}Persistence.${finderName}<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant && finder.tenantScoped>tenantDiscriminator.get${tenantDiscriminator.name?cap_first}(),</#if>${finderArguments}));
   }
 </#if>
 </#list>
@@ -146,6 +162,7 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
   }
   
   @Override
+  @Transactional
   public D update (D dto) throws ServiceException
   {
   <#if entity.multitenant>
@@ -155,9 +172,25 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
   </#if>
     E entity = toEntity(dto);
     E saved = base${entity.name?cap_first}Persistence.save(entity);
-    return toDto(saved);
+    D savedDto = toDto(saved);
+    publishCrudEvent(CrudOperation.UPDATED, savedDto);
+    return savedDto;
   }
-  
+
+  protected void publishEvent (ServiceEvent event)
+  {
+    if (serviceEventBus != null) {
+      serviceEventBus.publish(event);
+    }
+  }
+
+  protected void publishCrudEvent (CrudOperation operation, D dto)
+  {
+    if (dto != null) {
+      publishEvent(new EntityCrudEvent<D>(operation, "${entity.name}", dto.get${entity.key.name?cap_first}(), dto));
+    }
+  }
+
   protected abstract E toEntity (D dto);
   protected abstract List<E> toEntities (List<D> dtos);
 

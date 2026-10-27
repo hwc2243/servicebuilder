@@ -34,9 +34,9 @@ package ${entityPackage};
 <#assign modelGenericDeclaration = asGenericDeclaration(inheritedAndOwnEntityGenericTypes(entity))>
 @Entity(name="${entity.name?cap_first}")
 <#if entity.dbName?has_content>
-<@table_definition dbName=entity.dbName uniqueFinders=entity.uniqueFinders/>
+<@table_definition entity=entity dbName=entity.dbName uniqueFinders=entity.uniqueFinders/>
 <#else>
-<@table_definition dbName=entity.name uniqueFinders=entity.uniqueFinders/>
+<@table_definition entity=entity dbName=entity.name uniqueFinders=entity.uniqueFinders/>
 </#if>
 <#if entity.abstractEntity>
 @Inheritance(strategy = InheritanceType.JOINED)

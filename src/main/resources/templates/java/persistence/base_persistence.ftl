@@ -49,7 +49,7 @@ public interface Base${entity.name?cap_first}Persistence<E extends ${entity.name
     @Query("select entity from ${entity.name?cap_first}Entity entity join entity.${finderCollectionRelated.name} ${finder.name} where ${finder.name} = :${finder.name}")
     public List<E> ${finderName}${finderAttributes}(@Param("${finder.name}") ${finderPersistenceParameters});
 <#else>
-    public <#if finder.unique>E<#else>List<E></#if> ${finderName}<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant>${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name}, </#if>${finderParameters});
+    public <#if finder.unique>E<#else>List<E></#if> ${finderName}<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name}, </#if>${finderParameters});
 </#if>
 
 </#list>

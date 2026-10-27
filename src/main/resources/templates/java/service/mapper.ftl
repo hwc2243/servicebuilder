@@ -26,21 +26,26 @@ public interface ${entity.name?cap_first}Mapper {
 
   @Named("${entity.name}Default")
 <#list inheritedAndOwnRelateds(entity) as related>
+<#if !related.keyOnly>
   @Mapping(target = "${related.name}", ignore = true)
+</#if>
 </#list>
   ${entity.name?cap_first}DTO toDto(${entity.name?cap_first}Entity entity);
 
   @Named("${entity.name}Shallow")
 <#list entity.relateds as related>
+<#if !related.keyOnly>
   @Mapping(
       target = "${related.name}",
       source = "${related.name}",
       qualifiedByName = "${related.entityName}Default"
   )
+</#if>
 </#list>
   ${entity.name?cap_first}DTO toDtoShallow(${entity.name?cap_first}Entity entity);
 
 <#list entity.relateds as related>
+<#if !related.keyOnly>
   <#assign relatedEntity = entityMap[related.entityName]>
 
   @Named("${related.entityName}Default")
@@ -51,19 +56,24 @@ public interface ${entity.name?cap_first}Mapper {
       ${related.entityName?cap_first}Entity entity
   );
 
+</#if>
 </#list>
 
 <#list entity.relateds as related>
+<#if !related.keyOnly>
   @IterableMapping(qualifiedByName = "${related.entityName}Default")
   ${related.collectionType.collectionType}<${related.entityName?cap_first}DTO> ${related.name}ToDtos(
       ${related.collectionType.collectionType}<${related.entityName?cap_first}Entity> entities
   );
 
+</#if>
 </#list>
 
 <#if !entity.abstractEntity>
 <#list inheritedAndOwnRelateds(entity) as related>
+<#if !related.keyOnly>
   @Mapping(target = "${related.name}", ignore = true)
+</#if>
 </#list>
   ${entity.name?cap_first}Entity toEntity(${entity.name?cap_first}DTO dto);
 

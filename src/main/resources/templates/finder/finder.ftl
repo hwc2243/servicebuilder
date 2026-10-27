@@ -7,6 +7,7 @@
 <#assign finderPersistenceParameters = "">
 <#assign finderServiceParameters = "">
 <#assign finderCollectionRelated = "">
+<#assign finderTenantScoped = finder.tenantScoped>
 <#if finder.name?has_content>
 <#assign finderCollectionRelated = inheritedRelated(entity, finder.finderAttributes?first.name)>
 <#assign finderCollectionEntity = entityMap[finderCollectionRelated.entityName]>

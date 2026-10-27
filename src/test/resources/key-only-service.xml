@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="keyOnly" package="test.key_only">
+    <entity name="user">
+        <key name="id" type="long"/>
+        <attribute name="name" type="string"/>
+    </entity>
+
+    <entity name="rally">
+        <key name="id" type="long"/>
+        <attribute name="name" type="string"/>
+        <related name="user" relationship="many_to_one" entity="user" key-only="true"/>
+    </entity>
+</service>
