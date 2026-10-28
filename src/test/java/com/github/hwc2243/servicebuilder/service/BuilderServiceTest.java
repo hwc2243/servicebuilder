@@ -168,6 +168,37 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	}
 
 	@Test
+	public void whenClientBuildType_isSelected_onlyClientCodeIsGenerated() throws Exception {
+		args.setBuildType(BuilderArgs.BuildType.CLIENT);
+		args.setOutputDir("/tmp/servicebuilder-client-build");
+		builderService.build(loadFile("simple-service.xml"), args);
+
+		Path generatedRoot = Paths.get("/tmp/servicebuilder-client-build", "test", "simple");
+		assertTrue(Files.exists(generatedRoot.resolve("client/model/Simple.java")));
+		assertFalse(Files.exists(generatedRoot.resolve("entity/base/BaseSimpleEntity.java")));
+	}
+
+	@Test
+	public void whenServerBuildType_isSelected_onlyServerCodeIsGenerated() throws Exception {
+		args.setBuildType(BuilderArgs.BuildType.SERVER);
+		args.setOutputDir("/tmp/servicebuilder-server-build");
+		builderService.build(loadFile("simple-service.xml"), args);
+
+		Path generatedRoot = Paths.get("/tmp/servicebuilder-server-build", "test", "simple");
+		assertTrue(Files.exists(generatedRoot.resolve("entity/base/BaseSimpleEntity.java")));
+		assertFalse(Files.exists(generatedRoot.resolve("client/model/Simple.java")));
+	}
+
+	@Test
+	public void whenBuilderArgs_areCreated_javaIsTheDefaultBuildLanguage() {
+		BuilderArgs builderArgs = new BuilderArgs();
+
+		assertEquals(BuilderArgs.BuildLang.JAVA, builderArgs.getBuildLang());
+		assertEquals(BuilderArgs.BuildLang.JAVA,
+				builderArgs.new BuildLangConverter().convert("java"));
+	}
+
+	@Test
 	public void whenInternalAndExternalApis_areGenerated() throws Exception {
 		File serviceFile = loadFile("api-service.xml");
 		builderService.build(serviceFile, args);

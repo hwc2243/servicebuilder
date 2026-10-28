@@ -100,6 +100,8 @@ public class BuilderServiceImpl implements BuilderService {
 
 	@Override
 	public void build (Service service, BuilderArgs args) throws BuildException {
+		final boolean buildClient = args.getBuildType() == BuilderArgs.BuildType.CLIENT;
+		final boolean buildServer = args.getBuildType() == BuilderArgs.BuildType.SERVER;
 		boolean needPersistence = false;
 		boolean tempNeedInternalApi = false;
 		boolean tempNeedExternalApi = false;
@@ -149,6 +151,7 @@ public class BuilderServiceImpl implements BuilderService {
 		File projectPackageDir = createPackageDir(outputDir, projectPackageName.replace(".", File.separator));
 		logger.debug("Base package dir = {}", projectPackageDir.getAbsolutePath());
 
+		if (buildServer) {
 		// model package setup
 		String modelPackageName = projectPackageName + ".model";
 		model.put("modelPackage", modelPackageName);
@@ -192,11 +195,11 @@ public class BuilderServiceImpl implements BuilderService {
 		model.put("eventPackage", eventPackageName);
 		File eventPackageDir = createPackageDir(servicePackageDir, "event");
 
-		writeFile(args, model, "java/event/service_event.ftl", new File(eventPackageDir, "ServiceEvent.java"));
-		writeFile(args, model, "java/event/crud_operation.ftl", new File(eventPackageDir, "CrudOperation.java"));
-		writeFile(args, model, "java/event/entity_crud_event.ftl", new File(eventPackageDir, "EntityCrudEvent.java"));
-		writeFile(args, model, "java/event/service_event_bus.ftl", new File(eventPackageDir, "ServiceEventBus.java"));
-		writeFile(args, model, "java/event/spring_service_event_bus.ftl",
+		writeFile(args, model, "java/server/event/service_event.ftl", new File(eventPackageDir, "ServiceEvent.java"));
+		writeFile(args, model, "java/server/event/crud_operation.ftl", new File(eventPackageDir, "CrudOperation.java"));
+		writeFile(args, model, "java/server/event/entity_crud_event.ftl", new File(eventPackageDir, "EntityCrudEvent.java"));
+		writeFile(args, model, "java/server/event/service_event_bus.ftl", new File(eventPackageDir, "ServiceEventBus.java"));
+		writeFile(args, model, "java/server/event/spring_service_event_bus.ftl",
 				new File(eventPackageDir, "SpringServiceEventBus.java"));
 
 		// multitenant setup
@@ -209,19 +212,19 @@ public class BuilderServiceImpl implements BuilderService {
 			
 			File tenantDiscriminatorFile = new File(servicePackageDir, "TenantDiscriminator.java");
 			if (!tenantDiscriminatorFile.exists() || args.isReplace()) {
-				writeFile(args, model, "java/multitenant/tenant_discriminator.ftl", tenantDiscriminatorFile);
+				writeFile(args, model, "java/server/multitenant/tenant_discriminator.ftl", tenantDiscriminatorFile);
 			}
 			
 			File multitenantFile = new File(modelBasePackageDir, "Multitenant.java");
-			writeFile(args, model, "java/model/multitenant.ftl", multitenantFile);
+			writeFile(args, model, "java/server/model/multitenant.ftl", multitenantFile);
 			
 			File multitenantServiceFile = new File(serviceBasePackageDir, "MultitenantServiceImpl.java");
-			writeFile(args, model, "java/multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
+			writeFile(args, model, "java/server/multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
 		}
 
-		writeFile(args, model, "java/entity/abstract_base_entity.ftl", new File(entityBasePackageDir, "AbstractBaseEntity.java"));
-		writeFile(args, model, "java/service/service_exception.ftl", new File(servicePackageDir, "ServiceException.java"));
-		writeFile(args, model, "java/service/base_entity_service.ftl", new File(serviceBasePackageDir, "EntityService.java"));
+		writeFile(args, model, "java/server/entity/abstract_base_entity.ftl", new File(entityBasePackageDir, "AbstractBaseEntity.java"));
+		writeFile(args, model, "java/server/service/service_exception.ftl", new File(servicePackageDir, "ServiceException.java"));
+		writeFile(args, model, "java/server/service/base_entity_service.ftl", new File(serviceBasePackageDir, "EntityService.java"));
 
 		// api setup
 		String apiPackageName = projectPackageName + ".api";
@@ -299,46 +302,17 @@ public class BuilderServiceImpl implements BuilderService {
 				}
 			}
 		});
-		
-		/*
+		}
 
-		// if we are building client code
+		if (buildClient) {
+		// client package setup
 		File clientPackageDir = null;
 		String clientPackageName = projectPackageName + ".client";
-		if (args.getBuildType().contains(BuilderArgs.BuildType.ALL)
-				|| args.getBuildType().contains(BuilderArgs.BuildType.CLIENT)) {
-			model.put("clientPackage", clientPackageName);
-			clientPackageDir = createPackageDir(projectPackageDir, "client");
-		}
-
-		// write the repositories
-		if (needPersistence && (args.getBuildType().contains(BuilderArgs.BuildType.ALL)
-				|| args.getBuildType().contains(BuilderArgs.BuildType.SERVICE))) {
-			
-
-			// write the services
-
-			try {
-				if (service.isMultitenant()) {
-					
-
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-
-			service.getEntities().stream().forEach(entity -> {
-				if (entity.isPersistence()) {
-					writeBaseService(args, model, entity, baseServiceDir);
-					writeLocalService(args, model, entity, localServiceDir);
-				}
-			});
-
-		}
+		model.put("clientPackage", clientPackageName);
+		clientPackageDir = createPackageDir(projectPackageDir, "client");
 
 		// if we are building client code, write the models and rest services
-		if (args.getBuildType().contains(BuilderArgs.BuildType.ALL)
-				|| args.getBuildType().contains(BuilderArgs.BuildType.CLIENT)) {
+		{
 			String clientModelPackageName = clientPackageName + ".model";
 			model.put("clientModelPackage", clientModelPackageName);
 			File clientModelDir = createPackageDir(clientPackageDir, "model");
@@ -370,13 +344,13 @@ public class BuilderServiceImpl implements BuilderService {
 			String clientBaseServicePackageName = clientServicePackageName + ".base";
 			model.put("clientBaseServicePackage", clientBaseServicePackageName);
 			File clientBaseServiceDir = createPackageDir(clientServiceDir, "base");
-			writeFile(args, model, "/client/abstract_client_base_entity.ftl",
+			writeFile(args, model, "/java/client/abstract_client_base_entity.ftl",
 					new File(clientBaseModelDir, "AbstractBaseEntity.java"));
-			writeFile(args, model, "/client/abstract_client_base_rest.ftl",
+			writeFile(args, model, "/java/client/abstract_client_base_rest.ftl",
 					new File(clientBaseRestDir, "AbstractRestClient.java"));
-			writeFile(args, model, "client/client_service_exception.ftl",
+				writeFile(args, model, "java/client/client_service_exception.ftl",
 					new File(clientServiceDir, "ServiceException.java"));
-			writeFile(args, model, "client/client_entity_service.ftl",
+				writeFile(args, model, "java/client/client_entity_service.ftl",
 					new File(clientBaseServiceDir, "EntityService.java"));
 
 			service.getEntities().stream().forEach(entity -> {
@@ -395,27 +369,27 @@ public class BuilderServiceImpl implements BuilderService {
 			if (service.isMultitenant()) {
 
 				File multitenantFile = new File(clientBaseModelDir, "Multitenant.java");
-				writeFile(args, model, "multitenant/multitenant.ftl", multitenantFile);
+					writeFile(args, model, "java/server/multitenant/multitenant.ftl", multitenantFile);
 
 				File tenantDiscriminatorFile = new File(clientRestDir, "TenantDiscriminator.java");
 				if (!tenantDiscriminatorFile.exists() || args.isReplace()) {
-					writeFile(args, model, "multitenant/tenant_discriminator.ftl", tenantDiscriminatorFile);
+					writeFile(args, model, "java/server/multitenant/tenant_discriminator.ftl", tenantDiscriminatorFile);
 				}
 
 				File multitenantClientFile = new File(clientBaseRestDir, "MultitenantRestClient.java");
-				writeFile(args, model, "multitenant/multitenant_client_impl.ftl", multitenantClientFile);
+					writeFile(args, model, "java/server/multitenant/multitenant_client_impl.ftl", multitenantClientFile);
 
 				File headerProviderFile = new File(clientBaseRestDir, "HeaderProvider.java");
 				if (!headerProviderFile.exists() || args.isReplace()) {
-					writeFile(args, model, "client/header_provider.ftl", headerProviderFile);
+					writeFile(args, model, "java/client/header_provider.ftl", headerProviderFile);
 				}
 
 				model.put("multitenantBaseServicePackage", clientBaseServicePackageName);
 				File multitenantServiceFile = new File(clientBaseServiceDir, "MultitenantServiceImpl.java");
-				writeFile(args, model, "multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
+					writeFile(args, model, "java/server/multitenant/multitenant_service_impl.ftl", multitenantServiceFile);
 			}
 		}
-		*/
+		}
 	}
 
 	protected Map<String, Entity> buildEntityMap(Service service) {
@@ -783,7 +757,7 @@ public class BuilderServiceImpl implements BuilderService {
 				enumModel.put("entity", entity);
 				enumModel.put("attribute", attribute);
 			
-				writeFile(args, enumModel, "java/model/enum.ftl", enumFile);
+				writeFile(args, enumModel, "java/server/model/enum.ftl", enumFile);
 			}
 		}
 	}
@@ -796,7 +770,7 @@ public class BuilderServiceImpl implements BuilderService {
 		Map<String, Object> entityModel = new HashMap<>(baseModel);
 		entityModel.put("entity", entity);
 
-		writeFile(args, entityModel, "java/model/base_model.ftl", classFile);
+		writeFile(args, entityModel, "java/server/model/base_model.ftl", classFile);
 	}
 	
 	protected void writeExtensionModel (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) throws BuildException {
@@ -807,7 +781,7 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 			
-			writeFile(args, entityModel, "java/model/model.ftl", classFile);
+			writeFile(args, entityModel, "java/server/model/model.ftl", classFile);
 		} 
 	}
 	
@@ -818,7 +792,7 @@ public class BuilderServiceImpl implements BuilderService {
 		Map<String, Object> entityModel = new HashMap<>(baseModel);
 		entityModel.put("entity", entity);
 
-		writeFile(args, entityModel, "java/entity/base_entity.ftl", classFile);
+		writeFile(args, entityModel, "java/server/entity/base_entity.ftl", classFile);
 	}
 	
 	protected void writeExtensionEntity(BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir) {
@@ -830,7 +804,7 @@ public class BuilderServiceImpl implements BuilderService {
 				Map<String, Object> entityModel = new HashMap<>(baseModel);
 				entityModel.put("entity", entity);
 
-				writeFile(args, entityModel, "java/entity/entity.ftl", classFile);
+				writeFile(args, entityModel, "java/server/entity/entity.ftl", classFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -846,7 +820,7 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "java/persistence/base_persistence.ftl", classFile);
+			writeFile(args, entityModel, "java/server/persistence/base_persistence.ftl", classFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -862,7 +836,7 @@ public class BuilderServiceImpl implements BuilderService {
 				Map<String, Object> entityModel = new HashMap<>(baseModel);
 				entityModel.put("entity", entity);
 
-				writeFile(args, entityModel, "java/persistence/persistence.ftl", classFile);
+				writeFile(args, entityModel, "java/server/persistence/persistence.ftl", classFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -877,7 +851,7 @@ public class BuilderServiceImpl implements BuilderService {
 		Map<String, Object> entityModel = new HashMap<>(baseModel);
 		entityModel.put("entity", entity);
 
-		writeFile(args, entityModel, "java/dto/base_dto.ftl", classFile);
+		writeFile(args, entityModel, "java/server/dto/base_dto.ftl", classFile);
 	}
 
 	protected void writeExtensionDTO (BuilderArgs args, Map<String, Object> baseModel, Entity entity, File outputDir)
@@ -889,7 +863,7 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "java/dto/dto.ftl", classFile);
+			writeFile(args, entityModel, "java/server/dto/dto.ftl", classFile);
 		}
 	}
 
@@ -903,8 +877,8 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "java/service/base_service.ftl", serviceFile);
-			writeFile(args, entityModel, "java/service/base_service_impl.ftl", implFile);
+			writeFile(args, entityModel, "java/server/service/base_service.ftl", serviceFile);
+			writeFile(args, entityModel, "java/server/service/base_service_impl.ftl", implFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -923,13 +897,13 @@ public class BuilderServiceImpl implements BuilderService {
 			entityModel.put("entity", entity);
 
 			if (!serviceFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "java/service/service.ftl", serviceFile);
+				writeFile(args, entityModel, "java/server/service/service.ftl", serviceFile);
 			}
 			if (!implFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "java/service/service_impl.ftl", implFile);
+				writeFile(args, entityModel, "java/server/service/service_impl.ftl", implFile);
 			}
 			if (!mapperFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "java/service/mapper.ftl", mapperFile);
+				writeFile(args, entityModel, "java/server/service/mapper.ftl", mapperFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -950,8 +924,8 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "java/api/external/base_api_external.ftl", classFile);
-			writeFile(args, entityModel, "java/api/external/base_api_external_impl.ftl", implFile);
+			writeFile(args, entityModel, "java/server/api/external/base_api_external.ftl", classFile);
+			writeFile(args, entityModel, "java/server/api/external/base_api_external_impl.ftl", implFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -969,10 +943,10 @@ public class BuilderServiceImpl implements BuilderService {
 			entityModel.put("entity", entity);
 
 			if (!classFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "java/api/external/api_external.ftl", classFile);
+				writeFile(args, entityModel, "java/server/api/external/api_external.ftl", classFile);
 			}
 			if (!implFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "java/api/external/api_external_impl.ftl", implFile);
+				writeFile(args, entityModel, "java/server/api/external/api_external_impl.ftl", implFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -991,8 +965,8 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "java/api/internal/base_api_internal.ftl", classFile);
-			writeFile(args, entityModel, "java/api/internal/base_api_internal_impl.ftl", implFile);
+			writeFile(args, entityModel, "java/server/api/internal/base_api_internal.ftl", classFile);
+			writeFile(args, entityModel, "java/server/api/internal/base_api_internal_impl.ftl", implFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -1010,10 +984,10 @@ public class BuilderServiceImpl implements BuilderService {
 			entityModel.put("entity", entity);
 
 			if (!classFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "java/api/internal/api_internal.ftl", classFile);
+				writeFile(args, entityModel, "java/server/api/internal/api_internal.ftl", classFile);
 			}
 			if (!implFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "java/api/internal/api_internal_impl.ftl", implFile);
+				writeFile(args, entityModel, "java/server/api/internal/api_internal_impl.ftl", implFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -1031,7 +1005,7 @@ public class BuilderServiceImpl implements BuilderService {
 			entityModel.put("entity", entity);
 
 			if (!classFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "client/client_entity.ftl", classFile);
+				writeFile(args, entityModel, "java/client/client_entity.ftl", classFile);
 			}
 
 		} catch (Exception ex) {
@@ -1048,7 +1022,7 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "client/client_base_entity.ftl", classFile);
+			writeFile(args, entityModel, "java/client/client_base_entity.ftl", classFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -1063,7 +1037,7 @@ public class BuilderServiceImpl implements BuilderService {
 			entityModel.put("entity", entity);
 
 			if (!classFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "client/client_rest.ftl", classFile);
+				writeFile(args, entityModel, "java/client/client_rest.ftl", classFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -1078,7 +1052,7 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "client/client_base_rest.ftl", classFile);
+				writeFile(args, entityModel, "java/client/client_base_rest.ftl", classFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -1094,7 +1068,7 @@ public class BuilderServiceImpl implements BuilderService {
 			entityModel.put("entity", entity);
 
 			if (!classFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "client/client_repository.ftl", classFile);
+				writeFile(args, entityModel, "java/client/client_repository.ftl", classFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -1110,7 +1084,7 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "client/client_base_repository.ftl", classFile);
+			writeFile(args, entityModel, "java/client/client_base_repository.ftl", classFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -1127,11 +1101,11 @@ public class BuilderServiceImpl implements BuilderService {
 			entityModel.put("entity", entity);
 
 			if (!serviceFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "client/client_service.ftl", serviceFile);
+				writeFile(args, entityModel, "java/client/client_service.ftl", serviceFile);
 			}
 
 			if (!implFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "client/client_service_impl.ftl", implFile);
+				writeFile(args, entityModel, "java/client/client_service_impl.ftl", implFile);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -1149,8 +1123,8 @@ public class BuilderServiceImpl implements BuilderService {
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
 
-			writeFile(args, entityModel, "client/client_base_service.ftl", serviceFile);
-			writeFile(args, entityModel, "client/client_base_service_impl.ftl", implFile);
+			writeFile(args, entityModel, "java/client/client_base_service.ftl", serviceFile);
+			writeFile(args, entityModel, "java/client/client_base_service_impl.ftl", implFile);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

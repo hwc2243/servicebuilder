@@ -1,7 +1,5 @@
 package com.github.hwc2243.servicebuilder.service;
 
-import java.util.List;
-
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.Parameter;
 
@@ -20,10 +18,17 @@ public class BuilderArgs {
 
 	@Parameter(
 			names = {"-b", "--build-type"},
-			description = "The build type: all, client, service (default all)",
+			description = "The build type: client or server (default server)",
 			converter = BuildTypeConverter.class)
 	@Builder.Default
-	private List<BuildType> buildType = List.of(BuildType.ALL);
+	private BuildType buildType = BuildType.SERVER;
+
+	@Parameter(
+		names = {"-l", "--build-lang"},
+		description = "The build language: java (default java)",
+		converter = BuildLangConverter.class)
+	@Builder.Default
+	private BuildLang buildLang = BuildLang.JAVA;
 	
 	@Parameter(
 		names = {"-c", "--clean"},
@@ -57,7 +62,11 @@ public class BuilderArgs {
 	
 	
 	public enum BuildType {
-		ALL, DTO, CLIENT, SERVICE
+		CLIENT, SERVER
+	}
+
+	public enum BuildLang {
+		JAVA
 	}
 
 	
@@ -65,6 +74,13 @@ public class BuilderArgs {
         @Override
         public BuildType convert (String value) {
             return BuildType.valueOf(value.toUpperCase());
+        }
+    }
+
+	public class BuildLangConverter implements IStringConverter<BuildLang> {
+        @Override
+        public BuildLang convert (String value) {
+            return BuildLang.valueOf(value.toUpperCase());
         }
     }
 }
