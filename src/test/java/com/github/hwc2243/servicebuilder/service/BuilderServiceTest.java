@@ -199,6 +199,29 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	}
 
 	@Test
+	public void whenFlutterClientBuild_isSelected_modelsAreGenerated() throws Exception {
+		args.setBuildLang(BuilderArgs.BuildLang.FLUTTER);
+		args.setBuildType(BuilderArgs.BuildType.CLIENT);
+		args.setOutputDir("/tmp/servicebuilder-flutter-build");
+		builderService.build(loadFile("simple-service.xml"), args);
+
+		Path model = Paths.get("/tmp/servicebuilder-flutter-build", "lib/models/SimpleDto.dart");
+		String source = Files.readString(model);
+		assertTrue(source.contains("class SimpleDto"));
+		assertTrue(source.contains("final int? id;"));
+		assertTrue(source.contains("final int? serverId;"));
+		assertTrue(source.contains("json['id'] as int?"));
+	}
+
+	@Test
+	public void whenFlutterServerBuild_isSelected_isRejected() throws Exception {
+		args.setBuildLang(BuilderArgs.BuildLang.FLUTTER);
+		args.setBuildType(BuilderArgs.BuildType.SERVER);
+
+		assertThrows(BuildException.class, () -> builderService.build(loadFile("simple-service.xml"), args));
+	}
+
+	@Test
 	public void whenInternalAndExternalApis_areGenerated() throws Exception {
 		File serviceFile = loadFile("api-service.xml");
 		builderService.build(serviceFile, args);

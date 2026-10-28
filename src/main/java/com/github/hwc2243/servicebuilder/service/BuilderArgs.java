@@ -25,7 +25,7 @@ public class BuilderArgs {
 
 	@Parameter(
 		names = {"-l", "--build-lang"},
-		description = "The build language: java (default java)",
+		description = "The build language: java or flutter (default java)",
 		converter = BuildLangConverter.class)
 	@Builder.Default
 	private BuildLang buildLang = BuildLang.JAVA;
@@ -66,7 +66,7 @@ public class BuilderArgs {
 	}
 
 	public enum BuildLang {
-		JAVA
+		JAVA, FLUTTER
 	}
 
 	
