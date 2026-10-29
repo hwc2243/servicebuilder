@@ -174,7 +174,7 @@ class ${providerClassName} extends ChangeNotifier {
   Future<void> delete(${dartKeyType(entity.key)} ${serverKeyName}) async {
     await execute(() async {
       final response = await httpClient.delete(
-        '$_path/$${serverKeyName}',
+        '$resourcePath/$${serverKeyName}',
         headers: requestHeaders,
       );
       httpClient.ensureSuccess(response);
