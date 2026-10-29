@@ -50,7 +50,9 @@ public interface ${entity.name?cap_first}Mapper {
 
   @Named("${related.entityName}Default")
   <#list inheritedAndOwnRelateds(relatedEntity) as nestedRelated>
+  <#if !nestedRelated.keyOnly>
   @Mapping(target = "${nestedRelated.name}", ignore = true)
+  </#if>
   </#list>
   ${related.entityName?cap_first}DTO ${related.entityName}ToDto(
       ${related.entityName?cap_first}Entity entity

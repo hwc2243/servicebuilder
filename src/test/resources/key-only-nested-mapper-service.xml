@@ -1,0 +1,16 @@
+<service name="keyOnlyNestedMapper" package="test.key_only_nested_mapper">
+    <entity name="route">
+        <attribute name="name" type="string"/>
+        <related name="items" entity="routeItem" relationship="one_to_many"
+                 collection="list" mapped-by="route"/>
+    </entity>
+
+    <entity name="routeItem" abstract="true">
+        <attribute name="position" type="long"/>
+        <related name="route" entity="route" relationship="many_to_one" key-only="true"/>
+    </entity>
+
+    <entity name="routeInstruction" parent="routeItem">
+        <attribute name="instructionText" type="string"/>
+    </entity>
+</service>

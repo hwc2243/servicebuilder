@@ -77,6 +77,20 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	}
 
 	@Test
+	public void whenNestedMapperRelationshipIsKeyOnly_itUsesTheKeyField() throws Exception {
+		args.setOutputDir("/tmp/servicebuilder-key-only-nested-mapper-build");
+		Service serviceDefinition = definitionReaderService.read(
+				loadFile("key-only-nested-mapper-service.xml"));
+		builderService.build(serviceDefinition, args);
+		runCompile("/tmp/servicebuilder-key-only-nested-mapper-build/test/key_only_nested_mapper");
+
+		Path mapper = Paths.get("/tmp/servicebuilder-key-only-nested-mapper-build",
+				"test", "key_only_nested_mapper", "service", "RouteMapper.java");
+		String source = Files.readString(mapper);
+		assertFalse(source.contains("@Mapping(target = \"route\", ignore = true)"));
+	}
+
+	@Test
 	public void whenKeyOnlyCollection_isRejected() throws Exception {
 		assertThrows(BuildException.class, () -> {
 			File serviceFile = loadFile("key-only-collection-service.xml");
