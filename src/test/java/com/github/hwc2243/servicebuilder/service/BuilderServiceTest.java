@@ -86,9 +86,14 @@ public class BuilderServiceTest extends AbstractServiceTest {
 
 	@Test
 	public void whenKeyOnlyMatchesTenantDiscriminator_isGeneratedOnce() throws Exception {
-		testService("multitenant/key-only-discriminator-service.xml");
+		args.setOutputDir("/tmp/servicebuilder-key-only-discriminator-build");
+		Service serviceDefinition = definitionReaderService.read(
+				loadFile("multitenant/key-only-discriminator-service.xml"));
+		builderService.build(serviceDefinition, args);
+		runCompile("/tmp/servicebuilder-key-only-discriminator-build/com/rallyapp/rallymaster");
 
-		Path generatedRoot = Paths.get(TMPDIR, "com", "rallyapp", "rallymaster");
+		Path generatedRoot = Paths.get("/tmp/servicebuilder-key-only-discriminator-build",
+				"com", "rallyapp", "rallymaster");
 		String entity = Files.readString(
 				generatedRoot.resolve("entity/base/BaseOrganizationMembershipEntity.java"));
 		String persistence = Files.readString(generatedRoot.resolve(
@@ -205,12 +210,73 @@ public class BuilderServiceTest extends AbstractServiceTest {
 		args.setOutputDir("/tmp/servicebuilder-flutter-build");
 		builderService.build(loadFile("simple-service.xml"), args);
 
-		Path model = Paths.get("/tmp/servicebuilder-flutter-build", "lib/models/SimpleDto.dart");
+		Path model = Paths.get("/tmp/servicebuilder-flutter-build", "lib/models/simple_dto.dart");
 		String source = Files.readString(model);
 		assertTrue(source.contains("class SimpleDto"));
 		assertTrue(source.contains("final int? id;"));
 		assertTrue(source.contains("final int? serverId;"));
 		assertTrue(source.contains("json['id'] as int?"));
+		assertFalse(Files.exists(Paths.get("/tmp/servicebuilder-flutter-build",
+				"lib/providers/simple_provider.dart")));
+	}
+
+	@Test
+	public void whenFlutterTenantBuild_isSelected_runtimeTenantProvidersAreGenerated() throws Exception {
+		args.setBuildLang(BuilderArgs.BuildLang.FLUTTER);
+		args.setBuildType(BuilderArgs.BuildType.CLIENT);
+		args.setOutputDir("/tmp/servicebuilder-flutter-tenant-provider-build");
+		builderService.build(loadFile("multitenant/key-only-discriminator-service.xml"), args);
+
+		Path providerRoot = Paths.get("/tmp/servicebuilder-flutter-tenant-provider-build", "lib/providers");
+		String tenantProvider = Files.readString(providerRoot.resolve("tenant_discriminator_provider.dart"));
+		assertTrue(tenantProvider.contains("class TenantDiscriminatorProvider extends ChangeNotifier"));
+		assertTrue(tenantProvider.contains("int? get organizationId"));
+		assertTrue(tenantProvider.contains("setOrganizationId"));
+
+		assertFalse(Files.exists(providerRoot.resolve("organization_membership_provider.dart")));
+	}
+
+	@Test
+	public void whenFlutterExternalApi_isConfigured_providerMethodsAndHttpClientAreGenerated() throws Exception {
+		args.setBuildLang(BuilderArgs.BuildLang.FLUTTER);
+		args.setBuildType(BuilderArgs.BuildType.CLIENT);
+		args.setOutputDir("/tmp/servicebuilder-flutter-api-build");
+		builderService.build(loadFile("api-service.xml"), args);
+
+		Path providerRoot = Paths.get("/tmp/servicebuilder-flutter-api-build", "lib/providers");
+		String provider = Files.readString(providerRoot.resolve("widget_provider.dart"));
+		assertTrue(provider.contains("Future<WidgetDto?> get(int serverId)"));
+		assertTrue(provider.contains("Future<List<WidgetDto>> list()"));
+		assertTrue(provider.contains("Future<List<WidgetDto>> search("));
+		assertTrue(provider.contains("Future<List<WidgetDto>> search()"));
+		assertFalse(provider.contains("Future<WidgetDto> update("));
+		assertFalse(provider.contains("Future<void> delete("));
+		assertTrue(provider.contains("'/api/external/widget'"));
+		assertTrue(Files.exists(Paths.get("/tmp/servicebuilder-flutter-api-build",
+				"lib/network/service_builder_http_client.dart")));
+		assertTrue(Files.exists(Paths.get("/tmp/servicebuilder-flutter-api-build",
+				"lib/network/service_builder_http_exception.dart")));
+	}
+
+	@Test
+	public void whenFlutterTenantModel_hasKeyOnlyTenantRelation_organizationIdIsGeneratedOnce() throws Exception {
+		args.setBuildLang(BuilderArgs.BuildLang.FLUTTER);
+		args.setBuildType(BuilderArgs.BuildType.CLIENT);
+		args.setOutputDir("/tmp/servicebuilder-flutter-tenant-build");
+		builderService.build(loadFile("multitenant/key-only-discriminator-service.xml"), args);
+
+		Path model = Paths.get("/tmp/servicebuilder-flutter-tenant-build",
+				"lib/models/organization_membership_dto.dart");
+		String source = Files.readString(model);
+		assertEquals(1, source.lines()
+				.filter(line -> line.trim().equals("this.organizationId,"))
+				.count());
+		String tenantCopy = source.substring(source.indexOf("forOrganizationId"), source.indexOf("Map<String, dynamic> toJson"));
+		assertEquals(1, tenantCopy.lines()
+				.filter(line -> line.contains("organizationId:"))
+				.count());
+		assertFalse(Files.exists(Paths.get("/tmp/servicebuilder-flutter-tenant-build",
+				"lib/models/OrganizationMembershipDto.dart")));
 	}
 
 	@Test

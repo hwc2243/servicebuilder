@@ -23,6 +23,14 @@
 <#assign className = entity.name?cap_first + "Dto">
 <#assign serverKeyName = "server" + entity.key.name?cap_first>
 <#assign serverKeyType = dartKeyType(entity.key)>
+<#assign tenantFieldName = "">
+<#if entity.multitenant && tenantDiscriminator??>
+  <#assign tenantFieldName = tenantDiscriminator.name>
+</#if>
+<#function isTenantRelation related>
+  <#return related.keyOnly && tenantFieldName?has_content
+      && related.name + "Id" == tenantFieldName>
+</#function>
 <#assign hasTenantAttribute = false>
 <#if entity.multitenant && tenantDiscriminator??>
   <#list entity.attributes as attribute>
@@ -49,7 +57,7 @@ class ${className} {
     this.${tenantDiscriminator.name},
 </#if>
 <#list entity.relateds as related>
-<#if related.keyOnly && !isTenantKeyOnly(entity, related)>
+<#if related.keyOnly && !isTenantRelation(related)>
     this.${related.name}Id,
 </#if>
 </#list>
@@ -64,7 +72,7 @@ class ${className} {
     ${tenantDiscriminator.name}: json['${tenantDiscriminator.name}'] as ${dartDataType(tenantDiscriminator.type)}?,
 </#if>
 <#list entity.relateds as related>
-<#if related.keyOnly && !isTenantKeyOnly(entity, related)>
+<#if related.keyOnly && !isTenantRelation(related)>
     ${related.name}Id: json['${related.name}Id'] as ${dartKeyType(entityMap[related.entityName].key)}?,
 </#if>
 </#list>
@@ -82,7 +90,7 @@ class ${className} {
   final ${dartDataType(tenantDiscriminator.type)}? ${tenantDiscriminator.name};
 </#if>
 <#list entity.relateds as related>
-<#if related.keyOnly && !isTenantKeyOnly(entity, related)>
+<#if related.keyOnly && !isTenantRelation(related)>
   final ${dartKeyType(entityMap[related.entityName].key)}? ${related.name}Id;
 </#if>
 </#list>
@@ -92,15 +100,13 @@ class ${className} {
     id: id,
     ${serverKeyName}: ${serverKeyName},
 <#list entity.attributes as attribute>
+<#if !hasTenantAttribute || attribute.name != tenantDiscriminator.name>
     ${attribute.name}: ${attribute.name},
-</#list>
-<#if hasTenantAttribute>
-    ${tenantDiscriminator.name}: selected${tenantDiscriminator.name?cap_first},
-<#else>
-    ${tenantDiscriminator.name}: selected${tenantDiscriminator.name?cap_first},
 </#if>
+</#list>
+    ${tenantDiscriminator.name}: selected${tenantDiscriminator.name?cap_first},
 <#list entity.relateds as related>
-<#if related.keyOnly && !isTenantKeyOnly(entity, related)>
+<#if related.keyOnly && !isTenantRelation(related)>
     ${related.name}Id: ${related.name}Id,
 </#if>
 </#list>
@@ -123,7 +129,7 @@ class ${className} {
     if (${tenantDiscriminator.name} != null) '${tenantDiscriminator.name}': ${tenantDiscriminator.name},
 </#if>
 <#list entity.relateds as related>
-<#if related.keyOnly && !isTenantKeyOnly(entity, related)>
+<#if related.keyOnly && !isTenantRelation(related)>
     if (${related.name}Id != null) '${related.name}Id': ${related.name}Id,
 </#if>
 </#list>
