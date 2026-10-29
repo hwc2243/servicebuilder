@@ -74,9 +74,17 @@ public final class FlutterLanguageBuilder extends BuilderServiceImpl implements 
 			}
 			Map<String, Object> entityModel = new HashMap<>(baseModel);
 			entityModel.put("entity", entity);
+			File generatedProviderDir = new File(providerDir, "base");
+			if (!generatedProviderDir.exists()) {
+				generatedProviderDir.mkdirs();
+			}
+			File baseProviderFile = new File(generatedProviderDir,
+					"base_" + toSnakeCase(entity.getName()) + "_provider.dart");
+			writeFile(args, entityModel, "flutter/client/entity_provider.ftl", baseProviderFile);
+
 			File providerFile = new File(providerDir, toSnakeCase(entity.getName()) + "_provider.dart");
-			if (!providerFile.exists() || args.isReplace()) {
-				writeFile(args, entityModel, "flutter/client/entity_provider.ftl", providerFile);
+			if (!providerFile.exists()) {
+				writeFile(args, entityModel, "flutter/client/provider_extension.ftl", providerFile);
 			}
 		}
 	}

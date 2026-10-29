@@ -21,6 +21,7 @@
 </#function>
 
 <#assign className = entity.name?cap_first>
+<#assign providerClassName = "Base" + className + "Provider">
 <#assign dtoClassName = className + "Dto">
 <#assign serverKeyName = "server" + entity.key.name?cap_first>
 <#assign modelFileName = entity.name?replace("([a-z0-9])([A-Z])", "$1_$2", "r")?lower_case + "_dto.dart">
@@ -33,16 +34,16 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import '../models/${modelFileName}';
+import '../../models/${modelFileName}';
 <#if hasExternalApi>
-import '../network/service_builder_http_client.dart';
+import '../../network/service_builder_http_client.dart';
 </#if>
 <#if entity.multitenant && tenantDiscriminator??>
-import 'tenant_discriminator_provider.dart';
+import '../tenant_discriminator_provider.dart';
 </#if>
 
 /// Holds ${className} DTOs and provides its configured external API operations.
-class ${className}Provider extends ChangeNotifier {
+class ${providerClassName} extends ChangeNotifier {
 <#if hasExternalApi>
   final ServiceBuilderHttpClient httpClient;
 </#if>
@@ -53,7 +54,7 @@ class ${className}Provider extends ChangeNotifier {
   bool _isLoading = false;
   Object? _error;
 
-  ${className}Provider({
+  ${providerClassName}({
 <#if hasExternalApi>
     required this.httpClient,
 </#if>
@@ -76,14 +77,14 @@ class ${className}Provider extends ChangeNotifier {
 
 <#if hasCreate>
   Future<${dtoClassName}> create(${dtoClassName} value) async {
-    return _execute(() async {
+    return execute(() async {
       final response = await httpClient.post(
-        _path,
-        headers: _headers(),
+        resourcePath,
+        headers: requestHeaders,
         body: jsonEncode(value.toJson()),
       );
       httpClient.ensureSuccess(response);
-      final created = ${dtoClassName}.fromJson(_decodeObject(response));
+      final created = ${dtoClassName}.fromJson(decodeObject(response));
       _items.add(created);
       notifyListeners();
       return created;
@@ -93,22 +94,22 @@ class ${className}Provider extends ChangeNotifier {
 
 <#if hasRead>
   Future<${dtoClassName}?> get(${dartKeyType(entity.key)} ${serverKeyName}) async {
-    return _execute(() async {
+    return execute(() async {
       final response = await httpClient.get(
-        '$_path/$${serverKeyName}',
-        headers: _headers(),
+        '$resourcePath/$${serverKeyName}',
+        headers: requestHeaders,
       );
       if (response.statusCode == 404) {
         return null;
       }
       httpClient.ensureSuccess(response);
-      return ${dtoClassName}.fromJson(_decodeObject(response));
+      return ${dtoClassName}.fromJson(decodeObject(response));
     });
   }
 
   Future<List<${dtoClassName}>> list() async {
-    return _execute(() async {
-      final response = await httpClient.get(_path, headers: _headers());
+    return execute(() async {
+      final response = await httpClient.get(resourcePath, headers: requestHeaders);
       httpClient.ensureSuccess(response);
       final values = jsonDecode(response.body) as List<dynamic>;
       final result = values
@@ -124,10 +125,10 @@ class ${className}Provider extends ChangeNotifier {
     String? ${attribute.name},
 </#list>
   }<#else>)</#if> async {
-    return _execute(() async {
+    return execute(() async {
       final response = await httpClient.get(
-        '$_path/search',
-        headers: _headers(),
+        '$resourcePath/search',
+        headers: requestHeaders,
 <#if searchableAttributes?size gt 0>        queryParameters: {
 <#list searchableAttributes as attribute>
           if (${attribute.name} != null) '${attribute.name}': ${attribute.name},
@@ -151,14 +152,14 @@ class ${className}Provider extends ChangeNotifier {
     ${dartKeyType(entity.key)} ${serverKeyName},
     ${dtoClassName} value,
   ) async {
-    return _execute(() async {
+    return execute(() async {
       final response = await httpClient.put(
-        '$_path/$${serverKeyName}',
-        headers: _headers(),
+        '$resourcePath/$${serverKeyName}',
+        headers: requestHeaders,
         body: jsonEncode(value.toJson()),
       );
       httpClient.ensureSuccess(response);
-      final updated = ${dtoClassName}.fromJson(_decodeObject(response));
+      final updated = ${dtoClassName}.fromJson(decodeObject(response));
       final index = _items.indexWhere((item) => item.${serverKeyName} == updated.${serverKeyName});
       if (index >= 0) {
         _items[index] = updated;
@@ -171,10 +172,10 @@ class ${className}Provider extends ChangeNotifier {
 
 <#if hasDelete>
   Future<void> delete(${dartKeyType(entity.key)} ${serverKeyName}) async {
-    await _execute(() async {
+    await execute(() async {
       final response = await httpClient.delete(
         '$_path/$${serverKeyName}',
-        headers: _headers(),
+        headers: requestHeaders,
       );
       httpClient.ensureSuccess(response);
       _items.removeWhere((item) => item.${serverKeyName} == ${serverKeyName});
@@ -196,7 +197,7 @@ class ${className}Provider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<T> _execute<T>(Future<T> Function() operation) async {
+  Future<T> execute<T>(Future<T> Function() operation) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -213,7 +214,7 @@ class ${className}Provider extends ChangeNotifier {
   }
 
 <#if hasExternalApi>
-  Map<String, String> _headers() {
+  Map<String, String> get requestHeaders {
     final headers = <String, String>{};
 <#if entity.multitenant && tenantDiscriminator??>
     final selectedTenant = tenantProvider.${tenantDiscriminator.name};
@@ -225,10 +226,10 @@ class ${className}Provider extends ChangeNotifier {
     return headers;
   }
 
-  Map<String, dynamic> _decodeObject(dynamic response) =>
+  Map<String, dynamic> decodeObject(dynamic response) =>
       jsonDecode(response.body) as Map<String, dynamic>;
 
-  String get _path => '/api/external/${entity.name}';
+  String get resourcePath => '/api/external/${entity.name}';
 </#if>
 <#if entity.multitenant && tenantDiscriminator??>
   void _tenantChanged() => notifyListeners();

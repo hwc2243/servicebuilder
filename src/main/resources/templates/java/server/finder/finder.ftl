@@ -20,8 +20,22 @@
 <#list finder.finderAttributes as finderAttribute>
 <#assign finderArgumentName = finderAttribute.name>
 <#assign parameterJavaType = "">
-<#if finderAttributes?length != 0><#assign finderAttributes += "And"></#if>
 <#assign finderRelated = inheritedRelated(entity, finderAttribute.name)>
+<#--
+  A tenant-scoped finder already receives the tenant discriminator as its
+  leading predicate and argument. Do not add it a second time when the finder
+  explicitly references either the discriminator attribute itself or a
+  key-only relation backed by that same column (for example,
+  organization -> organizationId).
+-->
+<#assign finderUsesTenantDiscriminator = entity.multitenant && finderTenantScoped
+    && tenantDiscriminator??
+    && (finderAttribute.name == tenantDiscriminator.name
+        || (finderRelated?has_content
+            && finderRelated.keyOnly
+            && finderRelated.name + "Id" == tenantDiscriminator.name))>
+<#if !finderUsesTenantDiscriminator>
+<#if finderAttributes?length != 0><#assign finderAttributes += "And"></#if>
 <#if finderRelated?has_content>
 <#assign finderAttributes += finderRelated.name?cap_first + "Id">
 <#assign finderArgumentName = finderRelated.name + "Id">
@@ -45,6 +59,7 @@
 <#assign finderParameters += parameterJavaType>
 <#assign finderParameters += " ">
 <#assign finderParameters += finderArgumentName>
+</#if>
 <#if finder.unique>
 <#assign finderName = "findFirstBy">
 <#assign finderReturn = "T">

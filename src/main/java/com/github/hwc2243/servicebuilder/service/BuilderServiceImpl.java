@@ -121,8 +121,12 @@ public class BuilderServiceImpl implements BuilderService {
 		logger.debug("Outdir = {}", outputDir.getAbsolutePath());
 		if (outputDir.exists() && args.isClean()) {
 			try {
-				Files.walk(outputDir.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile)
+				if (args.getBuildLang() == BuilderArgs.BuildLang.FLUTTER) {
+					cleanFlutterOutput(outputDir);
+				} else {
+					Files.walk(outputDir.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile)
 						.forEach(File::delete);
+				}
 			} catch (IOException ex) {
 				throw new BuildException(ex);
 			}
@@ -140,6 +144,23 @@ public class BuilderServiceImpl implements BuilderService {
 		new LanguageBuilderFactory(freemarker, definitionReaderService)
 				.get(args.getBuildLang())
 				.build(context);
+	}
+
+	protected void cleanFlutterOutput(File outputDir) throws IOException {
+		deletePath(new File(outputDir, "lib/models").toPath());
+		deletePath(new File(outputDir, "lib/network").toPath());
+		deletePath(new File(outputDir, "lib/providers/base").toPath());
+		deletePath(new File(outputDir, "lib/providers/generated").toPath());
+		File tenantProvider = new File(outputDir, "lib/providers/tenant_discriminator_provider.dart");
+		if (tenantProvider.exists()) {
+			Files.delete(tenantProvider.toPath());
+		}
+	}
+
+	private void deletePath(Path path) throws IOException {
+		if (Files.exists(path)) {
+			Files.walk(path).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+		}
 	}
 
 	protected Map<String, Entity> buildEntityMap(Service service) {

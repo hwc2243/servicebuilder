@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="rallymaster" package="com.rallyapp.rallymaster" multitenant="true">
+    <tenant-discriminator name="organizationId" type="long"/>
+
+    <entity name="user">
+        <key name="id" type="long"/>
+    </entity>
+
+    <entity name="organization">
+        <key name="id" type="long"/>
+    </entity>
+
+    <entity name="organizationMembership" db-name="organization_membership"
+            persistence="true" multitenant="true">
+        <related name="user" relationship="many_to_one" entity="user" key-only="true"/>
+        <related name="organization" relationship="many_to_one" entity="organization" key-only="true"/>
+
+        <finder unique="true">
+            <finder-attribute name="organization"/>
+            <finder-attribute name="user"/>
+        </finder>
+    </entity>
+</service>

@@ -112,6 +112,31 @@ public class BuilderServiceTest extends AbstractServiceTest {
 		assertTrue(service.contains("findByUserId (Long userId)"));
 		assertFalse(service.contains("findByOrganizationIdAndUserId"));
 	}
+
+	@Test
+	public void whenTenantScopedFinderIncludesTenantRelation_itIsNotDuplicated() throws Exception {
+		args.setOutputDir("/tmp/servicebuilder-tenant-relation-finder-build");
+		Service serviceDefinition = definitionReaderService.read(
+				loadFile("multitenant/tenant-relation-finder-dedup-service.xml"));
+		builderService.build(serviceDefinition, args);
+		runCompile("/tmp/servicebuilder-tenant-relation-finder-build/com/rallyapp/rallymaster");
+
+		Path generatedRoot = Paths.get("/tmp/servicebuilder-tenant-relation-finder-build",
+				"com", "rallyapp", "rallymaster");
+		String persistence = Files.readString(generatedRoot.resolve(
+				"persistence/base/BaseOrganizationMembershipPersistence.java"));
+		String service = Files.readString(generatedRoot.resolve(
+				"service/base/BaseOrganizationMembershipService.java"));
+		String serviceImpl = Files.readString(generatedRoot.resolve(
+				"service/base/BaseOrganizationMembershipServiceImpl.java"));
+
+		assertTrue(persistence.contains(
+				"findFirstByOrganizationIdAndUserId(Long organizationId, Long userId)"));
+		assertFalse(persistence.contains("OrganizationIdAndOrganizationId"));
+		assertTrue(service.contains("fetchByOrganizationIdAndUserId (Long userId)"));
+		assertTrue(serviceImpl.contains(
+				"findFirstByOrganizationIdAndUserId(tenantDiscriminator.getOrganizationId(),userId)"));
+	}
 	
 	@Test
 	public void whenFinder_hasBadColumn() throws Exception {
@@ -240,11 +265,13 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	public void whenFlutterExternalApi_isConfigured_providerMethodsAndHttpClientAreGenerated() throws Exception {
 		args.setBuildLang(BuilderArgs.BuildLang.FLUTTER);
 		args.setBuildType(BuilderArgs.BuildType.CLIENT);
-		args.setOutputDir("/tmp/servicebuilder-flutter-api-build");
+		args.setOutputDir("/tmp/servicebuilder-flutter-api-subclass-build");
 		builderService.build(loadFile("api-service.xml"), args);
 
-		Path providerRoot = Paths.get("/tmp/servicebuilder-flutter-api-build", "lib/providers");
-		String provider = Files.readString(providerRoot.resolve("widget_provider.dart"));
+		Path providerRoot = Paths.get("/tmp/servicebuilder-flutter-api-subclass-build", "lib/providers");
+		String provider = Files.readString(providerRoot.resolve("base/base_widget_provider.dart"));
+		String extension = Files.readString(providerRoot.resolve("widget_provider.dart"));
+		assertTrue(extension.contains("class WidgetProvider extends BaseWidgetProvider"));
 		assertTrue(provider.contains("Future<WidgetDto?> get(int serverId)"));
 		assertTrue(provider.contains("Future<List<WidgetDto>> list()"));
 		assertTrue(provider.contains("Future<List<WidgetDto>> search("));
@@ -252,10 +279,16 @@ public class BuilderServiceTest extends AbstractServiceTest {
 		assertFalse(provider.contains("Future<WidgetDto> update("));
 		assertFalse(provider.contains("Future<void> delete("));
 		assertTrue(provider.contains("'/api/external/widget'"));
-		assertTrue(Files.exists(Paths.get("/tmp/servicebuilder-flutter-api-build",
+		assertTrue(Files.exists(Paths.get("/tmp/servicebuilder-flutter-api-subclass-build",
 				"lib/network/service_builder_http_client.dart")));
-		assertTrue(Files.exists(Paths.get("/tmp/servicebuilder-flutter-api-build",
+		assertTrue(Files.exists(Paths.get("/tmp/servicebuilder-flutter-api-subclass-build",
 				"lib/network/service_builder_http_exception.dart")));
+
+		Path customProvider = providerRoot.resolve("widget_provider.dart");
+		Files.writeString(customProvider, Files.readString(customProvider)
+				+ "\n  Future<void> customEndpoint() async {}\n");
+		builderService.build(loadFile("api-service.xml"), args);
+		assertTrue(Files.readString(customProvider).contains("customEndpoint"));
 	}
 
 	@Test
