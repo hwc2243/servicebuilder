@@ -1,7 +1,7 @@
 <#macro related_attribute related>
-<#if isTenantKeyOnly(entity, related)>
+<#if isApiNoneReference(related) || isTenantKeyOnly(entity, related)>
 <#-- The tenant discriminator field already represents this relationship. -->
-<#elseif related.keyOnly>
+<#elseif related.apiIdReference>
   <#assign relatedEntity = entityMap[related.entityName]>
   protected ${className(relatedEntity.key.type.javaType)} ${related.name}Id;
 <#elseif related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE">
@@ -12,9 +12,9 @@
 
 </#macro>
 <#macro related_accessor related>
-<#if isTenantKeyOnly(entity, related)>
+<#if isApiNoneReference(related) || isTenantKeyOnly(entity, related)>
 <#-- The tenant discriminator accessors already represent this relationship. -->
-<#elseif related.keyOnly>
+<#elseif related.apiIdReference>
   <#assign relatedEntity = entityMap[related.entityName]>
   public ${className(relatedEntity.key.type.javaType)} get${related.name?cap_first}Id ()
   {

@@ -2,6 +2,7 @@
 <#include "/java/server/finder/finder.ftl">
 package ${serviceBasePackage};
 <#assign imports += {
+  "java.util.Collection": true,
   "java.util.List": true,
   "java.util.Optional": true,
   "org.springframework.beans.factory.annotation.Autowired" : true,
@@ -18,6 +19,11 @@ package ${serviceBasePackage};
   eventPackage + ".ServiceEvent" : true,
   eventPackage + ".ServiceEventBus" : true
 }>
+<#list entity.relateds as related>
+<#if related.relationshipType.name() == "ONE_TO_MANY" || related.relationshipType.name() == "MANY_TO_MANY">
+<#assign imports += { dtoPackage + "." + related.entityName?cap_first + "DTO" : true }>
+</#if>
+</#list>
 <#list entity.attributes as attribute>
 <#if attribute.type == "ENUM">
 <#if attribute.enumClass?has_content>
@@ -160,6 +166,29 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
 </#if>
     return optional.isEmpty() ? null : toDto(optional.get());
   }
+
+<#list entity.relateds as related>
+<#if related.relationshipType.name() == "MANY_TO_ONE" && !hasRelationshipFinder(entity, related) && !isTenantDiscriminatorRelation(entity, related)>
+  @Override
+  public List<D> findBy${related.name?cap_first}Id (${entityMap[related.entityName].key.type.javaType} ${related.name}Id)
+  {
+    return toDtos(base${entity.name?cap_first}Persistence.findBy<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${related.name?cap_first}_Id(<#if entity.multitenant>tenantDiscriminator.get${tenantDiscriminator.name?cap_first}(), </#if>${related.name}Id));
+  }
+</#if>
+<#if related.relationshipType.name() == "ONE_TO_MANY" || related.relationshipType.name() == "MANY_TO_MANY">
+  @Override
+  public Collection<${related.entityName?cap_first}DTO> get${related.name?cap_first} (ID id) throws ServiceException
+  {
+    Optional<E> optional = base${entity.name?cap_first}Persistence.findById(id);
+<#if entity.multitenant>
+    if (optional.isPresent() && !hasAccess(optional.get())) {
+      throw new ServiceException("Access denied for ${entity.name} with ${entity.key.name} = " + id);
+    }
+</#if>
+    return optional.isEmpty() ? null : to${related.name?cap_first}Dtos(optional.get());
+  }
+</#if>
+</#list>
   
   @Override
   @Transactional
@@ -196,4 +225,9 @@ public abstract class Base${entity.name?cap_first}ServiceImpl<D extends ${entity
 
   protected abstract D toDto (E entity);
   protected abstract List<D> toDtos (List<E> entities);
+<#list entity.relateds as related>
+<#if related.relationshipType.name() == "ONE_TO_MANY" || related.relationshipType.name() == "MANY_TO_MANY">
+  protected abstract Collection<${related.entityName?cap_first}DTO> to${related.name?cap_first}Dtos (E entity);
+</#if>
+</#list>
 }

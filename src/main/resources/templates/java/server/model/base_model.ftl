@@ -30,7 +30,7 @@ package ${modelBasePackage};
   <#assign imports += { "java.util.UUID" : true }>
 </#if>
 <#list entity.relateds as related>
-  <#if related.keyOnly && entityMap[related.entityName].key.type.value == "uuid">
+  <#if related.apiIdReference && entityMap[related.entityName].key.type.value == "uuid">
     <#assign imports += { "java.util.UUID" : true }>
   </#if>
 </#list>
@@ -63,7 +63,7 @@ public interface Base${entity.name?cap_first}${genericDeclaration}
 </#if>
 </#list>
 <#list entity.relateds as related>
-<#if isTenantKeyOnly(entity, related)>
+<#if isLegacyTenantKeyOnly(entity, related)>
 <#-- The tenant discriminator accessors already represent this relationship. -->
 <#elseif related.keyOnly>
 <#assign relatedEntity = entityMap[related.entityName]>

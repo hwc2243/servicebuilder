@@ -32,7 +32,7 @@
     && tenantDiscriminator??
     && (finderAttribute.name == tenantDiscriminator.name
         || (finderRelated?has_content
-            && finderRelated.keyOnly
+            && finderRelated.apiIdReference
             && finderRelated.name + "Id" == tenantDiscriminator.name))>
 <#if !finderUsesTenantDiscriminator>
 <#if finderAttributes?length != 0><#assign finderAttributes += "And"></#if>

@@ -1,6 +1,7 @@
 <#include "/functions.ftl">
 package ${baseExternalApiPackage};
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import ${dtoPackage}.${entity.name?cap_first}DTO;
+<#list entity.relateds as related>
+<#if related.relationshipType.name() == "ONE_TO_MANY" || related.relationshipType.name() == "MANY_TO_MANY">
+import ${dtoPackage}.${related.entityName?cap_first}DTO;
+</#if>
+</#list>
 
 import ${baseExternalApiPackage}.BaseExternal${entity.name?cap_first}Rest;
 
@@ -32,6 +38,13 @@ public interface BaseExternal${entity.name?cap_first}Rest
       @RequestParam(required = false) String ${attribute.name}<#sep>,</#sep>
 </#list>
 	);
+
+<#list entity.relateds as related>
+<#if related.relationshipType.name() == "ONE_TO_MANY" || related.relationshipType.name() == "MANY_TO_MANY">
+	public ResponseEntity<Collection<${related.entityName?cap_first}DTO>> list${entity.name?cap_first}${related.name?cap_first} (
+		${entity.key.type.javaType} ${entity.name}Id);
+</#if>
+</#list>
 </#if>
 	
 <#if entity.api?? && entity.api.external?? && entity.api.external.operations?seq_contains("UPDATE")>

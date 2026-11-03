@@ -26,7 +26,11 @@ public interface ${entity.name?cap_first}Mapper {
 
   @Named("${entity.name}Default")
 <#list inheritedAndOwnRelateds(entity) as related>
-<#if !related.keyOnly>
+<#if isGeneratedApiIdReference(related) && !isTenantKeyOnly(entity, related)>
+  @Mapping(target = "${related.name}Id", source = "${related.name}.${entityMap[related.entityName].key.name}")
+<#elseif isApiObjectReference(related)>
+  @Mapping(target = "${related.name}", source = "${related.name}", qualifiedByName = "${related.entityName}Default")
+<#elseif !related.apiIdReference && !related.keyOnly && !isApiNoneReference(related)>
   @Mapping(target = "${related.name}", ignore = true)
 </#if>
 </#list>
@@ -34,7 +38,7 @@ public interface ${entity.name?cap_first}Mapper {
 
   @Named("${entity.name}Shallow")
 <#list entity.relateds as related>
-<#if !related.keyOnly>
+<#if isApiObjectReference(related)>
   @Mapping(
       target = "${related.name}",
       source = "${related.name}",
@@ -45,12 +49,14 @@ public interface ${entity.name?cap_first}Mapper {
   ${entity.name?cap_first}DTO toDtoShallow(${entity.name?cap_first}Entity entity);
 
 <#list entity.relateds as related>
-<#if !related.keyOnly>
+<#if isApiObjectReference(related) || isCollectionRelated(related)>
   <#assign relatedEntity = entityMap[related.entityName]>
 
   @Named("${related.entityName}Default")
   <#list inheritedAndOwnRelateds(relatedEntity) as nestedRelated>
-  <#if !nestedRelated.keyOnly>
+<#if isGeneratedApiIdReference(nestedRelated) && !isTenantKeyOnly(relatedEntity, nestedRelated)>
+  @Mapping(target = "${nestedRelated.name}Id", source = "${nestedRelated.name}.${entityMap[nestedRelated.entityName].key.name}")
+<#elseif isApiObjectReference(nestedRelated)>
   @Mapping(target = "${nestedRelated.name}", ignore = true)
   </#if>
   </#list>
@@ -62,7 +68,7 @@ public interface ${entity.name?cap_first}Mapper {
 </#list>
 
 <#list entity.relateds as related>
-<#if !related.keyOnly>
+<#if isApiObjectReference(related) || isCollectionRelated(related)>
   @IterableMapping(qualifiedByName = "${related.entityName}Default")
   ${related.collectionType.collectionType}<${related.entityName?cap_first}DTO> ${related.name}ToDtos(
       ${related.collectionType.collectionType}<${related.entityName?cap_first}Entity> entities
@@ -73,7 +79,9 @@ public interface ${entity.name?cap_first}Mapper {
 
 <#if !entity.abstractEntity>
 <#list inheritedAndOwnRelateds(entity) as related>
-<#if !related.keyOnly>
+<#if isApiObjectReference(related) || isApiNoneReference(related)>
+  @Mapping(target = "${related.name}", ignore = true)
+<#elseif isExplicitApiIdReference(related) && !isTenantKeyOnly(entity, related)>
   @Mapping(target = "${related.name}", ignore = true)
 </#if>
 </#list>

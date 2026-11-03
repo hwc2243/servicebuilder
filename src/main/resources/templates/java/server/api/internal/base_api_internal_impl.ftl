@@ -3,6 +3,7 @@
 <#assign dtoName = baseEntityName + "DTO">
 package ${baseInternalApiPackage};
 
+import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -22,6 +23,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import ${dtoPackage}.${dtoName};
+<#list entity.relateds as related>
+<#if related.relationshipType.name() == "ONE_TO_MANY" || related.relationshipType.name() == "MANY_TO_MANY">
+import ${dtoPackage}.${related.entityName?cap_first}DTO;
+</#if>
+</#list>
 
 import ${servicePackage}.${baseEntityName}Service;
 import ${servicePackage}.ServiceException;
@@ -138,6 +144,31 @@ public abstract class BaseInternal${baseEntityName}RestImpl implements BaseInter
         return ResponseEntity.internalServerError().build();
 	  }
 	}
+
+<#list entity.relateds as related>
+<#if related.relationshipType.name() == "ONE_TO_MANY" || related.relationshipType.name() == "MANY_TO_MANY">
+    @GetMapping("/{${entity.name}Id}/${related.name}")
+    @Override
+    public ResponseEntity<Collection<${related.entityName?cap_first}DTO>> list${baseEntityName}${related.name?cap_first}(
+        @PathVariable ${entity.key.type.javaType} ${entity.name}Id)
+    {
+      try
+      {
+        Collection<${related.entityName?cap_first}DTO> values = ${entity.name}Service.get${related.name?cap_first}(${entity.name}Id);
+        if (values == null)
+        {
+          return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(values);
+      }
+      catch (ServiceException ex)
+      {
+        ex.printStackTrace();
+        return ResponseEntity.internalServerError().build();
+      }
+    }
+</#if>
+</#list>
 </#if>
 	
 <#if entity.api?? && entity.api.internal?? && entity.api.internal.operations?seq_contains("UPDATE")>

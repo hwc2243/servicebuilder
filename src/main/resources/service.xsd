@@ -119,6 +119,15 @@
 			<xs:attribute ref="owner" />
 			<xs:attribute ref="mapped-by" />
 			<xs:attribute name="key-only" type="xs:boolean" default="false" />
+			<xs:attribute name="api-reference" use="optional">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="id" />
+						<xs:enumeration value="object" />
+						<xs:enumeration value="none" />
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
 		</xs:complexType>
 	</xs:element>
 	

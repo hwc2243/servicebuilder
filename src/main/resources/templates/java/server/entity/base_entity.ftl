@@ -87,7 +87,9 @@ public abstract class Base${entity.name?cap_first}Entity<T extends Base${entity.
 </#if>
     implements Base${entity.name?cap_first}${modelGenericDeclaration}, <#if entity.multitenant>Multitenant, </#if>Serializable
 {
+<#if !entity.parent?has_content>
 <@key_attribute entity entity.key/>
+</#if>
 
 <#list entity.attributes as attribute>
 <#if attribute.type == "ENUM">
@@ -100,13 +102,11 @@ public abstract class Base${entity.name?cap_first}Entity<T extends Base${entity.
 </#list>
 
 <#list entity.relateds as related>
-<#if isTenantKeyOnly(entity, related)>
-<#-- The tenant discriminator attribute already represents this relationship. -->
-<#elseif related.keyOnly>
+<#if isLegacyTenantKeyOnly(entity, related)>
+<#elseif related.keyOnly && !isExplicitApiIdReference(related)>
 <#assign relatedEntity = entityMap[related.entityName]>
   @Column(name = "${related.name}Id")
   protected ${className(relatedEntity.key.type.javaType)} ${related.name}Id = null;
-
 <#elseif related.relationshipType.name() == "ONE_TO_ONE">
 <@one_to_one_attribute entity=entity related=related type=related.entityName?cap_first + "Entity"/>
   
@@ -130,7 +130,9 @@ public abstract class Base${entity.name?cap_first}Entity<T extends Base${entity.
   }
 </#if>
   
+<#if !entity.parent?has_content>
 <@key_accessors_impl entity=entity key=entity.key/>
+</#if>
 
 <#list entity.attributes as attribute>
 <#if attribute.type == "ENUM">
@@ -142,30 +144,20 @@ public abstract class Base${entity.name?cap_first}Entity<T extends Base${entity.
 </#if>
 </#list>
 <#list entity.relateds as related>
-<#if isTenantKeyOnly(entity, related)>
-<#-- The tenant discriminator accessors already represent this relationship. -->
-<#elseif related.keyOnly>
-<#assign relatedEntity = entityMap[related.entityName]>
-  public ${className(relatedEntity.key.type.javaType)} get${related.name?cap_first}Id ()
-  {
-    return this.${related.name}Id;
-  }
-
-  public void set${related.name?cap_first}Id (${className(relatedEntity.key.type.javaType)} ${related.name}Id)
-  {
-    this.${related.name}Id = ${related.name}Id;
-  }
-
-<#elseif related.relationshipType.name() == "ONE_TO_ONE">
+<#if related.keyOnly && !isTenantKeyOnly(entity, related) && !isExplicitApiIdReference(related)>
+  public ${className(entityMap[related.entityName].key.type.javaType)} get${related.name?cap_first}Id () { return this.${related.name}Id; }
+  public void set${related.name?cap_first}Id (${className(entityMap[related.entityName].key.type.javaType)} ${related.name}Id) { this.${related.name}Id = ${related.name}Id; }
+</#if>
+<#if (!related.keyOnly || isExplicitApiIdReference(related)) && related.relationshipType.name() == "ONE_TO_ONE">
 <@one_to_one_accessors_impl entity=entity related=related type=related.entityName?cap_first + "Entity"/>
 
-<#elseif related.relationshipType.name() == "ONE_TO_MANY">
+<#elseif (!related.keyOnly || isExplicitApiIdReference(related)) && related.relationshipType.name() == "ONE_TO_MANY">
 <@one_to_many_accessors_impl entity=entity related=related type=related.entityName?cap_first + "Entity"/>
 
-<#elseif related.relationshipType.name() == "MANY_TO_ONE">
+<#elseif (!related.keyOnly || isExplicitApiIdReference(related)) && related.relationshipType.name() == "MANY_TO_ONE">
 <@many_to_one_accessors_impl entity=entity related=related type=related.entityName?cap_first + "Entity"/>
 
-<#elseif related.relationshipType.name() == "MANY_TO_MANY">
+<#elseif (!related.keyOnly || isExplicitApiIdReference(related)) && related.relationshipType.name() == "MANY_TO_MANY">
 <@many_to_many_accessors_impl entity=entity related=related type=related.entityName?cap_first + "Entity"/>
 
 <#else>

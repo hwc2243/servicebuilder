@@ -28,8 +28,11 @@
   <#assign tenantFieldName = tenantDiscriminator.name>
 </#if>
 <#function isTenantRelation related>
-  <#return related.keyOnly && tenantFieldName?has_content
+  <#return related.apiIdReference && tenantFieldName?has_content
       && related.name + "Id" == tenantFieldName>
+</#function>
+<#function isObjectRelation related>
+  <#return related.apiObjectReference && !isTenantRelation(related)>
 </#function>
 <#assign hasTenantAttribute = false>
 <#if entity.multitenant && tenantDiscriminator??>
@@ -57,8 +60,12 @@ class ${className} {
     this.${tenantDiscriminator.name},
 </#if>
 <#list entity.relateds as related>
-<#if related.keyOnly && !isTenantRelation(related)>
+<#if related.apiIdReference && !isTenantRelation(related)>
     this.${related.name}Id,
+<#elseif isObjectRelation(related) && (related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE")>
+    this.${related.name},
+<#elseif isObjectRelation(related)>
+    this.${related.name},
 </#if>
 </#list>
   });
@@ -72,8 +79,13 @@ class ${className} {
     ${tenantDiscriminator.name}: json['${tenantDiscriminator.name}'] as ${dartDataType(tenantDiscriminator.type)}?,
 </#if>
 <#list entity.relateds as related>
-<#if related.keyOnly && !isTenantRelation(related)>
+<#if related.apiIdReference && !isTenantRelation(related)>
     ${related.name}Id: json['${related.name}Id'] as ${dartKeyType(entityMap[related.entityName].key)}?,
+<#elseif isObjectRelation(related) && (related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE")>
+    ${related.name}: json['${related.name}'] == null ? null : ${related.entityName?cap_first}Dto.fromJson(json['${related.name}'] as Map<String, dynamic>),
+<#elseif isObjectRelation(related)>
+    ${related.name}: (json['${related.name}'] as List<dynamic>?)
+        ?.map((item) => ${related.entityName?cap_first}Dto.fromJson(item as Map<String, dynamic>)).toList(),
 </#if>
 </#list>
   );
@@ -90,8 +102,12 @@ class ${className} {
   final ${dartDataType(tenantDiscriminator.type)}? ${tenantDiscriminator.name};
 </#if>
 <#list entity.relateds as related>
-<#if related.keyOnly && !isTenantRelation(related)>
+<#if related.apiIdReference && !isTenantRelation(related)>
   final ${dartKeyType(entityMap[related.entityName].key)}? ${related.name}Id;
+<#elseif isObjectRelation(related) && (related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE")>
+  final ${related.entityName?cap_first}Dto? ${related.name};
+<#elseif isObjectRelation(related)>
+  final List<${related.entityName?cap_first}Dto>? ${related.name};
 </#if>
 </#list>
 
@@ -106,8 +122,10 @@ class ${className} {
 </#list>
     ${tenantDiscriminator.name}: selected${tenantDiscriminator.name?cap_first},
 <#list entity.relateds as related>
-<#if related.keyOnly && !isTenantRelation(related)>
+<#if related.apiIdReference && !isTenantRelation(related)>
     ${related.name}Id: ${related.name}Id,
+<#elseif isObjectRelation(related)>
+    ${related.name}: ${related.name},
 </#if>
 </#list>
   );
@@ -129,8 +147,12 @@ class ${className} {
     if (${tenantDiscriminator.name} != null) '${tenantDiscriminator.name}': ${tenantDiscriminator.name},
 </#if>
 <#list entity.relateds as related>
-<#if related.keyOnly && !isTenantRelation(related)>
+<#if related.apiIdReference && !isTenantRelation(related)>
     if (${related.name}Id != null) '${related.name}Id': ${related.name}Id,
+<#elseif isObjectRelation(related)>
+    if (${related.name} != null) '${related.name}': ${related.name} is List
+        ? ${related.name}!.map((item) => item.toJson()).toList()
+        : (${related.name} as dynamic).toJson(),
 </#if>
 </#list>
   };

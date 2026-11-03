@@ -351,6 +351,63 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	}
 
 	@Test
+	public void whenEntityHasToManyRelationship_nestedCollectionEndpointsAreGenerated() throws Exception {
+		args.setOutputDir("/tmp/servicebuilder-collection-api-build");
+		builderService.build(loadFile("collection-api-service.xml"), args);
+
+		Path generatedRoot = Paths.get("/tmp/servicebuilder-collection-api-build", "test", "collectionapi");
+		String externalApi = Files.readString(generatedRoot.resolve(
+				"api/external/base/BaseExternalRouteRest.java"));
+		String externalImpl = Files.readString(generatedRoot.resolve(
+				"api/external/base/BaseExternalRouteRestImpl.java"));
+		String internalApi = Files.readString(generatedRoot.resolve(
+				"api/internal/base/BaseInternalRouteRest.java"));
+
+		assertTrue(externalApi.contains("listRouteItems"));
+		assertTrue(externalImpl.contains("@GetMapping(\"/{routeId}/items\")"));
+		assertTrue(externalImpl.contains("routeService.getItems(routeId)"));
+		assertTrue(internalApi.contains("listRouteItems"));
+	}
+
+	@Test
+	public void whenToManyRelationshipIsApiNone_endpointAndMapperAreStillGenerated() throws Exception {
+		args.setOutputDir("/tmp/servicebuilder-api-reference-collection-build");
+		builderService.build(loadFile("api-reference-collection-service.xml"), args);
+
+		Path generatedRoot = Paths.get("/tmp/servicebuilder-api-reference-collection-build",
+				"test", "relationship_modes");
+		String parentDto = Files.readString(generatedRoot.resolve("dto/base/BaseParentDTO.java"));
+		String parentEntity = Files.readString(generatedRoot.resolve("entity/base/BaseParentEntity.java"));
+		String parentModel = Files.readString(generatedRoot.resolve("model/base/BaseParent.java"));
+		String parentMapper = Files.readString(generatedRoot.resolve("service/ParentMapper.java"));
+		String parentApi = Files.readString(generatedRoot.resolve(
+				"api/external/base/BaseExternalParentRest.java"));
+		String childService = Files.readString(generatedRoot.resolve(
+				"service/base/BaseChildService.java"));
+
+		assertFalse(parentDto.contains("children"));
+		assertTrue(parentEntity.contains("@OneToMany(mappedBy = \"parent\""));
+		assertTrue(parentModel.contains("OWNER getOwner ();"));
+		assertTrue(parentDto.contains("Long ownerId"));
+		assertTrue(parentMapper.contains("childrenToDtos"));
+		assertTrue(parentApi.contains("listParentChildren"));
+		assertTrue(childService.contains("findByParentId (Long parentId)"));
+		assertFalse(childService.contains("throws ServiceException"));
+	}
+
+	@Test
+	public void whenAbstractEntityHasApis_restArtifactsAreNotGenerated() throws Exception {
+		args.setOutputDir("/tmp/servicebuilder-abstract-api-build");
+		builderService.build(loadFile("abstract-api-service.xml"), args);
+
+		Path generatedRoot = Paths.get("/tmp/servicebuilder-abstract-api-build", "test", "abstractapi");
+		assertFalse(Files.exists(generatedRoot.resolve("api/internal/base/BaseInternalBaseRecordRest.java")));
+		assertFalse(Files.exists(generatedRoot.resolve("api/external/base/BaseExternalBaseRecordRest.java")));
+		assertTrue(Files.exists(generatedRoot.resolve("api/internal/base/BaseInternalRecordRest.java")));
+		assertTrue(Files.exists(generatedRoot.resolve("api/external/base/BaseExternalRecordRest.java")));
+	}
+
+	@Test
 	public void whenUniqueFinder_hasRelationships_usesJoinColumns() throws Exception {
 		testService("unique-related-finder-service.xml");
 

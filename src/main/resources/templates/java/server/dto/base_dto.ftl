@@ -26,7 +26,7 @@ package ${dtoBasePackage};
 <#assign imports += { "java.util.UUID" : true }>
 </#if>
 <#list entity.relateds as related>
-<#if related.keyOnly && entityMap[related.entityName].key.type.value == "uuid">
+<#if related.apiIdReference && entityMap[related.entityName].key.type.value == "uuid">
 <#assign imports += { "java.util.UUID" : true }>
 </#if>
 </#list>
@@ -48,19 +48,13 @@ package ${dtoBasePackage};
  <#if entity.multitenant>
  <#assign imports += { modelBasePackage + ".Multitenant" : true }>
  </#if>
-<#list inheritedAndOwnDtoGenericTypes(entity) as genericType>
-  <#assign imports += { dtoPackage + "." + genericType : true }>
-</#list>
-
 <@import imports/>
 
-<#assign modelGenericDeclaration = asGenericDeclaration(inheritedAndOwnDtoGenericTypes(entity))>
-<#assign modelGenericDeclaration = asGenericDeclaration(inheritedAndOwnDtoGenericTypes(entity))>
 public abstract class Base${entity.name?cap_first}DTO
 <#if entity.parent?? && entity.parent?has_content>
 extends Base${entity.parent?cap_first}DTO
 </#if>
-implements Base${entity.name?cap_first}${modelGenericDeclaration}, <#if entity.multitenant>Multitenant, </#if> Serializable
+implements <#if entity.multitenant>Multitenant, </#if> Serializable
 {
 <@key_attribute entity entity.key/>
 

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="collectionapi" package="test.collectionapi">
+    <entity name="route">
+        <attribute name="name" type="string"/>
+        <related name="items" entity="routeItem" relationship="one_to_many"
+                 collection="list" mapped-by="route"/>
+        <api>
+            <internal operations="READ"/>
+            <external operations="READ"/>
+        </api>
+    </entity>
+
+    <entity name="routeItem">
+        <attribute name="name" type="string"/>
+        <related name="route" entity="route" relationship="many_to_one" key-only="true"/>
+    </entity>
+</service>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service name="relationshipModes" package="test.relationship_modes" multitenant="true">
+    <tenant-discriminator name="organizationId" type="long" />
+
+    <entity name="parent" db-name="parent" multitenant="true">
+        <attribute name="name" type="string" />
+
+        <related name="children" entity="child" relationship="one_to_many"
+                 collection="list" mapped-by="parent" api-reference="none" />
+        <related name="owner" entity="owner" relationship="many_to_one"
+                 api-reference="id" />
+
+        <api>
+            <external operations="CREATE READ UPDATE DELETE" />
+        </api>
+    </entity>
+
+    <entity name="child" db-name="child" multitenant="true">
+        <attribute name="name" type="string" />
+        <related name="parent" entity="parent" relationship="many_to_one"
+                 api-reference="id" />
+    </entity>
+
+    <entity name="owner" db-name="owner">
+        <attribute name="name" type="string" />
+    </entity>
+</service>

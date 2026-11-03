@@ -7,7 +7,66 @@
 </#function>
 
 <#function isTenantKeyOnly entity related>
-  <#return related.keyOnly && entity.multitenant && tenantDiscriminator??
+  <#return related.apiIdReference && entity.multitenant && tenantDiscriminator??
+      && related.name + "Id" == tenantDiscriminator.name>
+</#function>
+
+<#function isTenantApiReference entity related>
+  <#return related.apiIdReference && entity.multitenant && tenantDiscriminator??
+      && related.name + "Id" == tenantDiscriminator.name>
+</#function>
+
+<#function isLegacyTenantKeyOnly entity related>
+  <#return related.keyOnly && (!related.apiReference?? || related.apiReference?lower_case != "id")
+      && entity.multitenant && tenantDiscriminator??
+      && related.name + "Id" == tenantDiscriminator.name>
+</#function>
+
+<#function isExplicitApiIdReference related>
+  <#return related.apiReference?? && related.apiReference?lower_case == "id">
+</#function>
+
+<#function isGeneratedApiIdReference related>
+  <#return related.apiIdReference && (!related.keyOnly || isExplicitApiIdReference(related))>
+</#function>
+
+<#function isApiObjectReference related>
+  <#return related.apiObjectReference>
+</#function>
+
+<#function isApiNoneReference related>
+  <#return related.apiNoneReference>
+</#function>
+
+<#function isCollectionRelated related>
+  <#return related.relationshipType.name() == "ONE_TO_MANY"
+      || related.relationshipType.name() == "MANY_TO_MANY">
+</#function>
+
+<#function hasRelationshipFinder entity related>
+  <#list inheritedAndOwnFinders(entity) as finder>
+    <#list finder.finderAttributes as finderAttribute>
+      <#if finderAttribute.name == related.name>
+        <#return true>
+      </#if>
+    </#list>
+  </#list>
+  <#return false>
+</#function>
+
+<#function isTenantDiscriminatorAttribute entity attribute>
+  <#if entity.multitenant && tenantDiscriminator?? && attribute.name == tenantDiscriminator.name>
+    <#list entity.relateds as related>
+      <#if isTenantDiscriminatorRelation(entity, related)>
+        <#return true>
+      </#if>
+    </#list>
+  </#if>
+  <#return false>
+</#function>
+
+<#function isTenantDiscriminatorRelation entity related>
+  <#return entity.multitenant && tenantDiscriminator??
       && related.name + "Id" == tenantDiscriminator.name>
 </#function>
 
@@ -28,6 +87,16 @@
   <#list targetEntity.relateds as related>
     <#if !related.keyOnly>
       <#assign names += [related.entityName?cap_first + suffix]>
+    </#if>
+  </#list>
+  <#return names>
+</#function>
+
+<#function relatedDtoGenericNames targetEntity>
+  <#assign names = []>
+  <#list targetEntity.relateds as related>
+    <#if related.apiObjectReference>
+      <#assign names += [related.entityName?cap_first + "DTO"]>
     </#if>
   </#list>
   <#return names>
@@ -108,13 +177,13 @@
 <#function parentDtoGenericTypes targetEntity>
   <#if targetEntity.parent?? && targetEntity.parent?has_content>
     <#assign parentEntity = entityMap[targetEntity.parent]>
-    <#return relatedGenericNames(parentEntity, "DTO")>
+    <#return relatedDtoGenericNames(parentEntity)>
   </#if>
   <#return []>
 </#function>
 
 <#function ownDtoGenericTypes targetEntity>
-  <#return relatedGenericNames(targetEntity, "DTO")>
+  <#return relatedDtoGenericNames(targetEntity)>
 </#function>
 
 <#function inheritedAndOwnDtoGenericTypes targetEntity>

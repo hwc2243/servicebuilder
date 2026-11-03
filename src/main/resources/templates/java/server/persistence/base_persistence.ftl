@@ -2,7 +2,7 @@
 <#include "/java/server/finder/finder.ftl">
 package ${persistenceBasePackage};
 
-<#if entity.finders?? || entity.multitenant>
+<#if entity.finders?? || entity.multitenant || entity.relateds?filter(r -> r.relationshipType.name() == "MANY_TO_ONE")?size gt 0>
 <#assign imports += { "java.util.List" : true }>
 </#if>
 
@@ -52,5 +52,11 @@ public interface Base${entity.name?cap_first}Persistence<E extends ${entity.name
     public <#if finder.unique>E<#else>List<E></#if> ${finderName}<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.name?cap_first}And</#if>${finderAttributes}(<#if entity.multitenant && finder.tenantScoped>${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name}, </#if>${finderParameters});
 </#if>
 
+</#list>
+
+<#list entity.relateds as related>
+<#if related.relationshipType.name() == "MANY_TO_ONE" && !hasRelationshipFinder(entity, related) && !isTenantDiscriminatorRelation(entity, related)>
+    public List<E> findBy<#if entity.multitenant>${tenantDiscriminator.name?cap_first}And</#if>${related.name?cap_first}_Id(<#if entity.multitenant>${tenantDiscriminator.type.javaType} ${tenantDiscriminator.name}, </#if>${entityMap[related.entityName].key.type.javaType} ${related.name}Id);
+</#if>
 </#list>
 }

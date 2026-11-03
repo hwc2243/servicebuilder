@@ -33,6 +33,34 @@ public class Related {
 	@Setter
 	@JacksonXmlProperty(localName="key-only")
 	protected boolean keyOnly = false;
+
+	@Getter
+	@Setter
+	@JacksonXmlProperty(localName="api-reference")
+	protected String apiReference = null;
+
+	/** API-only ID representation; persistence generation still uses the association. */
+	public boolean isApiIdReference() {
+		return "id".equals(getEffectiveApiReference());
+	}
+
+	public boolean isApiObjectReference() {
+		return "object".equals(getEffectiveApiReference());
+	}
+
+	public boolean isApiNoneReference() {
+		return "none".equals(getEffectiveApiReference());
+	}
+
+	public String getEffectiveApiReference() {
+		if (apiReference != null && !apiReference.isBlank()) {
+			return apiReference.toLowerCase();
+		}
+		if (keyOnly || relationshipType == RelationshipType.MANY_TO_ONE) {
+			return "id";
+		}
+		return "object";
+	}
 	
 	@Getter
 	@Setter

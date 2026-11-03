@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service name="abstractapi" package="test.abstractapi">
+    <entity name="baseRecord" abstract="true">
+        <attribute name="name" type="string"/>
+        <api>
+            <internal operations="READ"/>
+            <external operations="READ"/>
+        </api>
+    </entity>
+
+    <entity name="record">
+        <attribute name="name" type="string"/>
+        <api>
+            <internal operations="READ"/>
+            <external operations="READ"/>
+        </api>
+    </entity>
+</service>

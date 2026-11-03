@@ -23,8 +23,10 @@ public final class JavaLanguageBuilder extends BuilderServiceImpl implements Lan
 		boolean buildClient = args.getBuildType() == BuilderArgs.BuildType.CLIENT;
 		boolean buildServer = args.getBuildType() == BuilderArgs.BuildType.SERVER;
 		boolean needPersistence = service.getEntities().stream().anyMatch(entity -> entity.isPersistence());
-		boolean needInternalApi = service.getEntities().stream().anyMatch(entity -> entity.getApi() != null && entity.getApi().getInternal() != null);
-		boolean needExternalApi = service.getEntities().stream().anyMatch(entity -> entity.getApi() != null && entity.getApi().getExternal() != null);
+		boolean needInternalApi = service.getEntities().stream().anyMatch(entity -> !entity.isAbstractEntity()
+				&& entity.getApi() != null && entity.getApi().getInternal() != null);
+		boolean needExternalApi = service.getEntities().stream().anyMatch(entity -> !entity.isAbstractEntity()
+				&& entity.getApi() != null && entity.getApi().getExternal() != null);
 		
 		String projectPackageName = service.getPackageName();
 		File projectPackageDir = createPackageDir(outputDir, projectPackageName.replace(".", File.separator));
@@ -163,22 +165,16 @@ public final class JavaLanguageBuilder extends BuilderServiceImpl implements Lan
 				writeExtensionService(args, model, entity, servicePackageDir);
 			}
 			
-			if (needInternalApi) {
-				if (entity.getApi() != null) {
-					if (entity.getApi().getInternal() != null) {
-						writeApiBaseInternal(args, model, entity, baseInternalApiPackageDir);
-						writeApiInternal(args, model, entity, internalApiPackageDir);
-					}
-				}
+			if (needInternalApi && !entity.isAbstractEntity()
+					&& entity.getApi() != null && entity.getApi().getInternal() != null) {
+				writeApiBaseInternal(args, model, entity, baseInternalApiPackageDir);
+				writeApiInternal(args, model, entity, internalApiPackageDir);
 			}
 
-			if (needExternalApi) {
-				if (entity.getApi() != null) {
-					if (entity.getApi().getExternal() != null) {
-						writeApiBaseExternal(args, model, entity, baseExternalApiPackageDir);
-						writeApiExternal(args, model, entity, externalApiPackageDir);
-					}
-				}
+			if (needExternalApi && !entity.isAbstractEntity()
+					&& entity.getApi() != null && entity.getApi().getExternal() != null) {
+				writeApiBaseExternal(args, model, entity, baseExternalApiPackageDir);
+				writeApiExternal(args, model, entity, externalApiPackageDir);
 			}
 		});
 		}

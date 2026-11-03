@@ -14,9 +14,9 @@
 </#list>
 
 <#list entity.relateds as related>
-<#if isTenantKeyOnly(entity, related)>
+<#if isApiNoneReference(related) || isTenantKeyOnly(entity, related)>
 <#-- The tenant discriminator field is already part of the DTO attributes. -->
-<#elseif related.keyOnly>
+<#elseif related.apiIdReference>
     <#assign relatedEntity = entityMap[related.entityName]>
     private ${className(relatedEntity.key.type.javaType)} ${related.name}Id = null;
 <#elseif related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE">
@@ -40,9 +40,9 @@
 
 </#list>
 <#list entity.relateds as related>
-<#if isTenantKeyOnly(entity, related)>
+<#if isApiNoneReference(related) || isTenantKeyOnly(entity, related)>
 <#-- The tenant discriminator builder field is already part of the DTO attributes. -->
-<#elseif related.keyOnly>
+<#elseif related.apiIdReference>
     public Builder ${related.name}Id (${className(entityMap[related.entityName].key.type.javaType)} ${related.name}Id) {
       this.${related.name}Id = ${related.name}Id;
       return this;
@@ -76,9 +76,9 @@
     this.${attribute.name} = builder.${attribute.name};
 </#list>
 <#list entity.relateds as related>
-<#if isTenantKeyOnly(entity, related)>
+<#if isApiNoneReference(related) || isTenantKeyOnly(entity, related)>
 <#-- The tenant discriminator is copied with the regular attribute fields. -->
-<#elseif related.keyOnly>
+<#elseif related.apiIdReference>
     this.${related.name}Id = builder.${related.name}Id;
 <#else>
     this.${related.name} = builder.${related.name};
