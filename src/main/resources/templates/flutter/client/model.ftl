@@ -21,10 +21,11 @@
 </#function>
 
 <#assign className = entity.name?cap_first + "Dto">
+<#assign allAttributes = inheritedAndOwnAttributes(entity)>
 <#assign serverKeyName = "server" + entity.key.name?cap_first>
 <#assign serverKeyType = dartKeyType(entity.key)>
 <#assign tenantFieldName = "">
-<#if entity.multitenant && tenantDiscriminator??>
+<#if isEffectivelyMultitenant(entity) && tenantDiscriminator??>
   <#assign tenantFieldName = tenantDiscriminator.name>
 </#if>
 <#function isTenantRelation related>
@@ -35,8 +36,8 @@
   <#return related.apiObjectReference && !isTenantRelation(related)>
 </#function>
 <#assign hasTenantAttribute = false>
-<#if entity.multitenant && tenantDiscriminator??>
-  <#list entity.attributes as attribute>
+<#if isEffectivelyMultitenant(entity) && tenantDiscriminator??>
+  <#list allAttributes as attribute>
     <#if attribute.name == tenantDiscriminator.name>
       <#assign hasTenantAttribute = true>
     </#if>
@@ -44,7 +45,7 @@
 </#if>
 <#assign hasFirstName = false>
 <#assign hasLastName = false>
-<#list entity.attributes as attribute>
+<#list allAttributes as attribute>
   <#if attribute.name == "firstName"><#assign hasFirstName = true></#if>
   <#if attribute.name == "lastName"><#assign hasLastName = true></#if>
 </#list>
@@ -53,13 +54,13 @@ class ${className} {
   const ${className}({
     this.id,
     this.${serverKeyName},
-<#list entity.attributes as attribute>
+<#list allAttributes as attribute>
     this.${attribute.name},
 </#list>
-<#if entity.multitenant && tenantDiscriminator?? && !hasTenantAttribute>
+<#if isEffectivelyMultitenant(entity) && tenantDiscriminator?? && !hasTenantAttribute>
     this.${tenantDiscriminator.name},
 </#if>
-<#list entity.relateds as related>
+<#list inheritedAndOwnRelateds(entity) as related>
 <#if related.apiIdReference && !isTenantRelation(related)>
     this.${related.name}Id,
 <#elseif isObjectRelation(related) && (related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE")>
@@ -72,13 +73,13 @@ class ${className} {
 
   factory ${className}.fromJson(Map<String, dynamic> json) => ${className}(
     ${serverKeyName}: json['${entity.key.name}'] as ${serverKeyType}?,
-<#list entity.attributes as attribute>
+<#list allAttributes as attribute>
     ${attribute.name}: json['${attribute.name}'] as ${dartDataType(attribute.type)}?,
 </#list>
-<#if entity.multitenant && tenantDiscriminator?? && !hasTenantAttribute>
+<#if isEffectivelyMultitenant(entity) && tenantDiscriminator?? && !hasTenantAttribute>
     ${tenantDiscriminator.name}: json['${tenantDiscriminator.name}'] as ${dartDataType(tenantDiscriminator.type)}?,
 </#if>
-<#list entity.relateds as related>
+<#list inheritedAndOwnRelateds(entity) as related>
 <#if related.apiIdReference && !isTenantRelation(related)>
     ${related.name}Id: json['${related.name}Id'] as ${dartKeyType(entityMap[related.entityName].key)}?,
 <#elseif isObjectRelation(related) && (related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE")>
@@ -92,16 +93,16 @@ class ${className} {
 
   final int? id;
   final ${serverKeyType}? ${serverKeyName};
-<#list entity.attributes as attribute>
+<#list allAttributes as attribute>
 <#if attribute.type.value == "date">
   /// ISO-8601 calendar date (`yyyy-MM-dd`).
 </#if>
   final ${dartDataType(attribute.type)}? ${attribute.name};
 </#list>
-<#if entity.multitenant && tenantDiscriminator?? && !hasTenantAttribute>
+<#if isEffectivelyMultitenant(entity) && tenantDiscriminator?? && !hasTenantAttribute>
   final ${dartDataType(tenantDiscriminator.type)}? ${tenantDiscriminator.name};
 </#if>
-<#list entity.relateds as related>
+<#list inheritedAndOwnRelateds(entity) as related>
 <#if related.apiIdReference && !isTenantRelation(related)>
   final ${dartKeyType(entityMap[related.entityName].key)}? ${related.name}Id;
 <#elseif isObjectRelation(related) && (related.relationshipType.name() == "ONE_TO_ONE" || related.relationshipType.name() == "MANY_TO_ONE")>
@@ -111,17 +112,17 @@ class ${className} {
 </#if>
 </#list>
 
-<#if entity.multitenant && tenantDiscriminator??>
+<#if isEffectivelyMultitenant(entity) && tenantDiscriminator??>
   ${className} for${tenantDiscriminator.name?cap_first}(${dartDataType(tenantDiscriminator.type)} selected${tenantDiscriminator.name?cap_first}) => ${className}(
     id: id,
     ${serverKeyName}: ${serverKeyName},
-<#list entity.attributes as attribute>
+<#list allAttributes as attribute>
 <#if !hasTenantAttribute || attribute.name != tenantDiscriminator.name>
     ${attribute.name}: ${attribute.name},
 </#if>
 </#list>
     ${tenantDiscriminator.name}: selected${tenantDiscriminator.name?cap_first},
-<#list entity.relateds as related>
+<#list inheritedAndOwnRelateds(entity) as related>
 <#if related.apiIdReference && !isTenantRelation(related)>
     ${related.name}Id: ${related.name}Id,
 <#elseif isObjectRelation(related)>
@@ -140,13 +141,13 @@ class ${className} {
 
   Map<String, dynamic> toJson() => {
     if (${serverKeyName} != null) '${entity.key.name}': ${serverKeyName},
-<#list entity.attributes as attribute>
+<#list allAttributes as attribute>
     if (${attribute.name} != null) '${attribute.name}': ${attribute.name},
 </#list>
-<#if entity.multitenant && tenantDiscriminator?? && !hasTenantAttribute>
+<#if isEffectivelyMultitenant(entity) && tenantDiscriminator?? && !hasTenantAttribute>
     if (${tenantDiscriminator.name} != null) '${tenantDiscriminator.name}': ${tenantDiscriminator.name},
 </#if>
-<#list entity.relateds as related>
+<#list inheritedAndOwnRelateds(entity) as related>
 <#if related.apiIdReference && !isTenantRelation(related)>
     if (${related.name}Id != null) '${related.name}Id': ${related.name}Id,
 <#elseif isObjectRelation(related)>

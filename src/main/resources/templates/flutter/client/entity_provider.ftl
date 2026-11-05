@@ -30,7 +30,8 @@
 <#assign hasRead = hasExternalApi && entity.api.external.operations?seq_contains("READ")>
 <#assign hasUpdate = hasExternalApi && entity.api.external.operations?seq_contains("UPDATE")>
 <#assign hasDelete = hasExternalApi && entity.api.external.operations?seq_contains("DELETE")>
-<#assign searchableAttributes = entity.attributes?filter(a -> a.name != "id" && a.type == "string")>
+<#assign searchableAttributes = inheritedAndOwnAttributes(entity)?filter(a -> a.name != "id" && a.type == "string")>
+<#assign effectivelyMultitenant = isEffectivelyMultitenant(entity)>
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -38,7 +39,7 @@ import '../../models/${modelFileName}';
 <#if hasExternalApi>
 import '../../network/service_builder_http_client.dart';
 </#if>
-<#if entity.multitenant && tenantDiscriminator??>
+<#if effectivelyMultitenant && tenantDiscriminator??>
 import '../tenant_discriminator_provider.dart';
 </#if>
 
@@ -47,7 +48,7 @@ class ${providerClassName} extends ChangeNotifier {
 <#if hasExternalApi>
   final ServiceBuilderHttpClient httpClient;
 </#if>
-<#if entity.multitenant && tenantDiscriminator??>
+<#if effectivelyMultitenant && tenantDiscriminator??>
   final TenantDiscriminatorProvider tenantProvider;
 </#if>
   final List<${dtoClassName}> _items = <${dtoClassName}>[];
@@ -58,11 +59,11 @@ class ${providerClassName} extends ChangeNotifier {
 <#if hasExternalApi>
     required this.httpClient,
 </#if>
-<#if entity.multitenant && tenantDiscriminator??>
+<#if effectivelyMultitenant && tenantDiscriminator??>
     required this.tenantProvider,
 </#if>
   }) {
-<#if entity.multitenant && tenantDiscriminator??>
+<#if effectivelyMultitenant && tenantDiscriminator??>
     tenantProvider.addListener(_tenantChanged);
 </#if>
   }
@@ -70,7 +71,7 @@ class ${providerClassName} extends ChangeNotifier {
   List<${dtoClassName}> get items => List.unmodifiable(_items);
   bool get isLoading => _isLoading;
   Object? get error => _error;
-<#if entity.multitenant && tenantDiscriminator??>
+<#if effectivelyMultitenant && tenantDiscriminator??>
   ${dartDataType(tenantDiscriminator.type)}? get ${tenantDiscriminator.name} =>
       tenantProvider.${tenantDiscriminator.name};
 </#if>
@@ -216,7 +217,7 @@ class ${providerClassName} extends ChangeNotifier {
 <#if hasExternalApi>
   Map<String, String> get requestHeaders {
     final headers = <String, String>{};
-<#if entity.multitenant && tenantDiscriminator??>
+<#if effectivelyMultitenant && tenantDiscriminator??>
     final selectedTenant = tenantProvider.${tenantDiscriminator.name};
     if (selectedTenant == null) {
       throw StateError('A ${tenantDiscriminator.name} is required for ${className} requests');
@@ -231,7 +232,7 @@ class ${providerClassName} extends ChangeNotifier {
 
   String get resourcePath => '/api/external/${entity.name}';
 </#if>
-<#if entity.multitenant && tenantDiscriminator??>
+<#if effectivelyMultitenant && tenantDiscriminator??>
   void _tenantChanged() => notifyListeners();
 
   @override

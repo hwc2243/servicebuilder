@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service name="inheritedFlutter" package="test.inherited_flutter" multitenant="true">
+    <tenant-discriminator name="organizationId" type="long" />
+
+    <entity name="route" db-name="route">
+        <attribute name="name" type="string" />
+    </entity>
+
+    <entity name="routeItem" db-name="route_item" abstract="true" multitenant="true">
+        <attribute name="itemType" type="string" />
+        <attribute name="position" type="long" />
+        <related name="route" entity="route" relationship="many_to_one"
+                 api-reference="id" />
+    </entity>
+
+    <entity name="routeInstruction" db-name="route_instruction" parent="routeItem">
+        <attribute name="instructionText" type="string" />
+        <api>
+            <external operations="CREATE READ UPDATE DELETE" />
+        </api>
+    </entity>
+</service>

@@ -43,6 +43,16 @@
       || related.relationshipType.name() == "MANY_TO_MANY">
 </#function>
 
+<#function isEffectivelyMultitenant entity>
+  <#if entity.multitenant>
+    <#return true>
+  </#if>
+  <#if entity.parent?? && entity.parent?has_content>
+    <#return isEffectivelyMultitenant(entityMap[entity.parent])>
+  </#if>
+  <#return false>
+</#function>
+
 <#function hasRelationshipFinder entity related>
   <#list inheritedAndOwnFinders(entity) as finder>
     <#list finder.finderAttributes as finderAttribute>

@@ -327,6 +327,40 @@ public class BuilderServiceTest extends AbstractServiceTest {
 	}
 
 	@Test
+	public void whenFlutterEntityInheritsFromMultitenantParent_attributesAndTenantSupportAreFlattened() throws Exception {
+		args.setBuildLang(BuilderArgs.BuildLang.FLUTTER);
+		args.setBuildType(BuilderArgs.BuildType.CLIENT);
+		args.setOutputDir("/tmp/servicebuilder-flutter-inherited-build-v2");
+		builderService.build(loadFile("multitenant/inherited-flutter-service.xml"), args);
+
+		Path generatedRoot = Paths.get("/tmp/servicebuilder-flutter-inherited-build-v2", "lib");
+		String model = Files.readString(generatedRoot.resolve(
+				"models/route_instruction_dto.dart"));
+		String provider = Files.readString(generatedRoot.resolve(
+				"providers/base/base_route_instruction_provider.dart"));
+		String extension = Files.readString(generatedRoot.resolve(
+				"providers/route_instruction_provider.dart"));
+
+		assertTrue(model.contains("final String? itemType;"));
+		assertTrue(model.contains("final int? position;"));
+		assertTrue(model.contains("final String? instructionText;"));
+		assertTrue(model.contains("final int? routeId;"));
+		assertEquals(1, model.lines()
+				.filter(line -> line.trim().equals("final int? organizationId;"))
+				.count());
+		assertTrue(model.contains("itemType: json['itemType']"));
+		assertTrue(model.contains("routeId: json['routeId']"));
+		assertTrue(model.contains("'itemType': itemType"));
+		assertTrue(model.contains("'routeId': routeId"));
+		assertTrue(model.contains("organizationId: selectedOrganizationId"));
+
+		assertTrue(provider.contains("import '../tenant_discriminator_provider.dart';"));
+		assertTrue(provider.contains("required this.tenantProvider"));
+		assertTrue(provider.contains("tenantProvider.addListener(_tenantChanged)"));
+		assertTrue(extension.contains("required super.tenantProvider"));
+	}
+
+	@Test
 	public void whenFlutterServerBuild_isSelected_isRejected() throws Exception {
 		args.setBuildLang(BuilderArgs.BuildLang.FLUTTER);
 		args.setBuildType(BuilderArgs.BuildType.SERVER);
